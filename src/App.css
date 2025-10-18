@@ -63,3 +63,39 @@ body{
     background-color: var(--color-neutral-w-200);
     font-family: "Manrope",'Poppins';
 }
+
+body{
+    background-color: var(--color-neutral-w-200);
+    font-family: "Manrope",'Poppins';
+}
+
+/* Custom Scrollbar Styles */
+::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--color-neutral-w-300);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--color-neutral-b-600);
+    border-radius: 10px;
+    border: 2px solid var(--color-neutral-w-300);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--color-neutral-b-700);
+}
+
+::-webkit-scrollbar-thumb:active {
+    background: var(--color-neutral-b-800);
+}
+
+/* Firefox */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-neutral-b-600) var(--color-neutral-w-300);
+}
