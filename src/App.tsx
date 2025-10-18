@@ -4,13 +4,15 @@ import HomePage from './pages/home/HomePage'
 import MainLayout from './layout/MainLayout';
 import NotFoundPage from './pages/notfound/NotFoundPage';
 import ProfilePage from './pages/profile/ProfilePage'
+import SignUpPage from './pages/authentication/SignUpPage';
 
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path='/' element={<MainLayout />} >
       <Route index element={<HomePage />} />
       <Route path='*' element={<NotFoundPage />} />
-      <Route path='/about' element={<ProfilePage />} />
+      <Route path='/profile' element={<ProfilePage />} />
+      <Route path='/auth/Signup' element={<SignUpPage />} />
     </Route>
   )
 );

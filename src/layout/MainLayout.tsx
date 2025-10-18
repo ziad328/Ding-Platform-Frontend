@@ -1,7 +1,8 @@
+import { Outlet } from "react-router-dom"
 
 function layout() {
   return (
-    <div>layout</div>
+    <Outlet />
   )
 }
 

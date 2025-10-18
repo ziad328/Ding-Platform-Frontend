@@ -45,9 +45,21 @@
     --color-semantic-y-800: #E8AF2F;
     --color-semantic-y-900: #E4A704;
 
+    /* Typography */
+
+    --text-h1: 40px;
+    --text-h2: 32px;
+    --text-h3: 24px;
+    --text-h4: 18px;
+    --text-h5: 16px;
+    --text-h6: 14px;
+
+    --text-body: 16px;
+    --text-label: 12px;
 
 }
 
 body{
-    background-color: var(--color-neutral-w-100);
+    background-color: var(--color-neutral-w-200);
+    font-family: "Manrope",'Poppins';
 }
