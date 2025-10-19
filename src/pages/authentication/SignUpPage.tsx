@@ -78,7 +78,7 @@ export default function SignUpPage() {
   return (
     <div className="min-h-screen flex flex-col bg-neutral-w-50">
       {/* Logo */}
-      <div className="w-full py-4 px-4 sm:py-6">
+      <div className="w-full pt-6 px-4">
         <div className="flex items-center justify-center gap-2">
           <img src={logo} alt="Ding Logo" className="w-7 h-7 sm:w-8 sm:h-8" />
           <span className="text-lg sm:text-xl font-extrabold text-primary-800">Ding</span>
@@ -90,7 +90,7 @@ export default function SignUpPage() {
         <div className="w-full max-w-md bg-neutral-w-900 rounded-lg shadow-xl p-5 sm:p-6 md:p-8">
 
           {/* OAuth Buttons */}
-          <div className="space-y-3 sm:space-y-4 pt-6 sm:pt-8 mb-6 sm:mb-8">
+          <div className="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
             <button
               onClick={handleGoogleSignIn}
               className="w-full text-sm sm:text-base font-normal cursor-pointer flex items-center justify-center gap-2 bg-neutral-w-900 border border-neutral-w-400 rounded-md py-2.5 px-4 text-neutral-b-500 hover:bg-neutral-w-200 active:bg-neutral-w-300 transition-colors touch-manipulation"
