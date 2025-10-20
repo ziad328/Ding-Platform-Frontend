@@ -8,6 +8,7 @@ import SignUpPage from './pages/authentication/SignUpPage';
 import SignInPage from './pages/authentication/SingInPage';
 import ForgotPasswordPage from './pages/authentication/ForgotPasswordPage';
 import ResetPasswordPage from './pages/authentication/ResetPasswordPage';
+import EmailLoginPage from './pages/authentication/EmailLoginPage';
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -17,6 +18,7 @@ const router = createBrowserRouter(
       <Route path='/profile' element={<ProfilePage />} />
       <Route path='/auth/signup' element={<SignUpPage />} />
       <Route path='/auth/signin' element={<SignInPage />} />
+      <Route path='/auth/email-login' element={<EmailLoginPage />} />
       <Route path='/auth/forgot-password' element={<ForgotPasswordPage />} />
       <Route path='/auth/reset-password' element={<ResetPasswordPage />} />
     </Route>

@@ -1,7 +1,7 @@
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { InputField } from '../../components/atoms/InputField';
-import logo from '../../assets/Logo.svg';
+import { Logo } from '../../components/atoms/Logo';
 
 // Types
 interface ResetPasswordFormValues {
@@ -50,9 +50,8 @@ export default function ResetPasswordPage() {
     <div className="min-h-screen flex flex-col bg-neutral-w-50">
       {/* Logo */}
       <div className="w-full py-4 px-4 sm:py-6">
-        <div className="flex items-center justify-center gap-2">
-          <img src={logo} alt="Ding Logo" className="w-7 h-7 sm:w-8 sm:h-8" />
-          <span className="text-lg sm:text-xl font-extrabold text-primary-800">Ding</span>
+        <div className="flex items-center justify-center">
+          <Logo />
         </div>
       </div>
 

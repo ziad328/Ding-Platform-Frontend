@@ -1,10 +1,10 @@
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { InputField } from '../../components/atoms/InputField';
+import { Logo } from '../../components/atoms/Logo';
 import googleSvg from '../../assets/Google.svg';
 import email from '../../assets/Email.svg';
-import logo from '../../assets/Logo.svg';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 
 // Types
 interface SignInFormValues {
@@ -22,6 +22,7 @@ const signInSchema = Yup.object().shape({
 });
 
 export default function SignInPage() {
+  const navigate = useNavigate();
 
   const handleFormSubmit = async (values: SignInFormValues) => {
     // Example: await signInUser(values);
@@ -50,16 +51,15 @@ export default function SignInPage() {
   };
 
   const handleEmailLogin = () => {
-    console.log('Log in with Email');
+    navigate('/auth/email-login');
   };
 
   return (
     <div className="min-h-screen flex flex-col bg-neutral-w-50">
       {/* Logo */}
       <div className="w-full pt-6 px-4">
-        <div className="flex items-center justify-center gap-2">
-          <img src={logo} alt="Ding Logo" className="w-7 h-7 sm:w-8 sm:h-8" />
-          <span className="text-lg sm:text-xl font-extrabold text-primary-800">Ding</span>
+        <div className="flex items-center justify-center">
+          <Logo />
         </div>
       </div>
 

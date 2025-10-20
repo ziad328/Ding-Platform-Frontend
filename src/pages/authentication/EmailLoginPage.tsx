@@ -8,37 +8,37 @@ import { useNavigate } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
 
 // Types
-interface ForgotPasswordFormValues {
+interface EmailLoginFormValues {
   email: string;
 }
 
 // Validation Schema
-const forgotPasswordSchema = Yup.object().shape({
+const emailLoginSchema = Yup.object().shape({
   email: Yup.string()
     .email('Invalid email address')
     .required('Email is required')
 });
 
-export default function ForgotPasswordPage() {
+export default function EmailLoginPage() {
   const navigate = useNavigate();
   const [isSuccess, setIsSuccess] = useState(false);
 
-  const handleFormSubmit = async (values: ForgotPasswordFormValues) => {
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Example: await sendResetLink(values);
+  const handleFormSubmit = async (values: EmailLoginFormValues) => {
+    // Example: await sendLoginLink(values);
     console.log('Form submitted:', values);
+    
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
     
     // Show success state
     setIsSuccess(true);
   };
 
-  const formik = useFormik<ForgotPasswordFormValues>({
+  const formik = useFormik<EmailLoginFormValues>({
     initialValues: {
       email: ''
     },
-    validationSchema: forgotPasswordSchema,
+    validationSchema: emailLoginSchema,
     onSubmit: async (values, { setSubmitting }) => {
       try {
         await handleFormSubmit(values);
@@ -78,12 +78,12 @@ export default function ForgotPasswordPage() {
             <>
               {/* Title */}
               <h1 className="text-xl font-bold text-center text-primary-700 pt-8 mb-4 sm:mb-5">
-                Forgot password
+                Enter your email
               </h1>
 
               {/* Description */}
               <p className="text-xs sm:text-sm text-center text-neutral-b-500 mb-8 sm:mb-10 md:mb-12 px-2">
-                Enter your email to reset your password and access your account.
+                We'll send a secure link for instant access to your account.
               </p>
 
               {/* Form Fields */}
@@ -106,14 +106,14 @@ export default function ForgotPasswordPage() {
                 disabled={formik.isSubmitting}
                 className="w-full cursor-pointer bg-primary-700 text-white text-sm sm:text-base rounded-md mb-12 py-2.5 font-medium hover:bg-primary-800 active:bg-primary-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
               >
-                {formik.isSubmitting ? 'Sending...' : 'Send reset link'}
+                {formik.isSubmitting ? 'Sending...' : 'Send link'}
               </button>
             </>
           ) : (
             // Success State
             <SuccessAlert
               title="Check your inbox!"
-              description="We've sent you a password reset link. Simply open your inbox and click the link to reset your password."
+              description="Simply open your inbox and click the link to access your account. No passwords required!"
             />
           )}
         </div>
