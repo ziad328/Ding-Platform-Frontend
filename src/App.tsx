@@ -9,6 +9,7 @@ import SignInPage from './pages/authentication/SingInPage';
 import ForgotPasswordPage from './pages/authentication/ForgotPasswordPage';
 import ResetPasswordPage from './pages/authentication/ResetPasswordPage';
 import EmailLoginPage from './pages/authentication/EmailLoginPage';
+import OTPVerificationPage from './pages/authentication/OTPVerificationPage';
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -21,6 +22,7 @@ const router = createBrowserRouter(
       <Route path='/auth/email-login' element={<EmailLoginPage />} />
       <Route path='/auth/forgot-password' element={<ForgotPasswordPage />} />
       <Route path='/auth/reset-password' element={<ResetPasswordPage />} />
+      <Route path='/auth/verfiy-otp' element={<OTPVerificationPage />} />
     </Route>
   )
 );
