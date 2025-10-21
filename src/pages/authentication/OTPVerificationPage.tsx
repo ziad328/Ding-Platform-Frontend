@@ -5,11 +5,11 @@ import { Logo } from '../../components/atoms/Logo';
 
 export default function OTPVerificationPage() {
   const navigate = useNavigate();
-  const [otp, setOtp] = useState(['', '', '', '']);
-  const [timeLeft, setTimeLeft] = useState(59);
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [timeLeft, setTimeLeft] = useState(60);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
-  const email = "anorouzi.work@gmail.com"; // This would come from props or route state - just for testing
+  const email = "anorouzi.work@gmail.com"; // This would come from props or route state
 
   useEffect(() => {
     // Focus first input on mount
@@ -46,7 +46,7 @@ export default function OTPVerificationPage() {
     setOtp(newOtp);
 
     // Auto-focus next input
-    if (value && index < 3) {
+    if (value && index < 5) {
       inputRefs.current[index + 1]?.focus();
     }
   };
@@ -60,25 +60,25 @@ export default function OTPVerificationPage() {
 
   const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
     e.preventDefault();
-    const pastedData = e.clipboardData.getData('text').slice(0, 4);
+    const pastedData = e.clipboardData.getData('text').slice(0, 6);
     if (!/^\d+$/.test(pastedData)) return;
 
     const newOtp = [...otp];
     pastedData.split('').forEach((char, index) => {
-      if (index < 4) {
+      if (index < 6) {
         newOtp[index] = char;
       }
     });
     setOtp(newOtp);
 
     // Focus last filled input or next empty
-    const nextIndex = Math.min(pastedData.length, 3);
+    const nextIndex = Math.min(pastedData.length, 5);
     inputRefs.current[nextIndex]?.focus();
   };
 
   const handleVerify = async () => {
     const otpCode = otp.join('');
-    if (otpCode.length !== 4) return;
+    if (otpCode.length !== 6) return;
 
     setIsSubmitting(true);
     try {
@@ -101,8 +101,8 @@ export default function OTPVerificationPage() {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 500));
       console.log('Resending OTP');
-      setTimeLeft(59);
-      setOtp(['', '', '', '']);
+      setTimeLeft(60);
+      setOtp(['', '', '', '', '', '']);
       inputRefs.current[0]?.focus();
     } catch (error) {
       console.error('Resend error:', error);
@@ -130,20 +130,20 @@ export default function OTPVerificationPage() {
 
       {/* Main content */}
       <div className="flex-1 flex items-center justify-center p-3 sm:p-4 md:p-6">
-        <div className="w-full max-w-md bg-neutral-w-900 rounded-lg shadow-xl p-5 sm:p-6 md:p-8">
+        <div className="w-full max-w-md bg-neutral-w-900 rounded-lg shadow-xl p-4 sm:p-6 md:p-8">
           
           {/* Title */}
-          <h1 className="text-xl font-bold text-center text-primary-700 pt-8 mb-4 sm:mb-5">
+          <h1 className="text-lg sm:text-xl font-bold text-center text-primary-700 pt-6 sm:pt-8 mb-3 sm:mb-5 px-2">
             Enter verification code
           </h1>
 
           {/* Description */}
-          <p className="text-xs sm:text-sm text-center text-neutral-b-500 mb-8 sm:mb-10 px-2">
+          <p className="text-xs sm:text-sm text-center text-neutral-b-500 mb-6 sm:mb-10 px-2">
             Code sent to {email}
           </p>
 
           {/* OTP Input */}
-          <div className="flex justify-center gap-2 sm:gap-3 mb-6 sm:mb-8">
+          <div className="flex justify-center gap-1 sm:gap-2 md:gap-3 mb-6 sm:mb-8 max-w-full">
             {otp.map((digit, index) => (
               <input
                 key={index}
@@ -155,13 +155,13 @@ export default function OTPVerificationPage() {
                 onChange={(e) => handleChange(index, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(index, e)}
                 onPaste={handlePaste}
-                className="w-12 h-12 sm:w-14 sm:h-14 text-center text-lg sm:text-xl font-semibold border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors border-neutral-w-400"
+                className="w-9 h-9 sm:w-12 sm:h-12 md:w-14 md:h-14 text-center text-sm sm:text-lg md:text-xl font-semibold border-2 rounded-md sm:rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors border-neutral-w-400 flex-shrink-0"
               />
             ))}
           </div>
 
           {/* Resend Timer */}
-          <div className="text-center mb-8 sm:mb-10 md:mb-12">
+          <div className="text-center mb-6 sm:mb-10 md:mb-12">
             {timeLeft > 0 ? (
               <span className="text-xs sm:text-sm text-neutral-b-500">
                 Resend in{' '}
@@ -184,7 +184,7 @@ export default function OTPVerificationPage() {
             type="button"
             onClick={handleVerify}
             disabled={!isComplete || isSubmitting}
-            className="w-full cursor-pointer bg-primary-700 text-white text-sm sm:text-base rounded-md mb-12 py-2.5 font-medium hover:bg-primary-800 active:bg-primary-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
+            className="w-full cursor-pointer bg-primary-700 text-white text-sm sm:text-base rounded-md mb-8 sm:mb-12 py-2.5 font-medium hover:bg-primary-800 active:bg-primary-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
           >
             {isSubmitting ? 'Verifying...' : 'Verify'}
           </button>
