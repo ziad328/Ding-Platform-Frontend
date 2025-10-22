@@ -5,6 +5,10 @@ import { Logo } from '../../components/atoms/Logo';
 import googleSvg from '../../assets/Google.svg';
 import email from '../../assets/Email.svg';
 import { NavLink, useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { useLoginUserMutation } from '../../store/slices/auth/authApi';
+import { setCredentials } from '../../store/slices/auth/auth';
+import { enqueueSnackbar } from 'notistack';
 
 // Types
 interface SignInFormValues {
@@ -24,9 +28,22 @@ const signInSchema = Yup.object().shape({
 export default function SignInPage() {
   const navigate = useNavigate();
 
+  const [loginUser] = useLoginUserMutation();
+
+  const dispatch = useDispatch();
+
   const handleFormSubmit = async (values: SignInFormValues) => {
-    // Example: await signInUser(values);
-    console.log('Form submitted:', values);
+      try {
+        const response = await loginUser(values).unwrap();
+        if (response.code === 200 && response.data) {
+          enqueueSnackbar('Login successful!', { variant: 'success' });
+          navigate('/');
+        }
+      } catch (err) {
+        enqueueSnackbar((err as any)?.data?.message || (err as any)?.data, { 
+          variant: 'error',
+        });
+      }
   };
 
   const formik = useFormik<SignInFormValues>({

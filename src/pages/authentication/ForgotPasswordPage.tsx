@@ -6,6 +6,8 @@ import { SuccessAlert } from '../../components/atoms/SuccessAlert';
 import { Logo } from '../../components/atoms/Logo';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
+import { useForgotPasswordMutation } from '../../store/slices/auth/authApi';
+import { enqueueSnackbar } from 'notistack';
 
 // Types
 interface ForgotPasswordFormValues {
@@ -22,16 +24,21 @@ const forgotPasswordSchema = Yup.object().shape({
 export default function ForgotPasswordPage() {
   const navigate = useNavigate();
   const [isSuccess, setIsSuccess] = useState(false);
+  const [forgotPassword] = useForgotPasswordMutation();
 
   const handleFormSubmit = async (values: ForgotPasswordFormValues) => {
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Example: await sendResetLink(values);
-    console.log('Form submitted:', values);
-    
-    // Show success state
-    setIsSuccess(true);
+    try {
+      await forgotPassword({ email: values.email }).unwrap();
+      enqueueSnackbar('Password reset otp sent to your email', {
+        variant: 'success'
+      });
+      // Navigate to OTP verification page with email
+      navigate('/auth/verfiy-otp', { state: { email: values.email, type: 'forgot-password' } });
+    } catch (error) {
+      enqueueSnackbar((error as any)?.data?.message || 'Failed to send reset otp', {
+        variant: 'error',
+      });
+    }
   };
 
   const formik = useFormik<ForgotPasswordFormValues>({
@@ -103,9 +110,15 @@ export default function ForgotPasswordPage() {
               <button
                 type="button"
                 onClick={() => formik.handleSubmit()}
-                disabled={formik.isSubmitting}
-                className="w-full cursor-pointer bg-primary-700 text-white text-sm sm:text-base rounded-md mb-12 py-2.5 font-medium hover:bg-primary-800 active:bg-primary-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
+                disabled={formik.isSubmitting || !formik.isValid}
+                className="w-full cursor-pointer bg-primary-700 text-white text-sm sm:text-base rounded-md mb-12 py-2.5 font-medium hover:bg-primary-800 active:bg-primary-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation flex items-center justify-center gap-2"
               >
+                {formik.isSubmitting && (
+                  <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                )}
                 {formik.isSubmitting ? 'Sending...' : 'Send reset link'}
               </button>
             </>

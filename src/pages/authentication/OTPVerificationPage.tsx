@@ -1,22 +1,39 @@
 import { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
 import { Logo } from '../../components/atoms/Logo';
+import { useVerifyEmailOtpMutation, useResendEmailOtpMutation, useVerifyForgotPasswordOtpMutation, useResendForgotPasswordOtpMutation } from '../../store/slices/auth/authApi';
+import { enqueueSnackbar } from 'notistack';
 
 export default function OTPVerificationPage() {
   const navigate = useNavigate();
-  const [otp, setOtp] = useState(['', '', '', '']);
+  const location = useLocation();
+  const [verifyEmailOtp] = useVerifyEmailOtpMutation();
+  const [resendEmailOtp] = useResendEmailOtpMutation();
+  const [verifyForgotPasswordOtp] = useVerifyForgotPasswordOtpMutation();
+  const [resendForgotPasswordOtp] = useResendForgotPasswordOtpMutation();
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [timeLeft, setTimeLeft] = useState(59);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isResending, setIsResending] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
-  const email = "anorouzi.work@gmail.com"; // This would come from props or route state - just for testing
+  
+  // Get email and type from navigation state
+  const email = location.state?.email;
+  const verificationType = location.state?.type || 'email'; // 'email' or 'forgot-password'
 
   useEffect(() => {
+    // Redirect to signup if no email provided
+    if (!email) {
+      navigate('/auth/signup');
+      return;
+    }
+    
     // Focus first input on mount
     if (inputRefs.current[0]) {
       inputRefs.current[0].focus();
     }
-  }, []);
+  }, [email, navigate]);
 
   useEffect(() => {
     // Timer countdown
@@ -46,7 +63,7 @@ export default function OTPVerificationPage() {
     setOtp(newOtp);
 
     // Auto-focus next input
-    if (value && index < 3) {
+    if (value && index < 5) {
       inputRefs.current[index + 1]?.focus();
     }
   };
@@ -60,52 +77,74 @@ export default function OTPVerificationPage() {
 
   const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
     e.preventDefault();
-    const pastedData = e.clipboardData.getData('text').slice(0, 4);
+    const pastedData = e.clipboardData.getData('text').slice(0, 6);
     if (!/^\d+$/.test(pastedData)) return;
 
     const newOtp = [...otp];
     pastedData.split('').forEach((char, index) => {
-      if (index < 4) {
+      if (index < 6) {
         newOtp[index] = char;
       }
     });
     setOtp(newOtp);
 
     // Focus last filled input or next empty
-    const nextIndex = Math.min(pastedData.length, 3);
+    const nextIndex = Math.min(pastedData.length, 5);
     inputRefs.current[nextIndex]?.focus();
   };
 
   const handleVerify = async () => {
     const otpCode = otp.join('');
-    if (otpCode.length !== 4) return;
-
+    if (otpCode.length !== 6) return;
+    
     setIsSubmitting(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      console.log('Verifying OTP:', otpCode);
-      // Navigate to success or home page after verification
-      // navigate('/');
+      let response;
+      if (verificationType === 'forgot-password') {
+        response = await verifyForgotPasswordOtp({ email, otp: otpCode }).unwrap();
+        console.log(response);
+        if (response.code === 200 && response.data) {
+          enqueueSnackbar(response.data.message || 'OTP verified successfully!', { variant: 'success' });
+          navigate('/auth/reset-password', { state: { email } });
+        }
+      } else {
+        response = await verifyEmailOtp({ email, otp: otpCode }).unwrap();
+        if (response.code === 200 && response.data && response.data.accessToken) {
+          enqueueSnackbar('Email verified successfully!', { variant: 'success' });
+          navigate('/');
+        }
+      }
     } catch (error) {
       console.error('Verification error:', error);
+      enqueueSnackbar((error as any)?.data?.message || (error as any)?.data || 'Verification failed', { 
+        variant: 'error', 
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleResend = async () => {
-    if (timeLeft > 0) return;
+    if (timeLeft > 0 || isResending) return;
     
+    setIsResending(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-      console.log('Resending OTP');
+      if (verificationType === 'forgot-password') {
+        await resendForgotPasswordOtp({ email }).unwrap();
+      } else {
+        await resendEmailOtp({ email }).unwrap();
+      }
       setTimeLeft(59);
-      setOtp(['', '', '', '']);
+      setOtp(['', '', '', '', '', '']);
       inputRefs.current[0]?.focus();
+      enqueueSnackbar('Code sent successfully!', { variant: 'success' });
     } catch (error) {
       console.error('Resend error:', error);
+      enqueueSnackbar((error as any)?.data.data?.message || (error as any)?.data.data, { 
+        variant: 'error', 
+      });
+    } finally {
+      setIsResending(false);
     }
   };
 
@@ -134,12 +173,15 @@ export default function OTPVerificationPage() {
           
           {/* Title */}
           <h1 className="text-xl font-bold text-center text-primary-700 pt-8 mb-4 sm:mb-5">
-            Enter verification code
+            {verificationType === 'forgot-password' ? 'Enter reset code' : 'Enter verification code'}
           </h1>
 
           {/* Description */}
           <p className="text-xs sm:text-sm text-center text-neutral-b-500 mb-8 sm:mb-10 px-2">
-            Code sent to {email}
+            {verificationType === 'forgot-password' 
+              ? `Password reset code sent to ${email}` 
+              : `Code sent to ${email}`
+            }
           </p>
 
           {/* OTP Input */}
@@ -163,7 +205,7 @@ export default function OTPVerificationPage() {
           {/* Resend Timer */}
           <div className="text-center mb-8 sm:mb-10 md:mb-12">
             {timeLeft > 0 ? (
-              <span className="text-xs sm:text-sm text-neutral-b-500">
+              <span className="text-xs sm:text-sm text-neutral-b-500 ">
                 Resend in{' '}
                 <span className="font-medium text-primary-700">
                   {formatTime(timeLeft)}
@@ -171,10 +213,23 @@ export default function OTPVerificationPage() {
               </span>
             ) : (
               <button
-                onClick={handleResend}
-                className="text-xs sm:text-sm text-primary-700 font-medium hover:underline cursor-pointer touch-manipulation"
+                onClick={timeLeft > 0 || isResending ? undefined : handleResend}
+                disabled={timeLeft > 0 || isResending}
+                className={`text-xs sm:text-sm font-medium touch-manipulation flex items-center justify-center gap-2 min-w-[100px] mx-auto ${
+                  timeLeft > 0 || isResending
+                    ? 'text-neutral-b-400 cursor-not-allowed' 
+                    : 'text-primary-700 hover:underline cursor-pointer'
+                }`}
               >
-                Resend code
+                {isResending && (
+                  <svg className="animate-spin h-3 w-3 text-neutral-b-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                )}
+                <span className="whitespace-nowrap">
+                  {isResending ? 'Sending...' : 'Resend code'}
+                </span>
               </button>
             )}
           </div>
