@@ -2,6 +2,9 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { InputField } from '../../components/atoms/InputField';
 import { Logo } from '../../components/atoms/Logo';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useResetPasswordMutation } from '../../store/slices/auth/authApi';
+import { enqueueSnackbar } from 'notistack';
 
 // Types
 interface ResetPasswordFormValues {
@@ -23,10 +26,38 @@ const resetPasswordSchema = Yup.object().shape({
 });
 
 export default function ResetPasswordPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [resetPassword] = useResetPasswordMutation();
+  
+  // Get email from navigation state
+  const email = location.state?.email;
 
   const handleFormSubmit = async (values: ResetPasswordFormValues) => {
-    // Example: await resetPassword(values);
-    console.log('Form submitted:', values);
+    if (!email) {
+      enqueueSnackbar('Email not found. Please try the forgot password process again.', {
+        variant: 'error',
+      });
+      navigate('/auth/forgot-password');
+      return;
+    }
+
+    try {
+      await resetPassword({ 
+        email, 
+        newPassword: values.newPassword 
+      }).unwrap();
+      
+      enqueueSnackbar('Password reset successfully!', {
+        variant: 'success'
+      });
+      
+      navigate('/auth/signin');
+    } catch (error) {
+      enqueueSnackbar((error as any)?.data?.message || 'Failed to reset password', {
+        variant: 'error',
+      });
+    }
   };
 
   const formik = useFormik<ResetPasswordFormValues>({
@@ -92,9 +123,15 @@ export default function ResetPasswordPage() {
           <button
             type="button"
             onClick={() => formik.handleSubmit()}
-            disabled={formik.isSubmitting}
-            className="w-full cursor-pointer bg-primary-700 text-white text-sm sm:text-base rounded-md mb-12 py-2.5 font-medium hover:bg-primary-800 active:bg-primary-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
+            disabled={formik.isSubmitting || !formik.isValid}
+            className="w-full cursor-pointer bg-primary-700 text-white text-sm sm:text-base rounded-md mb-12 py-2.5 font-medium hover:bg-primary-800 active:bg-primary-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation flex items-center justify-center gap-2"
           >
+            {formik.isSubmitting && (
+              <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            )}
             {formik.isSubmitting ? 'Resetting...' : 'Reset password'}
           </button>
         </div>
