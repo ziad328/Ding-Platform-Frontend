@@ -169,7 +169,7 @@ export default function OTPVerificationPage() {
 
       {/* Main content */}
       <div className="flex-1 flex items-center justify-center p-3 sm:p-4 md:p-6">
-        <div className="w-full max-w-md bg-neutral-w-900 rounded-lg shadow-xl p-5 sm:p-6 md:p-8">
+        <div className="w-full max-w-md bg-neutral-w-900 rounded-lg shadow-xl p-4 sm:p-6 md:p-8">
           
           {/* Title */}
           <h1 className="text-xl font-bold text-center text-primary-700 pt-8 mb-4 sm:mb-5">
@@ -185,7 +185,7 @@ export default function OTPVerificationPage() {
           </p>
 
           {/* OTP Input */}
-          <div className="flex justify-center gap-2 sm:gap-3 mb-6 sm:mb-8">
+          <div className="flex justify-center gap-1 sm:gap-2 md:gap-3 mb-6 sm:mb-8 max-w-full">
             {otp.map((digit, index) => (
               <input
                 key={index}
@@ -197,13 +197,13 @@ export default function OTPVerificationPage() {
                 onChange={(e) => handleChange(index, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(index, e)}
                 onPaste={handlePaste}
-                className="w-12 h-12 sm:w-14 sm:h-14 text-center text-lg sm:text-xl font-semibold border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors border-neutral-w-400"
+                className="w-9 h-9 sm:w-12 sm:h-12 md:w-14 md:h-14 text-center text-sm sm:text-lg md:text-xl font-semibold border-2 rounded-md sm:rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors border-neutral-w-400 flex-shrink-0"
               />
             ))}
           </div>
 
           {/* Resend Timer */}
-          <div className="text-center mb-8 sm:mb-10 md:mb-12">
+          <div className="text-center mb-6 sm:mb-10 md:mb-12">
             {timeLeft > 0 ? (
               <span className="text-xs sm:text-sm text-neutral-b-500 ">
                 Resend in{' '}
@@ -239,7 +239,7 @@ export default function OTPVerificationPage() {
             type="button"
             onClick={handleVerify}
             disabled={!isComplete || isSubmitting}
-            className="w-full cursor-pointer bg-primary-700 text-white text-sm sm:text-base rounded-md mb-12 py-2.5 font-medium hover:bg-primary-800 active:bg-primary-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
+            className="w-full cursor-pointer bg-primary-700 text-white text-sm sm:text-base rounded-md mb-8 sm:mb-12 py-2.5 font-medium hover:bg-primary-800 active:bg-primary-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
           >
             {isSubmitting ? 'Verifying...' : 'Verify'}
           </button>
