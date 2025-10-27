@@ -37,7 +37,7 @@ export const InputField: React.FC<InputFieldProps> = ({
           value={value}
           onChange={onChange}
           onBlur={onBlur}
-          className={`w-full px-3 py-2.5 text-sm sm:px-4 sm:text-base font-normal border rounded-lg focus:outline-none focus:ring-2 transition-colors ${
+          className={`w-full px-3 py-2.5 text-sm sm:px-4 sm:text-base placeholder:text-neutral-500 font-normal border rounded-lg focus:outline-none focus:ring-2 transition-colors ${
             touched && error
               ? 'border-semantic-r-700 focus:ring-semantic-r-700'
               : 'border-neutral-w-400 focus:ring-primary-500 focus:border-transparent'

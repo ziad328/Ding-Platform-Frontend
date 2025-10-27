@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-@theme{
+@theme {
 
     /* Primary*/
     --color-primary-100: #ACE0E9;
@@ -36,7 +36,7 @@
     --color-semantic-g-700: #428553;
     --color-semantic-g-800: #2A7841;
     --color-semantic-g-900: #036B30;
-    
+
     --color-semantic-r-700: #CC4F3C;
     --color-semantic-r-800: #C23729;
     --color-semantic-r-900: #B81616;
@@ -59,14 +59,18 @@
 
 }
 
-body{
+body {
     background-color: var(--color-neutral-w-200);
-    font-family: "Manrope",'Poppins';
+    font-family: "Manrope", 'Poppins';
 }
 
-body{
+body {
     background-color: var(--color-neutral-w-200);
-    font-family: "Manrope",'Poppins';
+    font-family: "Manrope", 'Poppins';
+}
+
+.auth-title {
+    font-family: 'Delius Swash Caps', "cursive";
 }
 
 /* Custom Scrollbar Styles */
@@ -106,6 +110,7 @@ body{
         opacity: 0;
         transform: translateY(10px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -116,6 +121,7 @@ body{
     from {
         transform: scale(0);
     }
+
     to {
         transform: scale(1);
     }
@@ -126,10 +132,12 @@ body{
         opacity: 0;
         transform: scale(0) rotate(-45deg);
     }
+
     50% {
         opacity: 1;
         transform: scale(1.1) rotate(0deg);
     }
+
     100% {
         opacity: 1;
         transform: scale(1) rotate(0deg);
