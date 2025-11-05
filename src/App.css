@@ -1,0 +1,157 @@
+@import "tailwindcss";
+
+@theme {
+
+    /* Primary*/
+    --color-primary-100: #ACE0E9;
+    --color-primary-200: #76CCDB;
+    --color-primary-300: #41B8CB;
+    --color-primary-400: #18ABC0;
+    --color-primary-500: #009DB6;
+    --color-primary-600: #008EA4;
+    --color-primary-700: #007B8B;
+    --color-primary-800: #006774;
+    --color-primary-900: #00464B;
+
+    /* Neutral Black*/
+    --color-neutral-b-100: #E1E2F8;
+    --color-neutral-b-200: #979DA9;
+    --color-neutral-b-300: #838B98;
+    --color-neutral-b-400: #707988;
+    --color-neutral-b-500: #5D6778;
+    --color-neutral-b-600: #4B5669;
+    --color-neutral-b-700: #39465A;
+    --color-neutral-b-800: #27364B;
+    --color-neutral-b-900: #0C1024;
+
+    /* Neutral White*/
+    --color-neutral-w-100: #FAFBFF;
+    --color-neutral-w-200: #F1F4F9;
+    --color-neutral-w-300: #ECF0F5;
+    --color-neutral-w-400: #E2E8F0;
+    --color-neutral-w-900: #ffffff;
+
+    /* semantic*/
+    --color-semantic-g-100: #D4E3D6;
+    --color-semantic-g-700: #428553;
+    --color-semantic-g-800: #2A7841;
+    --color-semantic-g-900: #036B30;
+
+    --color-semantic-r-700: #CC4F3C;
+    --color-semantic-r-800: #C23729;
+    --color-semantic-r-900: #B81616;
+
+    --color-semantic-y-700: #EDB648;
+    --color-semantic-y-800: #E8AF2F;
+    --color-semantic-y-900: #E4A704;
+
+    /* Typography */
+
+    --text-h1: 40px;
+    --text-h2: 32px;
+    --text-h3: 24px;
+    --text-h4: 18px;
+    --text-h5: 16px;
+    --text-h6: 14px;
+
+    --text-body: 16px;
+    --text-label: 12px;
+
+}
+
+body {
+    background-color: var(--color-neutral-w-200);
+    font-family: "Manrope", 'Poppins';
+}
+
+body {
+    background-color: var(--color-neutral-w-200);
+    font-family: "Manrope", 'Poppins';
+}
+
+.auth-title {
+    font-family: 'Delius Swash Caps', "cursive";
+}
+
+/* Custom Scrollbar Styles */
+::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--color-neutral-w-300);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--color-neutral-b-600);
+    border-radius: 10px;
+    border: 2px solid var(--color-neutral-w-300);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--color-neutral-b-700);
+}
+
+::-webkit-scrollbar-thumb:active {
+    background: var(--color-neutral-b-800);
+}
+
+/* Firefox */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-neutral-b-600) var(--color-neutral-w-300);
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        transform: scale(0);
+    }
+
+    to {
+        transform: scale(1);
+    }
+}
+
+@keyframes checkmark {
+    0% {
+        opacity: 0;
+        transform: scale(0) rotate(-45deg);
+    }
+
+    50% {
+        opacity: 1;
+        transform: scale(1.1) rotate(0deg);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1) rotate(0deg);
+    }
+}
+
+.animate-fadeIn {
+    animation: fadeIn 0.5s ease-out;
+}
+
+.animate-scaleIn {
+    animation: scaleIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.animate-checkmark {
+    animation: checkmark 0.6s ease-out 0.2s backwards;
+}
