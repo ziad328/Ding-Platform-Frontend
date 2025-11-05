@@ -23,7 +23,7 @@ const forgotPasswordSchema = Yup.object().shape({
 
 export default function ForgotPasswordPage() {
   const navigate = useNavigate();
-  const [isSuccess, setIsSuccess] = useState(false);
+  const [isSuccess] = useState(false);
   const [forgotPassword] = useForgotPasswordMutation();
 
   const handleFormSubmit = async (values: ForgotPasswordFormValues) => {
