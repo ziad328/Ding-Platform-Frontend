@@ -5,12 +5,14 @@ import Post from '../../components/profile/Post';
 import EmptyState from '../../components/profile/EmptyState';
 import Settings from '../../components/profile/Settings';
 import SuggestedFriends from '../../components/profile/SuggestedFriends';
+import MyFriends from '../../components/profile/MyFriends';
 import SuggestedFollowers from '../../components/profile/SuggestedFollowers';
 import Footer from '../../components/profile/Footer';
 import {
   ProfileHeaderSkeleton,
   PostSkeleton,
   SuggestedFriendsSkeleton,
+  MyFriendsSkeleton,
   SuggestedFollowersSkeleton,
   FooterSkeleton,
   SettingsSkeleton,
@@ -135,12 +137,14 @@ const ProfilePage = () => {
           {isLoading ? (
             <>
               <SuggestedFriendsSkeleton />
+              <MyFriendsSkeleton />
               <SuggestedFollowersSkeleton />
               <FooterSkeleton />
             </>
           ) : (
             <>
               <SuggestedFriends />
+              <MyFriends />
               <SuggestedFollowers />
               <Footer />
             </>

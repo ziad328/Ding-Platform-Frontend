@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import type { ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { MessageCircle, UserPlus, Briefcase, GraduationCap } from 'lucide-react';
 
@@ -22,6 +23,8 @@ interface ProfileHoverPreviewProps {
   onMouseLeave?: () => void;
   primaryActionLabel?: string;
   secondaryActionLabel?: string;
+  primaryActionIcon?: ReactNode;
+  secondaryActionIcon?: ReactNode;
 }
 
 interface PlacementState {
@@ -44,6 +47,8 @@ const ProfileHoverPreview = ({
   onMouseLeave,
   primaryActionLabel = 'Follow',
   secondaryActionLabel = 'Message',
+  primaryActionIcon = <UserPlus className="w-4 h-4" />,
+  secondaryActionIcon = <MessageCircle className="w-4 h-4" />,
 }: ProfileHoverPreviewProps) => {
   const [placement, setPlacement] = useState<PlacementState | null>(null);
 
@@ -139,14 +144,14 @@ const ProfileHoverPreview = ({
             type="button"
             className="flex-1 min-w-[120px] inline-flex items-center justify-center gap-1 rounded-xl border border-neutral-w-300 px-3 py-1.5 text-sm font-medium text-neutral-b-800 hover:bg-neutral-w-200 transition-colors"
           >
-            <MessageCircle className="w-4 h-4" />
+            {secondaryActionIcon}
             {secondaryActionLabel}
           </button>
           <button
             type="button"
             className="flex-1 min-w-[120px] inline-flex items-center justify-center gap-1 rounded-xl bg-primary-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-primary-700 transition-colors"
           >
-            <UserPlus className="w-4 h-4" />
+            {primaryActionIcon}
             {primaryActionLabel}
           </button>
         </div>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { User, Edit2, LayoutGrid, Bookmark, Settings } from 'lucide-react';
 import { selectCurrentUser } from '../../store/slices/auth/auth';
 import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 interface ProfileHeaderProps {
     activeTab: string;
     setActiveTab: (tab: string) => void;
@@ -12,6 +13,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ activeTab, setActiveTab }
     const [isHoveringAvatar, setIsHoveringAvatar] = useState(false);
     const user = useSelector(selectCurrentUser);
     console.log(user);
+    const navigate = useNavigate();
     const tabs = [
         { name: 'My Posts', icon: LayoutGrid },
         { name: 'Saved Posts', icon: Bookmark },
@@ -64,18 +66,33 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ activeTab, setActiveTab }
 
                     {/* Right Side - Stats */}
                     <div className="flex items-center gap-4 sm:gap-6 md:gap-8 mt-3 sm:mt-4 lg:mt-6 lg:mr-4">
-                        <div className="text-center">
-                            <p className="text-lg sm:text-xl md:text-2xl font-bold text-neutral-b-900 mb-0.5 sm:mb-1">12</p>
-                            <p className="text-xs sm:text-sm text-neutral-b-500">Posts</p>
-                        </div>
-                        <div className="text-center">
-                            <p className="text-lg sm:text-xl md:text-2xl font-bold text-neutral-b-900 mb-0.5 sm:mb-1">207</p>
-                            <p className="text-xs sm:text-sm text-neutral-b-500">Followers</p>
-                        </div>
-                        <div className="text-center">
-                            <p className="text-lg sm:text-xl md:text-2xl font-bold text-neutral-b-900 mb-0.5 sm:mb-1">64</p>
-                            <p className="text-xs sm:text-sm text-neutral-b-500">Following</p>
-                        </div>
+                        <button
+                            type="button"
+                            onClick={() => setActiveTab('My Posts')}
+                            className="group text-center focus:outline-none hover:text-primary-600 transition-colors cursor-pointer"
+                            aria-label="View posts tab"
+                        >
+                            <p className="text-lg sm:text-xl md:text-2xl font-bold text-neutral-b-900 mb-0.5 sm:mb-1 group-hover:text-primary-600 transition-colors">12</p>
+                            <p className="text-xs sm:text-sm text-neutral-b-500 group-hover:text-primary-600 transition-colors">Posts</p>
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => navigate('/profile/followers')}
+                            className="group text-center focus:outline-none hover:text-primary-600 transition-colors cursor-pointer"
+                            aria-label="View all followers"
+                        >
+                            <p className="text-lg sm:text-xl md:text-2xl font-bold text-neutral-b-900 mb-0.5 sm:mb-1 group-hover:text-primary-600 transition-colors">207</p>
+                            <p className="text-xs sm:text-sm text-neutral-b-500 group-hover:text-primary-600 transition-colors">Followers</p>
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => navigate('/profile/following')}
+                            className="group text-center focus:outline-none hover:text-primary-600 transition-colors cursor-pointer"
+                            aria-label="View all following"
+                        >
+                            <p className="text-lg sm:text-xl md:text-2xl font-bold text-neutral-b-900 mb-0.5 sm:mb-1 group-hover:text-primary-600 transition-colors">64</p>
+                            <p className="text-xs sm:text-sm text-neutral-b-500 group-hover:text-primary-600 transition-colors">Following</p>
+                        </button>
                     </div>
                 </div>
 

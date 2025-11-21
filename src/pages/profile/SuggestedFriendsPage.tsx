@@ -108,7 +108,7 @@ const SuggestedFriendsPage = () => {
   }, []);
 
   return (
-    <div className="max-w-4xl mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
+    <div className="max-w-6xl mx-auto">
       <div className="bg-white rounded-lg sm:rounded-xl shadow-sm p-4 sm:p-6">
         {isLoading ? (
           <div className="space-y-4">

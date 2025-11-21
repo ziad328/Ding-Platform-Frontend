@@ -6,6 +6,9 @@ import NotFoundPage from './pages/notfound/NotFoundPage';
 import ProfilePage from './pages/profile/ProfilePage.tsx'
 import SuggestedFriendsPage from './pages/profile/SuggestedFriendsPage.tsx';
 import SuggestedFollowersPage from './pages/profile/SuggestedFollowersPage.tsx';
+import FriendsPage from './pages/profile/FriendsPage.tsx';
+import FollowersPage from './pages/profile/FollowersPage.tsx';
+import FollowingPage from './pages/profile/FollowingPage.tsx';
 import SignUpPage from './pages/authentication/SignUpPage';
 import SignInPage from './pages/authentication/SingInPage';
 import ForgotPasswordPage from './pages/authentication/ForgotPasswordPage';
@@ -35,6 +38,9 @@ const router = createBrowserRouter(
       <Route path='/profile' element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
       <Route path='/profile/suggested-friends' element={<ProtectedRoute><SuggestedFriendsPage /></ProtectedRoute>} />
       <Route path='/profile/suggested-followers' element={<ProtectedRoute><SuggestedFollowersPage /></ProtectedRoute>} />
+      <Route path='/profile/friends' element={<ProtectedRoute><FriendsPage /></ProtectedRoute>} />
+      <Route path='/profile/followers' element={<ProtectedRoute><FollowersPage /></ProtectedRoute>} />
+      <Route path='/profile/following' element={<ProtectedRoute><FollowingPage /></ProtectedRoute>} />
       <Route path='/auth/signup' element={<SignUpPage />} />
       <Route path='/auth/signin' element={<SignInPage />} />
       <Route path='/auth/email-login' element={<EmailLoginPage />} />
