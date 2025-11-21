@@ -6,8 +6,8 @@ import {
   selectFriendSuggestions,
   selectFriendSuggestionsError,
   selectFriendSuggestionsStatus,
-} from '../../store/slices/suggestions/friend/friendSuggestions';
-import { useGetFriendSuggestionsQuery } from '../../store/slices/suggestions/friend/friendSuggestionsApi';
+} from '../../store/slices/social/suggestions/friend/friendSuggestions';
+import { useGetFriendSuggestionsQuery } from '../../store/slices/social/suggestions/friend/friendSuggestionsApi';
 
 const SuggestedFriends = () => {
   const suggestions = useSelector(selectFriendSuggestions);

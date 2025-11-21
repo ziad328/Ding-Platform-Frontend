@@ -1,9 +1,9 @@
 import { createSlice } from '@reduxjs/toolkit';
-import type { RootState } from '../../../store';
+import type { RootState } from '../../../../store';
 import type { SuggestedPerson } from '../types';
-import { friendSuggestionsApi } from './friendSuggestionsApi';
+import { followSuggestionsApi } from './followSuggestionsApi';
 
-interface FriendSuggestionsState {
+interface FollowSuggestionsState {
   list: SuggestedPerson[];
   count: number;
   status: 'idle' | 'loading' | 'succeeded' | 'failed';
@@ -11,7 +11,7 @@ interface FriendSuggestionsState {
   lastFetchedAt: number | null;
 }
 
-const initialState: FriendSuggestionsState = {
+const initialState: FollowSuggestionsState = {
   list: [],
   count: 0,
   status: 'idle',
@@ -19,11 +19,11 @@ const initialState: FriendSuggestionsState = {
   lastFetchedAt: null,
 };
 
-const friendSuggestionsSlice = createSlice({
-  name: 'friendSuggestions',
+const followSuggestionsSlice = createSlice({
+  name: 'followSuggestions',
   initialState,
   reducers: {
-    clearFriendSuggestions: (state) => {
+    clearFollowSuggestions: (state) => {
       state.list = [];
       state.count = 0;
       state.status = 'idle';
@@ -33,17 +33,17 @@ const friendSuggestionsSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addMatcher(friendSuggestionsApi.endpoints.getFriendSuggestions.matchPending, (state) => {
+      .addMatcher(followSuggestionsApi.endpoints.getFollowSuggestions.matchPending, (state) => {
         state.status = 'loading';
         state.error = null;
       })
-      .addMatcher(friendSuggestionsApi.endpoints.getFriendSuggestions.matchFulfilled, (state, action) => {
+      .addMatcher(followSuggestionsApi.endpoints.getFollowSuggestions.matchFulfilled, (state, action) => {
         state.status = 'succeeded';
         state.list = action.payload.data;
         state.count = action.payload.count;
         state.lastFetchedAt = Date.now();
       })
-      .addMatcher(friendSuggestionsApi.endpoints.getFriendSuggestions.matchRejected, (state, action) => {
+      .addMatcher(followSuggestionsApi.endpoints.getFollowSuggestions.matchRejected, (state, action) => {
         state.status = 'failed';
         let payloadMessage: string | null = null;
         if (typeof action.payload === 'string') {
@@ -52,17 +52,17 @@ const friendSuggestionsSlice = createSlice({
           const payloadObject = action.payload as { data?: { message?: string }; error?: string };
           payloadMessage = payloadObject.data?.message ?? payloadObject.error ?? null;
         }
-        state.error = payloadMessage || action.error?.message || 'Unable to load friend suggestions';
+        state.error = payloadMessage || action.error?.message || 'Unable to load follow suggestions';
       });
   },
 });
 
-export const { clearFriendSuggestions } = friendSuggestionsSlice.actions;
+export const { clearFollowSuggestions } = followSuggestionsSlice.actions;
 
-export const selectFriendSuggestions = (state: RootState) => state.friendSuggestions.list;
-export const selectFriendSuggestionsCount = (state: RootState) => state.friendSuggestions.count;
-export const selectFriendSuggestionsStatus = (state: RootState) => state.friendSuggestions.status;
-export const selectFriendSuggestionsError = (state: RootState) => state.friendSuggestions.error;
+export const selectFollowSuggestions = (state: RootState) => state.followSuggestions.list;
+export const selectFollowSuggestionsCount = (state: RootState) => state.followSuggestions.count;
+export const selectFollowSuggestionsStatus = (state: RootState) => state.followSuggestions.status;
+export const selectFollowSuggestionsError = (state: RootState) => state.followSuggestions.error;
 
-export default friendSuggestionsSlice.reducer;
+export default followSuggestionsSlice.reducer;
 

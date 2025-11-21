@@ -42,8 +42,16 @@ export interface Friend {
   name: string;
 }
 
+export interface FriendsQueryParams {
+  limit?: number;
+  offset?: number;
+}
+
 export interface FriendsPayload {
   data: Friend[];
   count: number;
+  hasMore?: boolean;
+  total?: number;
+  nextOffset?: number | null;
 }
 

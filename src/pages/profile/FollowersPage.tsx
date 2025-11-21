@@ -13,8 +13,8 @@ import {
   selectFollowersNextOffset,
   selectFollowersIsFetchingMore,
   clearFollowers,
-} from '../../store/slices/follow/followers/followers';
-import { useGetFollowersQuery, useLazyGetFollowersQuery } from '../../store/slices/follow/followers/followersApi';
+} from '../../store/slices/social/followers/followers';
+import { useGetFollowersQuery, useLazyGetFollowersQuery } from '../../store/slices/social/followers/followersApi';
 
 const followerRoles = ['Product Engineer', 'CX Strategist', 'Marketing Lead', 'Solutions Architect', 'Design Manager', 'Community Lead'];
 const followerCompanies = ['Northwind Labs', 'Helio Systems', 'Vector Health', 'Kinetic Studio', 'Nimbus AI', 'Lunar Capital'];

@@ -1,4 +1,4 @@
-import { apiSlice } from '../../../ApiSlice';
+import { apiSlice } from '../../../../ApiSlice';
 import type { SuggestionsPayload } from '../types';
 
 interface SuggestionsResponse {
@@ -13,25 +13,25 @@ const defaultSuggestionsPayload: SuggestionsPayload = {
   count: 0,
 };
 
-export const friendSuggestionsApi = apiSlice.injectEndpoints({
+export const followSuggestionsApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
-    getFriendSuggestions: builder.query<SuggestionsPayload, void>({
+    getFollowSuggestions: builder.query<SuggestionsPayload, void>({
       query: () => ({
-        url: 'social/recommendations/friends',
+        url: 'social/recommendations/follow',
         method: 'GET',
       }),
       transformResponse: (response: SuggestionsResponse) => response?.data ?? defaultSuggestionsPayload,
       providesTags: (result) =>
         result
           ? [
-              ...result.data.map(({ userId }) => ({ type: 'FriendSuggestions' as const, id: userId })),
-              { type: 'FriendSuggestions' as const, id: 'LIST' },
+              ...result.data.map(({ userId }) => ({ type: 'FollowSuggestions' as const, id: userId })),
+              { type: 'FollowSuggestions' as const, id: 'LIST' },
             ]
-          : [{ type: 'FriendSuggestions' as const, id: 'LIST' }],
+          : [{ type: 'FollowSuggestions' as const, id: 'LIST' }],
     }),
   }),
   overrideExisting: false,
 });
 
-export const { useGetFriendSuggestionsQuery, useLazyGetFriendSuggestionsQuery } = friendSuggestionsApi;
+export const { useGetFollowSuggestionsQuery, useLazyGetFollowSuggestionsQuery } = followSuggestionsApi;
 

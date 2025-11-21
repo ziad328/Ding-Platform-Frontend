@@ -13,8 +13,8 @@ import {
   selectFollowingNextOffset,
   selectFollowingIsFetchingMore,
   clearFollowing,
-} from '../../store/slices/follow/following/following';
-import { useDeleteFollowingMutation, useGetFollowingQuery, useLazyGetFollowingQuery } from '../../store/slices/follow/following/followingApi';
+} from '../../store/slices/social/following/following';
+import { useDeleteFollowingMutation, useGetFollowingQuery, useLazyGetFollowingQuery } from '../../store/slices/social/following/followingApi';
 const followingRoles = ['Head of Product', 'Design Lead', 'ML Engineer', 'Revenue Ops', 'Principal PM', 'Data Architect'];
 const followingCompanies = ['Axiom Labs', 'Vertex Studio', 'SignalPulse', 'Moonshot Robotics', 'Tidal Ventures', 'Clearline'];
 const followingLocations = ['Seattle, USA', 'Paris, France', 'Cairo, Egypt', 'São Paulo, Brazil', 'Melbourne, Australia', 'Warsaw, Poland'];

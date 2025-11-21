@@ -6,8 +6,8 @@ import {
   selectFollowSuggestions,
   selectFollowSuggestionsError,
   selectFollowSuggestionsStatus,
-} from '../../store/slices/suggestions/follow/followSuggestions';
-import { useGetFollowSuggestionsQuery } from '../../store/slices/suggestions/follow/followSuggestionsApi';
+} from '../../store/slices/social/suggestions/follow/followSuggestions';
+import { useGetFollowSuggestionsQuery } from '../../store/slices/social/suggestions/follow/followSuggestionsApi';
 
 const SuggestedFollowers = () => {
   const suggestions = useSelector(selectFollowSuggestions);
