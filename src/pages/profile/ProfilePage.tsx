@@ -143,8 +143,8 @@ const ProfilePage = () => {
             </>
           ) : (
             <>
-              <SuggestedFriends />
               <MyFriends />
+              <SuggestedFriends />
               <SuggestedFollowers />
               <Footer />
             </>
