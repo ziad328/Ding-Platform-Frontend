@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { User, Edit2, LayoutGrid, Bookmark, Settings } from 'lucide-react';
-
+import { selectCurrentUser } from '../../store/slices/auth/auth';
+import { useSelector } from 'react-redux';
 interface ProfileHeaderProps {
     activeTab: string;
     setActiveTab: (tab: string) => void;
@@ -9,7 +10,8 @@ interface ProfileHeaderProps {
 const ProfileHeader: React.FC<ProfileHeaderProps> = ({ activeTab, setActiveTab }) => {
     const [isHoveringCover, setIsHoveringCover] = useState(false);
     const [isHoveringAvatar, setIsHoveringAvatar] = useState(false);
-
+    const user = useSelector(selectCurrentUser);
+    console.log(user);
     const tabs = [
         { name: 'My Posts', icon: LayoutGrid },
         { name: 'Saved Posts', icon: Bookmark },
@@ -44,7 +46,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ activeTab, setActiveTab }
                                 onMouseEnter={() => setIsHoveringAvatar(true)}
                                 onMouseLeave={() => setIsHoveringAvatar(false)}
                             >
-                                <User className="w-7 h-7 sm:w-10 sm:h-10 md:w-12 md:h-12 text-neutral-b-400" />
+                                {user?.image ? <img src={user?.image} alt="profile" className="w-full h-full rounded-full" /> : <User className="w-7 h-7 sm:w-10 sm:h-10 md:w-12 md:h-12 text-neutral-b-400" />}
                                 <div className={`absolute inset-0 bg-neutral-b-600 rounded-full flex items-center justify-center transition-all duration-300 ${isHoveringAvatar ? 'opacity-60' : 'opacity-0'
                                     }`}>
                                     <Edit2 className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
@@ -54,7 +56,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ activeTab, setActiveTab }
 
                         {/* User Details */}
                         <div>
-                            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-neutral-b-900 mb-0.5 sm:mb-1">Robert Fox</h1>
+                            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-neutral-b-900 mb-0.5 sm:mb-1">{user?.name}</h1>
                             <p className="text-xs sm:text-sm text-neutral-b-500 mb-1 sm:mb-2">@robert</p>
                             <p className="text-xs sm:text-sm text-neutral-b-600">Software Engineer</p>
                         </div>

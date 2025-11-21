@@ -1,4 +1,5 @@
 import { User, Plus } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const SuggestedFriends = () => {
     const friends = [
@@ -9,7 +10,7 @@ const SuggestedFriends = () => {
     ];
 
     return (
-        <div className="bg-white rounded-lg sm:rounded-xl shadow-sm p-3 sm:p-4 md:p-5">
+    <div className="bg-white rounded-lg sm:rounded-xl shadow-sm p-3 sm:p-4 md:p-5 space-y-3">
             <h3 className="text-sm sm:text-base font-semibold text-neutral-b-900 mb-3 sm:mb-4">Suggested Friends</h3>
             <div className="space-y-2.5 sm:space-y-3">
                 {friends.map((friend, index) => (
@@ -29,6 +30,14 @@ const SuggestedFriends = () => {
                     </div>
                 ))}
             </div>
+        <div className="pt-2 border-t border-neutral-w-300">
+            <Link
+                to="/profile/suggested-friends"
+                className="text-xs sm:text-sm font-medium text-primary-600 hover:text-primary-700 transition-colors"
+            >
+                View all suggested friends
+            </Link>
+        </div>
         </div>
     );
 };

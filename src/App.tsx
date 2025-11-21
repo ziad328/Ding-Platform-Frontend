@@ -3,7 +3,8 @@ import { createBrowserRouter, createRoutesFromElements, Route, RouterProvider, N
 import HomePage from './pages/home/HomePage'
 import MainLayout from './layout/MainLayout';
 import NotFoundPage from './pages/notfound/NotFoundPage';
-import ProfilePage from './pages/profile/ProfilePage'
+import ProfilePage from './pages/profile/ProfilePage.tsx'
+import SuggestedFriendsPage from './pages/profile/SuggestedFriendsPage.tsx';
 import SignUpPage from './pages/authentication/SignUpPage';
 import SignInPage from './pages/authentication/SingInPage';
 import ForgotPasswordPage from './pages/authentication/ForgotPasswordPage';
@@ -31,6 +32,7 @@ const router = createBrowserRouter(
       <Route index element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
       <Route path='*' element={<NotFoundPage />} />
       <Route path='/profile' element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+      <Route path='/profile/suggested-friends' element={<ProtectedRoute><SuggestedFriendsPage /></ProtectedRoute>} />
       <Route path='/auth/signup' element={<SignUpPage />} />
       <Route path='/auth/signin' element={<SignInPage />} />
       <Route path='/auth/email-login' element={<EmailLoginPage />} />

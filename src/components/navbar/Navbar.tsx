@@ -1,4 +1,4 @@
-import { Search, User, LogOut, X } from 'lucide-react';
+import { Search, User, LogOut, X, Loader2 } from 'lucide-react';
 import { Logo } from '../atoms/Logo';
 import { useSelector } from 'react-redux';
 import { selectCurrentUser } from '../../store/slices/auth/auth';
@@ -8,7 +8,7 @@ import { useState, useEffect, useRef } from 'react';
 
 function Navbar() {
   const user = useSelector(selectCurrentUser);
-  const [sendLogOut] = useSendLogOutMutation();
+  const [sendLogOut, { isLoading: isLoggingOut }] = useSendLogOutMutation();
   const navigate = useNavigate();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchValue, setSearchValue] = useState('');
@@ -111,10 +111,20 @@ function Navbar() {
               {/* Logout */}
               <button
                 onClick={handleLogout}
-                className="p-1 hover:bg-semantic-r-700/10 rounded-lg transition-all duration-200 touch-manipulation sm:p-1.5 md:p-2 hover:scale-110 active:scale-95"
+                disabled={isLoggingOut}
+                className={`p-1 rounded-lg transition-all duration-200 touch-manipulation sm:p-1.5 md:p-2 ${
+                  isLoggingOut
+                    ? 'bg-semantic-r-700/10 cursor-not-allowed opacity-80'
+                    : 'hover:bg-semantic-r-700/10 hover:scale-110 active:scale-95'
+                }`}
                 title="Logout"
+                aria-busy={isLoggingOut}
               >
-                <LogOut className="w-4 h-4 text-semantic-r-800 sm:w-5 sm:h-5 transition-transform hover:rotate-12" />
+                {isLoggingOut ? (
+                  <Loader2 className="w-4 h-4 text-semantic-r-800 sm:w-5 sm:h-5 animate-spin" />
+                ) : (
+                  <LogOut className="w-4 h-4 text-semantic-r-800 sm:w-5 sm:h-5 transition-transform hover:rotate-12" />
+                )}
               </button>
             </div>
           </>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { MessageCircle, Bookmark } from 'lucide-react';
 import ProfileHeader from '../../components/profile/ProfileHeader';
 import Post from '../../components/profile/Post';
@@ -6,9 +6,23 @@ import EmptyState from '../../components/profile/EmptyState';
 import Settings from '../../components/profile/Settings';
 import SuggestedFriends from '../../components/profile/SuggestedFriends';
 import Footer from '../../components/profile/Footer';
+import {
+  ProfileHeaderSkeleton,
+  PostSkeleton,
+  SuggestedFriendsSkeleton,
+  FooterSkeleton,
+  SettingsSkeleton,
+} from '../../components/profile/ProfileSkeletons';
 
 const ProfilePage = () => {
   const [activeTab, setActiveTab] = useState('My Posts');
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'auto' });
+    const timer = setTimeout(() => setIsLoading(false), 1200);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Mock data
   const myPosts = [
@@ -61,7 +75,11 @@ const ProfilePage = () => {
     <div className="max-w-7xl mx-auto px-2 sm:px-4 mb-6 sm:mb-8">
       {/* Profile Header with Tabs - Full Width */}
       <div className="mb-3 sm:mb-4">
-        <ProfileHeader activeTab={activeTab} setActiveTab={setActiveTab} />
+        {isLoading ? (
+          <ProfileHeaderSkeleton />
+        ) : (
+          <ProfileHeader activeTab={activeTab} setActiveTab={setActiveTab} />
+        )}
       </div>
 
       {/* Two Column Layout */}
@@ -72,7 +90,11 @@ const ProfilePage = () => {
           <div className="space-y-3 sm:space-y-4">
             {activeTab === 'My Posts' && (
               <>
-                {myPosts.length > 0 ? (
+                {isLoading ? (
+                  [true, false].map((withImage, index) => (
+                    <PostSkeleton key={`my-post-skeleton-${index}`} withImage={withImage} />
+                  ))
+                ) : myPosts.length > 0 ? (
                   myPosts.map((post) => <Post key={post.id} post={post} />)
                 ) : (
                   <EmptyState
@@ -86,7 +108,11 @@ const ProfilePage = () => {
 
             {activeTab === 'Saved Posts' && (
               <>
-                {savedPosts.length > 0 ? (
+                {isLoading ? (
+                  [false, true].map((withImage, index) => (
+                    <PostSkeleton key={`saved-post-skeleton-${index}`} withImage={withImage} />
+                  ))
+                ) : savedPosts.length > 0 ? (
                   savedPosts.map((post) => <Post key={post.id} post={post} />)
                 ) : (
                   <EmptyState
@@ -98,14 +124,23 @@ const ProfilePage = () => {
               </>
             )}
 
-            {activeTab === 'Settings' && <Settings />}
+            {activeTab === 'Settings' && (isLoading ? <SettingsSkeleton /> : <Settings />)}
           </div>
         </div>
 
         {/* Sidebar */}
         <div className="lg:col-span-4 space-y-3 sm:space-y-4">
-          <SuggestedFriends />
-          <Footer />
+          {isLoading ? (
+            <>
+              <SuggestedFriendsSkeleton />
+              <FooterSkeleton />
+            </>
+          ) : (
+            <>
+              <SuggestedFriends />
+              <Footer />
+            </>
+          )}
         </div>
       </div>
     </div>
