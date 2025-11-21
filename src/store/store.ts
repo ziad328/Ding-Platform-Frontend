@@ -5,6 +5,8 @@ import sessionReducer from './slices/session/session';
 import followersReducer from './slices/follow/followers/followers';
 import followingReducer from './slices/follow/following/following';
 import friendsReducer from './slices/follow/friends/friends';
+import friendSuggestionsReducer from './slices/suggestions/friend/friendSuggestions';
+import followSuggestionsReducer from './slices/suggestions/follow/followSuggestions';
 import { apiSlice } from './ApiSlice';
 import storage from 'redux-persist/lib/storage';
 import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from 'redux-persist';
@@ -26,6 +28,8 @@ export const store = configureStore({
     followers: followersReducer,
     following: followingReducer,
     friends: friendsReducer,
+    friendSuggestions: friendSuggestionsReducer,
+    followSuggestions: followSuggestionsReducer,
     [apiSlice.reducerPath]: apiSlice.reducer,
   },
   middleware: (getDefaultMiddleware) =>
