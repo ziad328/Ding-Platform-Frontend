@@ -25,6 +25,10 @@ interface ProfileHoverPreviewProps {
   secondaryActionLabel?: string;
   primaryActionIcon?: ReactNode;
   secondaryActionIcon?: ReactNode;
+  onPrimaryAction?: () => void;
+  onSecondaryAction?: () => void;
+  primaryActionDisabled?: boolean;
+  secondaryActionDisabled?: boolean;
 }
 
 interface PlacementState {
@@ -49,6 +53,10 @@ const ProfileHoverPreview = ({
   secondaryActionLabel = 'Message',
   primaryActionIcon = <UserPlus className="w-4 h-4" />,
   secondaryActionIcon = <MessageCircle className="w-4 h-4" />,
+  onPrimaryAction,
+  onSecondaryAction,
+  primaryActionDisabled = false,
+  secondaryActionDisabled = false,
 }: ProfileHoverPreviewProps) => {
   const [placement, setPlacement] = useState<PlacementState | null>(null);
 
@@ -142,6 +150,8 @@ const ProfileHoverPreview = ({
         <div className="mt-4 flex flex-wrap gap-2">
           <button
             type="button"
+            onClick={onSecondaryAction}
+            disabled={secondaryActionDisabled}
             className="flex-1 min-w-[120px] inline-flex items-center justify-center gap-1 rounded-xl border border-neutral-w-300 px-3 py-1.5 text-sm font-medium text-neutral-b-800 hover:bg-neutral-w-200 transition-colors"
           >
             {secondaryActionIcon}
@@ -149,6 +159,8 @@ const ProfileHoverPreview = ({
           </button>
           <button
             type="button"
+            onClick={onPrimaryAction}
+            disabled={primaryActionDisabled}
             className="flex-1 min-w-[120px] inline-flex items-center justify-center gap-1 rounded-xl bg-primary-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-primary-700 transition-colors"
           >
             {primaryActionIcon}

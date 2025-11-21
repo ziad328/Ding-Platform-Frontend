@@ -29,9 +29,19 @@ export const followingApi = apiSlice.injectEndpoints({
             ]
           : [{ type: 'Following' as const, id: 'LIST' }],
     }),
+    deleteFollowing: builder.mutation<void, string>({
+      query: (userId: string) => ({
+        url: `social/follow/${userId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: (_result, _error, userId) => [
+        { type: 'Following', id: userId },
+        { type: 'Following', id: 'LIST' },
+      ],
+    }),
   }),
   overrideExisting: false,
 });
 
-export const { useGetFollowingQuery, useLazyGetFollowingQuery } = followingApi;
+export const { useGetFollowingQuery, useLazyGetFollowingQuery, useDeleteFollowingMutation } = followingApi;
 

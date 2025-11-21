@@ -10,10 +10,7 @@ import {
   selectFollowingError,
   selectFollowingStatus,
 } from '../../store/slices/follow/following/following';
-import { useGetFollowingQuery } from '../../store/slices/follow/following/followingApi';
-
-const followingFirstNames = ['Lena', 'Marco', 'Salma', 'Elliot', 'Vivian', 'Hugo', 'Camila', 'Jonah', 'Yara', 'Declan', 'Norah', 'Farid'];
-const followingLastNames = ['Park', 'Costa', 'Sharif', 'Ng', 'Rossi', 'Borges', 'Nasser', 'Gibson', 'Holt', 'Ochoa', 'Tanaka', 'Baker'];
+import { useDeleteFollowingMutation, useGetFollowingQuery } from '../../store/slices/follow/following/followingApi';
 const followingRoles = ['Head of Product', 'Design Lead', 'ML Engineer', 'Revenue Ops', 'Principal PM', 'Data Architect'];
 const followingCompanies = ['Axiom Labs', 'Vertex Studio', 'SignalPulse', 'Moonshot Robotics', 'Tidal Ventures', 'Clearline'];
 const followingLocations = ['Seattle, USA', 'Paris, France', 'Cairo, Egypt', 'São Paulo, Brazil', 'Melbourne, Australia', 'Warsaw, Poland'];
@@ -34,6 +31,7 @@ type FollowingProfile = ProfilePreviewFriend & {
 
 const FollowingPage = () => {
   const [previewTarget, setPreviewTarget] = useState<{ following: FollowingProfile; rect: DOMRect } | null>(null);
+  const [pendingUnfollowId, setPendingUnfollowId] = useState<string | null>(null);
   const [isPreviewVisible, setIsPreviewVisible] = useState(false);
   const previewTimeoutRef = useRef<number | null>(null);
   const navigate = useNavigate();
@@ -47,6 +45,7 @@ const FollowingPage = () => {
     error: queryError,
     refetch,
   } = useGetFollowingQuery();
+  const [deleteFollowing] = useDeleteFollowingMutation();
 
   const isLoading = isQueryLoading || followingStatus === 'loading' || followingStatus === 'idle';
   const isFailed = isQueryError || followingStatus === 'failed';
@@ -106,8 +105,21 @@ const FollowingPage = () => {
       clearPreviewTimeout();
       setPreviewTarget(null);
       setIsPreviewVisible(false);
+      setPendingUnfollowId(null);
     };
   }, []);
+
+  const handleUnfollow = async (userId: string) => {
+    if (pendingUnfollowId) return;
+    setPendingUnfollowId(userId);
+    try {
+      await deleteFollowing(userId).unwrap();
+    } catch (error) {
+      console.error('Failed to unfollow user', error);
+    } finally {
+      setPendingUnfollowId(null);
+    }
+  };
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -179,10 +191,12 @@ const FollowingPage = () => {
                         <div className="text-xs text-neutral-b-500 hidden sm:block">{profile.focus}</div>
                         <button
                           type="button"
+                          onClick={() => handleUnfollow(profile.id)}
+                          disabled={pendingUnfollowId === profile.id}
                           className="inline-flex items-center gap-1 px-3 py-1.5 text-xs sm:text-sm font-medium text-neutral-b-700 border border-neutral-w-300 rounded-lg hover:bg-neutral-w-200 transition-colors"
                         >
                           <UserMinus className="w-4 h-4" />
-                          Unfollow
+                          {pendingUnfollowId === profile.id ? 'Unfollowing...' : 'Unfollow'}
                         </button>
                       </div>
                     </div>
@@ -202,6 +216,12 @@ const FollowingPage = () => {
         primaryActionLabel="Unfollow"
         primaryActionIcon={<UserMinus className="w-4 h-4" />}
         secondaryActionLabel="Message"
+        onPrimaryAction={() => {
+          if (previewTarget?.following) {
+            handleUnfollow(previewTarget.following.id);
+          }
+        }}
+        primaryActionDisabled={pendingUnfollowId === previewTarget?.following?.id}
       />
     </div>
   );
