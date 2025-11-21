@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { ArrowLeft, UserMinus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import ProfileHoverPreview from '../../components/profile/ProfileHoverPreview';
 import type { ProfilePreviewFriend } from '../../components/profile/ProfileHoverPreview';
 import {
@@ -9,8 +9,12 @@ import {
   selectFollowingCount,
   selectFollowingError,
   selectFollowingStatus,
+  selectFollowingHasMore,
+  selectFollowingNextOffset,
+  selectFollowingIsFetchingMore,
+  clearFollowing,
 } from '../../store/slices/follow/following/following';
-import { useDeleteFollowingMutation, useGetFollowingQuery } from '../../store/slices/follow/following/followingApi';
+import { useDeleteFollowingMutation, useGetFollowingQuery, useLazyGetFollowingQuery } from '../../store/slices/follow/following/followingApi';
 const followingRoles = ['Head of Product', 'Design Lead', 'ML Engineer', 'Revenue Ops', 'Principal PM', 'Data Architect'];
 const followingCompanies = ['Axiom Labs', 'Vertex Studio', 'SignalPulse', 'Moonshot Robotics', 'Tidal Ventures', 'Clearline'];
 const followingLocations = ['Seattle, USA', 'Paris, France', 'Cairo, Egypt', 'São Paulo, Brazil', 'Melbourne, Australia', 'Warsaw, Poland'];
@@ -34,21 +38,49 @@ const FollowingPage = () => {
   const [pendingUnfollowId, setPendingUnfollowId] = useState<string | null>(null);
   const [isPreviewVisible, setIsPreviewVisible] = useState(false);
   const previewTimeoutRef = useRef<number | null>(null);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const previousFollowingLengthRef = useRef<number>(0);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+
   const following = useSelector(selectFollowing);
   const followingStatus = useSelector(selectFollowingStatus);
   const followingError = useSelector(selectFollowingError);
   const followingCount = useSelector(selectFollowingCount);
+  const hasMore = useSelector(selectFollowingHasMore);
+  const nextOffset = useSelector(selectFollowingNextOffset);
+  const isFetchingMore = useSelector(selectFollowingIsFetchingMore);
+
+  // Initial load with limit=10, offset=0
   const {
     isLoading: isQueryLoading,
     isError: isQueryError,
     error: queryError,
     refetch,
-  } = useGetFollowingQuery();
+  } = useGetFollowingQuery({ limit: 10, offset: 0 });
+
+  // Lazy query for fetching additional pages
+  const [fetchNextPageQuery, { isFetching: isFetchingNextPage }] = useLazyGetFollowingQuery();
+
   const [deleteFollowing] = useDeleteFollowingMutation();
 
-  const isLoading = isQueryLoading || followingStatus === 'loading' || followingStatus === 'idle';
+  // Only show full loading skeleton on initial load (when there's no data)
+  // During pagination, we show the bottom skeleton loader instead
+  const isInitialLoading = (isQueryLoading || followingStatus === 'loading' || followingStatus === 'idle') && following.length === 0;
   const isFailed = isQueryError || followingStatus === 'failed';
+
+  // Fetch next page function
+  const fetchNextPage = useCallback(() => {
+    if (!hasMore || isFetchingMore || isFetchingNextPage || isInitialLoading) return;
+    fetchNextPageQuery({ limit: 10, offset: nextOffset });
+  }, [hasMore, isFetchingMore, isFetchingNextPage, isInitialLoading, nextOffset, fetchNextPageQuery]);
+
+  // Retry handler - resets pagination and refetches from beginning
+  const handleRetry = useCallback(() => {
+    dispatch(clearFollowing());
+    refetch();
+  }, [dispatch, refetch]);
 
   const enrichedFollowing: FollowingProfile[] = useMemo(
     () =>
@@ -96,9 +128,62 @@ const FollowingPage = () => {
     schedulePreviewClose();
   };
 
+  // IntersectionObserver for infinite scroll
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'auto' });
-  }, []);
+    if (!sentinelRef.current || !scrollContainerRef.current || !hasMore || isFetchingMore || isFetchingNextPage || isInitialLoading) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (entry.isIntersecting && !isFetchingMore && !isFetchingNextPage) {
+          // Small delay to mimic "take some time"
+          setTimeout(() => {
+            fetchNextPage();
+          }, 300);
+        }
+      },
+      {
+        root: scrollContainerRef.current, // Use scrollable container as root
+        rootMargin: '100px',
+        threshold: 0.1,
+      }
+    );
+
+    observer.observe(sentinelRef.current);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [hasMore, isFetchingMore, isFetchingNextPage, isInitialLoading, fetchNextPage]);
+
+  // Only scroll to top on initial mount when there's no data
+  useEffect(() => {
+    if (following.length === 0) {
+      window.scrollTo({ top: 0, behavior: 'auto' });
+    }
+  }, []); // Only run on mount
+
+  // Track following length to detect when new items are added via pagination
+  useEffect(() => {
+    previousFollowingLengthRef.current = enrichedFollowing.length;
+  }, [enrichedFollowing.length]);
+
+  // Auto-scroll to show skeleton when it appears during pagination
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    // Only auto-scroll if we're fetching more and have existing following
+    if ((isFetchingMore || isFetchingNextPage) && enrichedFollowing.length > 0) {
+      // Use requestAnimationFrame to ensure DOM is updated
+      requestAnimationFrame(() => {
+        if (container) {
+          // Scroll to bottom to show the skeleton
+          container.scrollTop = container.scrollHeight;
+        }
+      });
+    }
+  }, [isFetchingMore, isFetchingNextPage, enrichedFollowing.length]);
 
   useEffect(() => {
     return () => {
@@ -122,9 +207,9 @@ const FollowingPage = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="w-full mx-auto">
       <div className="bg-white rounded-lg sm:rounded-xl shadow-sm p-4 sm:p-6">
-        {isLoading ? (
+        {isInitialLoading ? (
           <div className="space-y-3 animate-pulse">
             <div className="h-5 w-44 rounded bg-neutral-w-300" />
             <div className="h-5 w-36 rounded bg-neutral-w-300" />
@@ -155,7 +240,7 @@ const FollowingPage = () => {
                 </p>
                 <button
                   type="button"
-                  onClick={() => refetch()}
+                  onClick={handleRetry}
                   className="mt-2 inline-flex items-center rounded-md bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 transition-colors"
                 >
                   Retry
@@ -167,7 +252,10 @@ const FollowingPage = () => {
                 <p className="text-sm text-neutral-b-600">You’re not following anyone yet. Discover voices to follow and they’ll appear here.</p>
               </div>
             ) : (
-              <div className="max-h-[65vh] overflow-y-auto hide-scrollbar pr-1 sm:pr-2 space-y-3 sm:space-y-4 divide-y divide-neutral-w-200">
+              <div 
+                ref={scrollContainerRef}
+                className="max-h-[60vh] overflow-y-auto hide-scrollbar pr-1 sm:pr-2 space-y-3 sm:space-y-4 divide-y divide-neutral-w-200"
+              >
                 {enrichedFollowing.map((profile) => (
                   <div key={profile.id} className="pt-3 first:pt-0">
                     <div
@@ -202,6 +290,31 @@ const FollowingPage = () => {
                     </div>
                   </div>
                 ))}
+                {/* Loading skeleton - shows when fetching more following */}
+                {(isFetchingMore || isFetchingNextPage) && enrichedFollowing.length > 0 && (
+                  <div className="pt-3 animate-pulse">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex items-start gap-3 sm:gap-4">
+                        <div className="w-12 h-12 rounded-full bg-neutral-w-300 shrink-0 sm:w-14 sm:h-14" />
+                        <div className="flex-1 space-y-2">
+                          <div className="h-4 w-32 rounded bg-neutral-w-300" />
+                          <div className="h-3 w-24 rounded bg-neutral-w-300" />
+                          <div className="h-3 w-40 rounded bg-neutral-w-300" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {/* Sentinel div for infinite scroll */}
+                {hasMore && !isFetchingMore && !isFetchingNextPage && (
+                  <div ref={sentinelRef} className="h-4" />
+                )}
+                {/* End of list message */}
+                {!hasMore && enrichedFollowing.length > 0 && !isFetchingMore && (
+                  <div className="pt-4 text-center">
+                    <p className="text-xs sm:text-sm text-neutral-b-500">All caught up! You've seen all the people you're following.</p>
+                  </div>
+                )}
               </div>
             )}
           </>

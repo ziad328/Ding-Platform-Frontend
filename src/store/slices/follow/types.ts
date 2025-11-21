@@ -23,9 +23,17 @@ export interface Following {
   name: string;
 }
 
+export interface FollowingQueryParams {
+  limit?: number;
+  offset?: number;
+}
+
 export interface FollowingPayload {
   data: Following[];
   count: number;
+  hasMore?: boolean;
+  total?: number;
+  nextOffset?: number | null;
 }
 
 export interface Friend {
