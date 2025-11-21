@@ -39,7 +39,7 @@ function Sidebar() {
       </nav>
 
       {/* Desktop Sidebar Card */}
-      <aside className="hidden md:block p-4 sticky top-20">
+      <aside className="hidden md:block p-4 overflow-y-auto">
         <div className="w-64 bg-white rounded-xl shadow-lg overflow-hidden">
           {/* Header Background */}
           <div className="h-20 bg-neutral-w-300" />

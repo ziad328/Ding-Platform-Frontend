@@ -11,13 +11,13 @@ function MainLayout() {
   const isAuthenticated = token && user;
 
   return (
-    <div className="min-h-screen bg-neutral-w-200">
+    <div className="h-screen bg-neutral-w-200 overflow-hidden flex flex-col">
       {isAuthenticated && <Navbar />}
 
-      <div className="flex w-full">
+      <div className="flex flex-1 overflow-hidden w-full">
         {isAuthenticated && <Sidebar />}
 
-        <main className={`flex-1 w-full min-h-screen ${isAuthenticated ? 'pb-14 md:pb-0 px-3 py-4 sm:px-4 sm:py-5 md:px-6 md:py-6' : ''}`}>
+        <main className={`flex-1 overflow-y-auto ${isAuthenticated ? 'pb-14 md:pb-0 px-3 py-4 sm:px-4 sm:py-5 md:px-6 md:py-6' : ''}`}>
           <Outlet />
         </main>
       </div>

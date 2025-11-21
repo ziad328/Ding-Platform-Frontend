@@ -4,9 +4,17 @@ export interface Follower {
   name: string;
 }
 
+export interface FollowersQueryParams {
+  limit?: number;
+  offset?: number;
+}
+
 export interface FollowersPayload {
   data: Follower[];
   count: number;
+  hasMore?: boolean;
+  total?: number;
+  nextOffset?: number | null;
 }
 
 export interface Following {
