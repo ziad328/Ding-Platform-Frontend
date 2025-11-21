@@ -11,10 +11,6 @@ import Footer from '../../components/profile/Footer';
 import {
   ProfileHeaderSkeleton,
   PostSkeleton,
-  SuggestedFriendsSkeleton,
-  MyFriendsSkeleton,
-  SuggestedFollowersSkeleton,
-  FooterSkeleton,
   SettingsSkeleton,
 } from '../../components/profile/ProfileSkeletons';
 
@@ -134,21 +130,10 @@ const ProfilePage = () => {
 
         {/* Sidebar */}
         <div className="lg:col-span-4 space-y-3 sm:space-y-4">
-          {isLoading ? (
-            <>
-              <SuggestedFriendsSkeleton />
-              <MyFriendsSkeleton />
-              <SuggestedFollowersSkeleton />
-              <FooterSkeleton />
-            </>
-          ) : (
-            <>
-              <MyFriends />
-              <SuggestedFriends />
-              <SuggestedFollowers />
-              <Footer />
-            </>
-          )}
+          <MyFriends />
+          <SuggestedFriends />
+          <SuggestedFollowers />
+          <Footer />
         </div>
       </div>
     </div>

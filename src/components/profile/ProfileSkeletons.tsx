@@ -65,7 +65,7 @@ export const PostSkeleton: React.FC<{ withImage?: boolean }> = ({ withImage }) =
 );
 
 export const SuggestedFriendsSkeleton: React.FC = () => (
-    <div className="bg-white rounded-lg sm:rounded-xl shadow-sm p-3 sm:p-4 md:p-5">
+    <div className="bg-white rounded-lg sm:rounded-xl shadow-sm p-3 sm:p-4 md:p-5 overflow-hidden">
         <div className={`h-4 w-40 rounded mb-4 ${shimmer}`} />
         <div className="space-y-3">
             {[1, 2, 3, 4].map((friend) => (
@@ -105,7 +105,7 @@ export const MyFriendsSkeleton: React.FC = () => (
 );
 
 export const SuggestedFollowersSkeleton: React.FC = () => (
-    <div className="bg-white rounded-lg sm:rounded-xl shadow-sm p-3 sm:p-4 md:p-5">
+    <div className="bg-white rounded-lg sm:rounded-xl shadow-sm p-3 sm:p-4 md:p-5 overflow-hidden">
         <div className={`h-4 w-48 rounded mb-4 ${shimmer}`} />
         <div className="space-y-3">
             {[1, 2, 3, 4].map((follower) => (
