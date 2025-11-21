@@ -9,3 +9,14 @@ export interface FollowersPayload {
   count: number;
 }
 
+export interface Following {
+  userId: string;
+  username: string;
+  name: string;
+}
+
+export interface FollowingPayload {
+  data: Following[];
+  count: number;
+}
+
