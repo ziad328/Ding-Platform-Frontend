@@ -1,26 +1,57 @@
 import { apiSlice } from '../../../../ApiSlice';
-import type { SuggestionsPayload } from '../types';
+import type { SuggestionsPayload, SuggestionsQueryParams } from '../types';
 
 interface SuggestionsResponse {
   code: number;
   success: boolean;
   message: string;
-  data: SuggestionsPayload;
+  data: {
+    data: SuggestionsPayload['data'];
+    meta: {
+      limit: number;
+      offset: number;
+      total: number;
+      hasMore: boolean;
+      nextOffset: number | null;
+    };
+  };
 }
-
-const defaultSuggestionsPayload: SuggestionsPayload = {
-  data: [],
-  count: 0,
-};
 
 export const followSuggestionsApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
-    getFollowSuggestions: builder.query<SuggestionsPayload, void>({
-      query: () => ({
-        url: 'social/recommendations/follow',
-        method: 'GET',
-      }),
-      transformResponse: (response: SuggestionsResponse) => response?.data ?? defaultSuggestionsPayload,
+    getFollowSuggestions: builder.query<SuggestionsPayload, SuggestionsQueryParams | void>({
+      query: (params) => {
+        const queryParams = new URLSearchParams();
+        if (params?.limit) queryParams.append('limit', params.limit.toString());
+        if (params?.offset) queryParams.append('offset', params.offset.toString());
+        const queryString = queryParams.toString();
+        return {
+          url: `social/recommendations/follow${queryString ? `?${queryString}` : ''}`,
+          method: 'GET',
+        };
+      },
+      transformResponse: (response: SuggestionsResponse) => {
+        const payload = response?.data ?? { data: [], meta: null };
+        const meta = payload.meta;
+        
+        if (!meta) {
+          return {
+            data: payload.data,
+            count: 0,
+            hasMore: false,
+            total: 0,
+            nextOffset: null,
+          };
+        }
+        
+        return {
+          data: payload.data,
+          count: meta.total,
+          hasMore: meta.hasMore,
+          total: meta.total,
+          nextOffset: meta.nextOffset,
+        };
+      },
       providesTags: (result) =>
         result
           ? [

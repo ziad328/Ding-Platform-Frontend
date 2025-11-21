@@ -5,8 +5,16 @@ export interface SuggestedPerson {
   headline?: string;
 }
 
+export interface SuggestionsQueryParams {
+  limit?: number;
+  offset?: number;
+}
+
 export interface SuggestionsPayload {
   data: SuggestedPerson[];
   count: number;
+  hasMore?: boolean;
+  total?: number;
+  nextOffset?: number | null;
 }
 
