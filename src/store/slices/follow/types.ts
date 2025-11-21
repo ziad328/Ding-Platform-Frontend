@@ -20,3 +20,14 @@ export interface FollowingPayload {
   count: number;
 }
 
+export interface Friend {
+  userId: string;
+  username: string;
+  name: string;
+}
+
+export interface FriendsPayload {
+  data: Friend[];
+  count: number;
+}
+
