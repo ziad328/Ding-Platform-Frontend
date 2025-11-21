@@ -84,6 +84,26 @@ export const SuggestedFriendsSkeleton: React.FC = () => (
     </div>
 );
 
+export const SuggestedFollowersSkeleton: React.FC = () => (
+    <div className="bg-white rounded-lg sm:rounded-xl shadow-sm p-3 sm:p-4 md:p-5">
+        <div className={`h-4 w-48 rounded mb-4 ${shimmer}`} />
+        <div className="space-y-3">
+            {[1, 2, 3, 4].map((follower) => (
+                <div key={follower} className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-full ${shimmer}`} />
+                        <div className="space-y-2">
+                            <div className={`h-3 w-32 rounded ${shimmer}`} />
+                            <div className={`h-3 w-24 rounded ${shimmer}`} />
+                        </div>
+                    </div>
+                    <div className={`h-6 w-20 rounded-full ${shimmer}`} />
+                </div>
+            ))}
+        </div>
+    </div>
+);
+
 export const SettingsSkeleton: React.FC = () => (
     <div className="bg-white rounded-lg sm:rounded-xl shadow-sm overflow-hidden">
         <div className="flex flex-col sm:flex-row">

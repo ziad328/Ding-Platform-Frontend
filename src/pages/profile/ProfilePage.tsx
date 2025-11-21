@@ -5,11 +5,13 @@ import Post from '../../components/profile/Post';
 import EmptyState from '../../components/profile/EmptyState';
 import Settings from '../../components/profile/Settings';
 import SuggestedFriends from '../../components/profile/SuggestedFriends';
+import SuggestedFollowers from '../../components/profile/SuggestedFollowers';
 import Footer from '../../components/profile/Footer';
 import {
   ProfileHeaderSkeleton,
   PostSkeleton,
   SuggestedFriendsSkeleton,
+  SuggestedFollowersSkeleton,
   FooterSkeleton,
   SettingsSkeleton,
 } from '../../components/profile/ProfileSkeletons';
@@ -133,11 +135,13 @@ const ProfilePage = () => {
           {isLoading ? (
             <>
               <SuggestedFriendsSkeleton />
+              <SuggestedFollowersSkeleton />
               <FooterSkeleton />
             </>
           ) : (
             <>
               <SuggestedFriends />
+              <SuggestedFollowers />
               <Footer />
             </>
           )}
