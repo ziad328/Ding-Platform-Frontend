@@ -155,7 +155,7 @@ const FollowersPage = () => {
 
     observer.observe(sentinelRef.current);
 
-      return () => {
+    return () => {
       observer.disconnect();
     };
   }, [hasMore, isFetchingMore, isFetchingNextPage, isInitialLoading, fetchNextPage]);
@@ -199,51 +199,51 @@ const FollowersPage = () => {
 
   return (
     <div className="w-full mx-auto">
-      <div className="bg-white rounded-lg sm:rounded-xl shadow-sm p-4 sm:p-6">
+      <div className="bg-white dark:bg-dark-bg-secondary rounded-lg sm:rounded-xl shadow-sm p-4 sm:p-6">
         {isInitialLoading ? (
           <div className="space-y-3 animate-pulse">
-            <div className="h-5 w-44 rounded bg-neutral-w-300" />
-            <div className="h-5 w-36 rounded bg-neutral-w-300" />
-            <div className="h-32 rounded-lg bg-neutral-w-300" />
+            <div className="h-5 w-44 rounded bg-neutral-w-300 dark:bg-dark-bg-tertiary" />
+            <div className="h-5 w-36 rounded bg-neutral-w-300 dark:bg-dark-bg-tertiary" />
+            <div className="h-32 rounded-lg bg-neutral-w-300 dark:bg-dark-bg-tertiary" />
           </div>
         ) : (
           <>
             <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
               <button
                 onClick={() => navigate('/profile')}
-                className="inline-flex items-center gap-2 text-sm font-medium text-primary-600 hover:text-primary-700 transition-colors"
+                className="inline-flex items-center gap-2 text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-500 transition-colors"
               >
                 <ArrowLeft className="w-4 h-4" />
                 Back to profile
               </button>
-              <h1 className="text-xl sm:text-2xl font-semibold text-neutral-b-900">
+              <h1 className="text-xl sm:text-2xl font-semibold text-neutral-b-900 dark:text-dark-text-primary">
                 Followers{followerCountLabel !== undefined ? ` (${followerCountLabel})` : ''}
               </h1>
-              <p className="text-sm sm:text-base text-neutral-b-600">
+              <p className="text-sm sm:text-base text-neutral-b-600 dark:text-dark-text-secondary">
                 These members follow your updates. Send a quick note or start a conversation.
               </p>
             </div>
             {isFailed && (
-              <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-red-700">
-                <p className="text-sm font-medium">We couldn’t load your followers.</p>
-                <p className="text-xs text-red-600 mt-1">{followersError || ((queryError as { data?: { message?: string } })?.data?.message ?? 'Something went wrong.')}</p>
+              <div className="mb-4 rounded-lg border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-900/20 p-3 text-red-700 dark:text-red-400">
+                <p className="text-sm font-medium">We couldn't load your followers.</p>
+                <p className="text-xs text-red-600 dark:text-red-400 mt-1">{followersError || ((queryError as { data?: { message?: string } })?.data?.message ?? 'Something went wrong.')}</p>
                 <button
                   type="button"
                   onClick={handleRetry}
-                  className="mt-2 inline-flex items-center rounded-md bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 transition-colors"
+                  className="mt-2 inline-flex items-center rounded-md bg-red-600 dark:bg-semantic-r-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 dark:hover:bg-semantic-r-900 transition-colors"
                 >
                   Retry
                 </button>
               </div>
             )}
             {!isFailed && enrichedFollowers.length === 0 ? (
-              <div className="rounded-lg border border-dashed border-neutral-w-300 p-6 text-center">
-                <p className="text-sm text-neutral-b-600">No followers yet. Once people start following you, they’ll appear here.</p>
+              <div className="rounded-lg border border-dashed border-neutral-w-300 dark:border-dark-border p-6 text-center">
+                <p className="text-sm text-neutral-b-600 dark:text-dark-text-secondary">No followers yet. Once people start following you, they'll appear here.</p>
               </div>
             ) : (
-              <div 
+              <div
                 ref={scrollContainerRef}
-                className="max-h-[60vh] overflow-y-auto hide-scrollbar pr-1 sm:pr-2 space-y-3 sm:space-y-4 divide-y divide-neutral-w-200"
+                className="max-h-[60vh] overflow-y-auto hide-scrollbar pr-1 sm:pr-2 space-y-3 sm:space-y-4 divide-y divide-neutral-w-200 dark:divide-dark-border"
               >
                 {enrichedFollowers.map((follower) => (
                   <div key={follower.id} className="pt-3 first:pt-0">
@@ -253,21 +253,21 @@ const FollowersPage = () => {
                       onMouseLeave={handlePreviewLeave}
                     >
                       <div className="flex items-start gap-3 sm:gap-4">
-                        <div className="w-12 h-12 rounded-full bg-primary-50 flex items-center justify-center shrink-0 sm:w-14 sm:h-14 overflow-hidden">
+                        <div className="w-12 h-12 rounded-full bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center shrink-0 sm:w-14 sm:h-14 overflow-hidden">
                           <img src={follower.avatar} alt={follower.name} className="w-full h-full object-cover" loading="lazy" />
                         </div>
                         <div>
-                          <p className="text-sm sm:text-base font-semibold text-neutral-b-900">{follower.name}</p>
-                          <p className="text-xs text-neutral-b-500">@{follower.username}</p>
-                          <p className="text-xs sm:text-sm text-neutral-b-500">{follower.role} · {follower.company}</p>
-                          <p className="text-xs text-neutral-b-400 mt-1">{follower.location} · Joined {follower.joined}</p>
-                          <p className="text-xs text-primary-600 mt-1">{follower.engagement}</p>
+                          <p className="text-sm sm:text-base font-semibold text-neutral-b-900 dark:text-dark-text-primary">{follower.name}</p>
+                          <p className="text-xs text-neutral-b-500 dark:text-dark-text-muted">@{follower.username}</p>
+                          <p className="text-xs sm:text-sm text-neutral-b-500 dark:text-dark-text-muted">{follower.role} · {follower.company}</p>
+                          <p className="text-xs text-neutral-b-400 dark:text-dark-text-muted mt-1">{follower.location} · Joined {follower.joined}</p>
+                          <p className="text-xs text-primary-600 dark:text-primary-400 mt-1">{follower.engagement}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2 sm:gap-3">
                         <button
                           type="button"
-                          className="inline-flex items-center gap-1 px-3 py-1.5 text-xs sm:text-sm font-medium text-primary-600 border border-primary-100 rounded-lg hover:bg-primary-50 transition-colors"
+                          className="inline-flex items-center gap-1 px-3 py-1.5 text-xs sm:text-sm font-medium text-primary-600 dark:text-primary-400 border border-primary-100 dark:border-primary-800 rounded-lg hover:bg-primary-50 dark:hover:bg-primary-900/30 transition-colors"
                         >
                           <MessageCircle className="w-4 h-4" />
                           Message
@@ -281,11 +281,11 @@ const FollowersPage = () => {
                   <div className="pt-3 animate-pulse">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <div className="flex items-start gap-3 sm:gap-4">
-                        <div className="w-12 h-12 rounded-full bg-neutral-w-300 shrink-0 sm:w-14 sm:h-14" />
+                        <div className="w-12 h-12 rounded-full bg-neutral-w-300 dark:bg-dark-bg-tertiary shrink-0 sm:w-14 sm:h-14" />
                         <div className="flex-1 space-y-2">
-                          <div className="h-4 w-32 rounded bg-neutral-w-300" />
-                          <div className="h-3 w-24 rounded bg-neutral-w-300" />
-                          <div className="h-3 w-40 rounded bg-neutral-w-300" />
+                          <div className="h-4 w-32 rounded bg-neutral-w-300 dark:bg-dark-bg-tertiary" />
+                          <div className="h-3 w-24 rounded bg-neutral-w-300 dark:bg-dark-bg-tertiary" />
+                          <div className="h-3 w-40 rounded bg-neutral-w-300 dark:bg-dark-bg-tertiary" />
                         </div>
                       </div>
                     </div>
@@ -298,7 +298,7 @@ const FollowersPage = () => {
                 {/* End of list message */}
                 {!hasMore && enrichedFollowers.length > 0 && !isFetchingMore && (
                   <div className="pt-4 text-center">
-                    <p className="text-xs sm:text-sm text-neutral-b-500">All caught up! You've seen all your followers.</p>
+                    <p className="text-xs sm:text-sm text-neutral-b-500 dark:text-dark-text-muted">All caught up! You've seen all your followers.</p>
                   </div>
                 )}
               </div>
