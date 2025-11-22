@@ -1,4 +1,4 @@
-import { Search, User, LogOut, X, Loader2 } from 'lucide-react';
+import { Search, User, LogOut, X, Loader2, ChevronDown } from 'lucide-react';
 import { Logo } from '../atoms/Logo';
 import { useSelector } from 'react-redux';
 import { selectCurrentUser } from '../../store/slices/auth/auth';
@@ -12,7 +12,9 @@ function Navbar() {
   const navigate = useNavigate();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchValue, setSearchValue] = useState('');
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
+  const profileRef = useRef<HTMLDivElement>(null);
 
   const handleLogout = async () => {
     try {
@@ -45,6 +47,24 @@ function Navbar() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [isSearchOpen]);
+
+  // Handle click outside to close profile dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+        if (isProfileOpen) {
+          setIsProfileOpen(false);
+        }
+      }
+    };
+
+    if (isProfileOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isProfileOpen]);
 
   return (
     <nav className="sticky top-0 z-50 w-full bg-neutral-w-900 border-b border-neutral-w-400 shadow-sm">
@@ -95,37 +115,54 @@ function Navbar() {
                 <Search className="w-4 h-4 text-neutral-b-600 sm:w-5 sm:h-5" />
               </button>
 
-              {/* User Profile */}
-              <button
-                onClick={() => navigate('/profile')}
-                className="flex items-center gap-1.5 hover:bg-neutral-w-200 rounded-lg transition-all duration-200 p-1 touch-manipulation sm:gap-2 sm:p-1.5 hover:scale-105 active:scale-95"
-              >
-                <div className="w-6 h-6 rounded-full bg-primary-100 flex items-center justify-center sm:w-7 sm:h-7 md:w-8 md:h-8 transition-all duration-200">
-                  <User className="w-3.5 h-3.5 text-primary-700 sm:w-4 sm:h-4 md:w-5 md:h-5" />
-                </div>
-                <span className="hidden sm:block text-xs font-medium text-neutral-b-700 whitespace-nowrap md:text-sm transition-colors">
-                  {user?.name || 'User'}
-                </span>
-              </button>
+              {/* User Profile Dropdown */}
+              <div ref={profileRef} className="relative">
+                <button
+                  onClick={() => setIsProfileOpen(!isProfileOpen)}
+                  className="flex items-center gap-1.5 hover:bg-neutral-w-200 rounded-lg transition-all duration-200 p-1 touch-manipulation sm:gap-2 sm:p-1.5"
+                >
+                  <div className="w-6 h-6 rounded-full bg-primary-100 flex items-center justify-center sm:w-7 sm:h-7 md:w-8 md:h-8 transition-all duration-200">
+                    <User className="w-3.5 h-3.5 text-primary-700 sm:w-4 sm:h-4 md:w-5 md:h-5" />
+                  </div>
+                  <span className="hidden sm:block text-xs font-medium text-neutral-b-700 whitespace-nowrap md:text-sm transition-colors">
+                    {user?.name || 'User'}
+                  </span>
+                  <ChevronDown className={`w-3 h-3 text-neutral-b-600 transition-transform duration-200 sm:w-4 sm:h-4 ${isProfileOpen ? 'rotate-180' : ''}`} />
+                </button>
 
-              {/* Logout */}
-              <button
-                onClick={handleLogout}
-                disabled={isLoggingOut}
-                className={`p-1 rounded-lg transition-all duration-200 touch-manipulation sm:p-1.5 md:p-2 ${
-                  isLoggingOut
-                    ? 'bg-semantic-r-700/10 cursor-not-allowed opacity-80'
-                    : 'hover:bg-semantic-r-700/10 hover:scale-110 active:scale-95'
-                }`}
-                title="Logout"
-                aria-busy={isLoggingOut}
-              >
-                {isLoggingOut ? (
-                  <Loader2 className="w-4 h-4 text-semantic-r-800 sm:w-5 sm:h-5 animate-spin" />
-                ) : (
-                  <LogOut className="w-4 h-4 text-semantic-r-800 sm:w-5 sm:h-5 transition-transform hover:rotate-12" />
+                {/* Profile Dropdown Menu */}
+                {isProfileOpen && (
+                  <div className="absolute right-0 top-full mt-2.5 w-48 bg-neutral-w-900 border border-neutral-w-400 rounded-lg shadow-lg z-50 animate-fadeIn overflow-hidden">
+                    <button
+                      onClick={() => {
+                        navigate('/profile');
+                        setIsProfileOpen(false);
+                      }}
+                      className="w-full px-3 py-3 text-left text-sm text-neutral-b-700 hover:bg-neutral-w-200 transition-colors duration-200 flex items-center gap-3"
+                    >
+                      <User className="w-4 h-4 ml-1" />
+                      Profile
+                    </button>
+                    <hr className="border-neutral-w-400" />
+                    <button
+                      onClick={handleLogout}
+                      disabled={isLoggingOut}
+                      className={`w-full px-3 py-3 text-left text-sm flex items-center gap-3 transition-all duration-200 group ${
+                        isLoggingOut
+                          ? 'text-neutral-b-400 cursor-not-allowed opacity-80'
+                          : 'text-semantic-r-800 hover:bg-semantic-r-700/10'
+                      }`}
+                    >
+                      {isLoggingOut ? (
+                        <Loader2 className="w-4 h-4 ml-1 animate-spin" />
+                      ) : (
+                        <LogOut className="w-4 h-4 ml-1 text-semantic-r-800 transition-transform group-hover:rotate-12" />
+                      )}
+                      {isLoggingOut ? 'Logging out...' : 'Logout'}
+                    </button>
+                  </div>
                 )}
-              </button>
+              </div>
             </div>
           </>
         )}
