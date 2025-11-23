@@ -44,7 +44,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ activeTab, setActiveTab }
                         {/* Avatar */}
                         <div className="relative -mt-10 sm:-mt-12 md:-mt-14 mb-3 sm:mb-4 w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24">
                             <div
-                                className="w-full h-full rounded-full bg-neutral-w-900 dark:bg-dark-bg-secondary border-3 sm:border-4 border-white dark:border-dark-bg-secondary shadow-lg flex items-center justify-center cursor-pointer group"
+                                className="w-full h-full rounded-full bg-neutral-w-900 dark:bg-dark-bg-secondary border-3 sm:border-4 border-white dark:border-dark-bg-secondary flex items-center justify-center cursor-pointer group"
                                 onMouseEnter={() => setIsHoveringAvatar(true)}
                                 onMouseLeave={() => setIsHoveringAvatar(false)}
                             >

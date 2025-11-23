@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
-import { ArrowLeft, UserPlus } from 'lucide-react';
+import { ArrowLeft, UserPlus, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { SuggestedFriendsSkeleton } from '../../components/profile/ProfileSkeletons';
@@ -212,15 +212,15 @@ const SuggestedFriendsPage = () => {
 
   return (
     <div className="w-full mx-auto">
-      <div className="bg-white rounded-lg sm:rounded-xl shadow-sm p-4 sm:p-6">
+      <div className="bg-white dark:bg-dark-bg-secondary rounded-lg sm:rounded-xl shadow-sm p-4 sm:p-6">
         {isInitialLoading ? (
           <div className="space-y-4">
-            <div className="h-5 w-32 rounded bg-neutral-w-300 animate-pulse" />
-            <div className="h-5 w-32 rounded bg-neutral-w-300 animate-pulse" />
+            <div className="h-5 w-32 rounded bg-neutral-w-300 dark:bg-dark-bg-tertiary animate-pulse" />
+            <div className="h-5 w-32 rounded bg-neutral-w-300 dark:bg-dark-bg-tertiary animate-pulse" />
             <div className="space-y-2 animate-pulse pt-2">
-              <div className="h-3 w-32 rounded bg-neutral-w-300" />
-              <div className="h-7 w-48 rounded bg-neutral-w-300" />
-              <div className="h-4 w-64 rounded bg-neutral-w-300" />
+              <div className="h-3 w-32 rounded bg-neutral-w-300 dark:bg-dark-bg-tertiary" />
+              <div className="h-7 w-48 rounded bg-neutral-w-300 dark:bg-dark-bg-tertiary" />
+              <div className="h-4 w-64 rounded bg-neutral-w-300 dark:bg-dark-bg-tertiary" />
             </div>
             <SuggestedFriendsSkeleton />
           </div>
@@ -229,49 +229,47 @@ const SuggestedFriendsPage = () => {
             <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
               <button
                 onClick={() => navigate('/profile')}
-                className="inline-flex items-center gap-2 text-sm font-medium text-primary-600 hover:text-primary-700 transition-colors"
+                className="inline-flex items-center gap-2 text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-500 transition-colors"
               >
                 <ArrowLeft className="w-4 h-4" />
                 Back to profile
               </button>
-              <h1 className="text-xl sm:text-2xl font-semibold text-neutral-b-900">
+              <h1 className="text-xl sm:text-2xl font-semibold text-neutral-b-900 dark:text-dark-text-primary">
                 Suggested Friends{suggestionsCount !== undefined ? ` (${suggestionsCount})` : ''}
               </h1>
-              <p className="text-sm sm:text-base text-neutral-b-600">
+              <p className="text-sm sm:text-base text-neutral-b-600 dark:text-dark-text-secondary">
                 Connect with professionals aligned with your interests, industry, and goals.
                 Browse the curated list below and grow your network.
               </p>
             </div>
             {isFailed && (
-              <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-red-700">
+              <div className="mb-4 rounded-lg border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-900/20 p-3 text-red-700 dark:text-red-400">
                 <p className="text-sm font-medium">We couldn't load friend suggestions.</p>
-                <p className="text-xs text-red-600 mt-1">
+                <p className="text-xs text-red-600 dark:text-red-400 mt-1">
                   {suggestionsError || ((queryError as { data?: { message?: string } })?.data?.message ?? 'Something went wrong.')}
                 </p>
                 <button
                   type="button"
                   onClick={handleRetry}
-                  className="mt-2 inline-flex items-center rounded-md bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 transition-colors"
+                  className="mt-2 inline-flex items-center rounded-md bg-red-600 dark:bg-red-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 dark:hover:bg-red-800 transition-colors"
                 >
                   Retry
                 </button>
               </div>
             )}
             {!isFailed && suggestedFriends.length === 0 ? (
-              <div className="rounded-lg border border-dashed border-neutral-w-300 p-6 text-center">
-                <p className="text-sm text-neutral-b-600">No friend suggestions available at the moment. Check back later for new recommendations.</p>
+              <div className="rounded-lg border border-dashed border-neutral-w-300 dark:border-dark-border p-6 text-center">
+                <p className="text-sm text-neutral-b-600 dark:text-dark-text-secondary">No friend suggestions available at the moment. Check back later for new recommendations.</p>
               </div>
             ) : (
               <div 
                 ref={scrollContainerRef}
-                className="max-h-[60vh] overflow-y-auto hide-scrollbar pr-1 sm:pr-2 space-y-3 sm:space-y-4 divide-y divide-neutral-w-200"
+                className="max-h-[60vh] overflow-y-auto hide-scrollbar pr-1 sm:pr-2 space-y-3 sm:space-y-4 divide-y divide-neutral-w-200 dark:divide-dark-border"
               >
               {suggestedFriends.map((friend) => (
-                <div key={friend.id} className="pt-3 first:pt-0">
+                <div key={friend.id} className="first:pt-0 pb-3">
                   <div
                     className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between group"
-                    onMouseEnter={(event) => handlePreviewEnter(friend, event.currentTarget)}
-                    onMouseLeave={handlePreviewLeave}
                   >
                     <button
                       type="button"
@@ -279,29 +277,41 @@ const SuggestedFriendsPage = () => {
                       className="flex items-start gap-3 sm:gap-4 text-left w-full sm:w-auto focus:outline-none"
                       aria-label={`Open ${friend.name}'s profile`}
                     >
-                      <div className="w-12 h-12 rounded-full bg-primary-50 flex items-center justify-center shrink-0 sm:w-14 sm:h-14 overflow-hidden">
-                        <img
-                          src={friend.avatar}
-                          alt={friend.name}
-                          className="w-full h-full object-cover"
-                          loading="lazy"
-                        />
+                      <div 
+                        className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-neutral-w-900 dark:bg-dark-bg-secondary border-3 sm:border-4 border-white dark:border-dark-bg-secondary flex items-center justify-center shrink-0 overflow-hidden cursor-pointer"
+                        onMouseEnter={(event) => handlePreviewEnter(friend, event.currentTarget)}
+                        onMouseLeave={handlePreviewLeave}
+                      >
+                        {friend.avatar ? (
+                          <img
+                            src={friend.avatar}
+                            alt={friend.name}
+                            className="w-full h-full rounded-full object-cover"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <User className="w-6 h-6 sm:w-7 sm:h-7 text-neutral-b-400 dark:text-dark-text-muted" />
+                        )}
                       </div>
                       <div>
-                        <p className="text-sm sm:text-base font-semibold text-neutral-b-900 hover:text-primary-600 transition-colors">
+                        <p 
+                          className="text-sm sm:text-base font-semibold text-neutral-b-900 dark:text-dark-text-primary hover:text-primary-600 dark:hover:text-primary-400 transition-colors cursor-pointer inline-block"
+                          onMouseEnter={(event) => handlePreviewEnter(friend, event.currentTarget)}
+                          onMouseLeave={handlePreviewLeave}
+                        >
                           {friend.name}
                         </p>
-                        <p className="text-xs sm:text-sm text-neutral-b-500">{friend.role}</p>
-                        <p className="text-xs text-neutral-b-400 mt-1">
+                        <p className="text-xs sm:text-sm text-neutral-b-500 dark:text-dark-text-muted">{friend.role}</p>
+                        <p className="text-xs text-neutral-b-400 dark:text-dark-text-muted mt-1">
                           {friend.location} · {friend.mutualConnections} mutual connections
                         </p>
-                        <p className="text-xs text-primary-600 mt-1">{friend.availability}</p>
+                        <p className="text-xs text-primary-600 dark:text-primary-400 mt-1">{friend.availability}</p>
                       </div>
                     </button>
                     <div className="flex items-center gap-2 sm:gap-3">
                       <button
                         type="button"
-                        className="inline-flex items-center gap-1 px-3 py-1.5 text-xs sm:text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors"
+                        className="inline-flex items-center gap-1 px-3 py-1.5 text-xs sm:text-sm font-medium text-white bg-primary-600 dark:bg-primary-500 rounded-lg hover:bg-primary-700 dark:hover:bg-primary-600 transition-colors"
                       >
                         <UserPlus className="w-4 h-4" />
                         Add Friend
@@ -315,11 +325,11 @@ const SuggestedFriendsPage = () => {
                   <div className="pt-3 animate-pulse">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <div className="flex items-start gap-3 sm:gap-4">
-                        <div className="w-12 h-12 rounded-full bg-neutral-w-300 shrink-0 sm:w-14 sm:h-14" />
+                        <div className="w-12 h-12 rounded-full bg-neutral-w-300 dark:bg-dark-bg-tertiary shrink-0 sm:w-14 sm:h-14" />
                         <div className="flex-1 space-y-2">
-                          <div className="h-4 w-32 rounded bg-neutral-w-300" />
-                          <div className="h-3 w-24 rounded bg-neutral-w-300" />
-                          <div className="h-3 w-40 rounded bg-neutral-w-300" />
+                          <div className="h-4 w-32 rounded bg-neutral-w-300 dark:bg-dark-bg-tertiary" />
+                          <div className="h-3 w-24 rounded bg-neutral-w-300 dark:bg-dark-bg-tertiary" />
+                          <div className="h-3 w-40 rounded bg-neutral-w-300 dark:bg-dark-bg-tertiary" />
                         </div>
                       </div>
                     </div>
@@ -332,7 +342,7 @@ const SuggestedFriendsPage = () => {
                 {/* End of list message */}
                 {!hasMore && suggestedFriends.length > 0 && !isFetchingMore && (
                   <div className="pt-4 text-center">
-                    <p className="text-xs sm:text-sm text-neutral-b-500">All caught up! You've seen all friend suggestions.</p>
+                    <p className="text-xs sm:text-sm text-neutral-b-500 dark:text-dark-text-muted">All caught up! You've seen all friend suggestions.</p>
                   </div>
                 )}
               </div>

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
-import { ArrowLeft, MessageCircle, UserPlus } from 'lucide-react';
+import { ArrowLeft, MessageCircle, UserPlus, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import ProfileHoverPreview from '../../components/profile/ProfileHoverPreview';
@@ -230,7 +230,7 @@ const FollowersPage = () => {
                 <button
                   type="button"
                   onClick={handleRetry}
-                  className="mt-2 inline-flex items-center rounded-md bg-red-600 dark:bg-semantic-r-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 dark:hover:bg-semantic-r-900 transition-colors"
+                  className="mt-2 inline-flex items-center rounded-md bg-red-600 dark:bg-red-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 dark:hover:bg-red-800 transition-colors"
                 >
                   Retry
                 </button>
@@ -246,18 +246,28 @@ const FollowersPage = () => {
                 className="max-h-[60vh] overflow-y-auto hide-scrollbar pr-1 sm:pr-2 space-y-3 sm:space-y-4 divide-y divide-neutral-w-200 dark:divide-dark-border"
               >
                 {enrichedFollowers.map((follower) => (
-                  <div key={follower.id} className="pt-3 first:pt-0">
+                  <div key={follower.id} className="first:pt-0 pb-3">
                     <div
                       className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
-                      onMouseEnter={(event) => handlePreviewEnter(follower, event.currentTarget)}
-                      onMouseLeave={handlePreviewLeave}
                     >
                       <div className="flex items-start gap-3 sm:gap-4">
-                        <div className="w-12 h-12 rounded-full bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center shrink-0 sm:w-14 sm:h-14 overflow-hidden">
-                          <img src={follower.avatar} alt={follower.name} className="w-full h-full object-cover" loading="lazy" />
+                        <div 
+                          className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-neutral-w-900 dark:bg-dark-bg-secondary border-3 sm:border-4 border-white dark:border-dark-bg-secondary flex items-center justify-center shrink-0 overflow-hidden cursor-pointer"
+                          onMouseEnter={(event) => handlePreviewEnter(follower, event.currentTarget)}
+                          onMouseLeave={handlePreviewLeave}
+                        >
+                          {follower.avatar ? (
+                            <img src={follower.avatar} alt={follower.name} className="w-full h-full rounded-full object-cover" loading="lazy" />
+                          ) : (
+                            <User className="w-6 h-6 sm:w-7 sm:h-7 text-neutral-b-400 dark:text-dark-text-muted" />
+                          )}
                         </div>
                         <div>
-                          <p className="text-sm sm:text-base font-semibold text-neutral-b-900 dark:text-dark-text-primary">{follower.name}</p>
+                          <p 
+                            className="text-sm sm:text-base font-semibold text-neutral-b-900 dark:text-dark-text-primary hover:text-primary-600 dark:hover:text-primary-400 transition-colors cursor-pointer inline-block"
+                            onMouseEnter={(event) => handlePreviewEnter(follower, event.currentTarget)}
+                            onMouseLeave={handlePreviewLeave}
+                          >{follower.name}</p>
                           <p className="text-xs text-neutral-b-500 dark:text-dark-text-muted">@{follower.username}</p>
                           <p className="text-xs sm:text-sm text-neutral-b-500 dark:text-dark-text-muted">{follower.role} · {follower.company}</p>
                           <p className="text-xs text-neutral-b-400 dark:text-dark-text-muted mt-1">{follower.location} · Joined {follower.joined}</p>
@@ -267,7 +277,7 @@ const FollowersPage = () => {
                       <div className="flex items-center gap-2 sm:gap-3">
                         <button
                           type="button"
-                          className="inline-flex items-center gap-1 px-3 py-1.5 text-xs sm:text-sm font-medium text-primary-600 dark:text-primary-400 border border-primary-100 dark:border-primary-800 rounded-lg hover:bg-primary-50 dark:hover:bg-primary-900/30 transition-colors"
+                          className="inline-flex items-center gap-1 px-3 py-1.5 text-xs sm:text-sm font-medium text-primary-600 dark:text-primary-400 border border-primary-100 dark:border-primary-900/50 rounded-lg hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
                         >
                           <MessageCircle className="w-4 h-4" />
                           Message

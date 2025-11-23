@@ -38,8 +38,11 @@ export interface FollowingPayload {
 
 export interface Friend {
   userId: string;
-  username: string;
-  name: string;
+  bio: string;
+  user: {
+    name: string;
+    image: string | null;
+  };
 }
 
 export interface FriendsQueryParams {

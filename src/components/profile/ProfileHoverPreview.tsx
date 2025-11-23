@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-import { MessageCircle, UserPlus, Briefcase, GraduationCap } from 'lucide-react';
+import { MessageCircle, UserPlus, Briefcase, GraduationCap, User } from 'lucide-react';
 
 export interface ProfilePreviewFriend {
   id: number | string;
@@ -9,7 +9,7 @@ export interface ProfilePreviewFriend {
   role: string;
   company: string;
   location: string;
-  avatar: string;
+  avatar: string | null;
   bio?: string;
   focus?: string;
   education?: string;
@@ -116,8 +116,12 @@ const ProfileHoverPreview = ({
           style={{ left: placement.arrowOffset }}
         />
         <div className="flex items-start gap-3">
-          <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-neutral-w-300 dark:border-dark-border">
-            <img src={friend.avatar} alt={friend.name} className="w-full h-full object-cover" loading="lazy" />
+          <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-neutral-w-300 dark:border-dark-border bg-primary-50 dark:bg-dark-bg-tertiary flex items-center justify-center">
+            {friend.avatar ? (
+              <img src={friend.avatar} alt={friend.name} className="w-full h-full object-cover" loading="lazy" />
+            ) : (
+              <User className="w-7 h-7 text-primary-600 dark:text-primary-400" />
+            )}
           </div>
           <div>
             <p className="text-base font-semibold">{friend.name}</p>
