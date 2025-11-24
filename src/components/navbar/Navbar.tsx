@@ -18,13 +18,8 @@ function Navbar() {
   const profileRef = useRef<HTMLDivElement>(null);
   const { isDarkMode, toggleDarkMode } = useDarkMode();
 
-  const handleLogout = async () => {
-    try {
-      await sendLogOut().unwrap();
-      navigate('/auth/signin');
-    } catch (error) {
-      console.error('Logout failed:', error);
-    }
+  const handleLogout = () => {
+    sendLogOut();
   };
 
   const handleCloseSearch = () => {
@@ -117,6 +112,19 @@ function Navbar() {
                 <Search className="w-4 h-4 text-neutral-b-600 dark:text-dark-text-secondary sm:w-5 sm:h-5" />
               </button>
 
+              {/* Dark Mode Toggle */}
+              <button
+                onClick={toggleDarkMode}
+                className="p-2 hover:bg-neutral-w-200 dark:hover:bg-dark-bg-tertiary rounded-lg transition-all duration-200 hover:scale-110 active:scale-95"
+                aria-label="Toggle dark mode"
+              >
+                {isDarkMode ? (
+                  <Sun className="w-5 h-5 text-primary-500 dark:text-primary-400" />
+                ) : (
+                  <Moon className="w-5 h-5 text-neutral-b-600" />
+                )}
+              </button>
+
               {/* User Profile Dropdown */}
               <div ref={profileRef} className="relative">
                 <button
@@ -147,30 +155,11 @@ function Navbar() {
                     </button>
                     <hr className="border-neutral-w-400 dark:border-dark-border" />
                     <button
-                      onClick={() => {
-                        toggleDarkMode();
-                      }}
-                      className="w-full px-3 py-3 text-left text-sm text-neutral-b-700 dark:text-dark-text-secondary hover:bg-neutral-w-200 dark:hover:bg-dark-bg-tertiary transition-colors duration-200 flex items-center gap-3"
-                    >
-                      {isDarkMode ? (
-                        <>
-                          <Sun className="w-4 h-4 ml-1" />
-                          Light Mode
-                        </>
-                      ) : (
-                        <>
-                          <Moon className="w-4 h-4 ml-1" />
-                          Dark Mode
-                        </>
-                      )}
-                    </button>
-                    <hr className="border-neutral-w-400 dark:border-dark-border" />
-                    <button
                       onClick={handleLogout}
                       disabled={isLoggingOut}
                       className={`w-full px-3 py-3 text-left text-sm flex items-center gap-3 transition-all duration-200 group ${isLoggingOut
-                          ? 'text-neutral-b-400 dark:text-dark-text-muted cursor-not-allowed opacity-80'
-                          : 'text-semantic-r-800 dark:text-semantic-r-700 hover:bg-semantic-r-700/10 dark:hover:bg-semantic-r-900/20'
+                        ? 'text-neutral-b-400 dark:text-dark-text-muted cursor-not-allowed opacity-80'
+                        : 'text-semantic-r-800 dark:text-semantic-r-700 hover:bg-semantic-r-700/10 dark:hover:bg-semantic-r-900/20'
                         }`}
                     >
                       {isLoggingOut ? (
