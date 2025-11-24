@@ -15,6 +15,7 @@ import ForgotPasswordPage from './pages/authentication/ForgotPasswordPage';
 import ResetPasswordPage from './pages/authentication/ResetPasswordPage';
 import EmailLoginPage from './pages/authentication/EmailLoginPage';
 import OTPVerificationPage from './pages/authentication/OTPVerificationPage';
+import LandingPage from './pages/landing/LandingPage';
 import { useSelector } from 'react-redux';
 import { selectCurrentToken, selectCurrentUser } from './store/slices/auth/auth';
 
@@ -22,18 +23,23 @@ import { selectCurrentToken, selectCurrentUser } from './store/slices/auth/auth'
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const token = useSelector(selectCurrentToken);
   const user = useSelector(selectCurrentUser);
-  
+
   if (!token || !user) {
-    return <Navigate to="/auth/signin" replace />;
+    return <Navigate to="/welcome" replace />;
   }
-  
+
   return <>{children}</>;
 };
 
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path='/' element={<MainLayout />} >
-      <Route index element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+      <Route index element={
+        <ProtectedRoute>
+          <HomePage />
+        </ProtectedRoute>
+      } />
+      <Route path='/welcome' element={<LandingPage />} />
       <Route path='*' element={<NotFoundPage />} />
       <Route path='/profile' element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
       <Route path='/profile/suggested-friends' element={<ProtectedRoute><SuggestedFriendsPage /></ProtectedRoute>} />
