@@ -31,29 +31,51 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+// Public Route Component (for landing page)
+const PublicRoute = ({ children }: { children: React.ReactNode }) => {
+  const token = useSelector(selectCurrentToken);
+  const user = useSelector(selectCurrentUser);
+
+  // If user is authenticated, redirect to home
+  if (token && user) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <>{children}</>;
+};
+
 const router = createBrowserRouter(
   createRoutesFromElements(
-    <Route path='/' element={<MainLayout />} >
-      <Route index element={
-        <ProtectedRoute>
-          <HomePage />
-        </ProtectedRoute>
+    <>
+      {/* Public Landing Page Route (outside MainLayout) */}
+      <Route path='/welcome' element={
+        <PublicRoute>
+          <LandingPage />
+        </PublicRoute>
       } />
-      <Route path='/welcome' element={<LandingPage />} />
-      <Route path='*' element={<NotFoundPage />} />
-      <Route path='/profile' element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-      <Route path='/profile/suggested-friends' element={<ProtectedRoute><SuggestedFriendsPage /></ProtectedRoute>} />
-      <Route path='/profile/suggested-followers' element={<ProtectedRoute><SuggestedFollowersPage /></ProtectedRoute>} />
-      <Route path='/profile/friends' element={<ProtectedRoute><FriendsPage /></ProtectedRoute>} />
-      <Route path='/profile/followers' element={<ProtectedRoute><FollowersPage /></ProtectedRoute>} />
-      <Route path='/profile/following' element={<ProtectedRoute><FollowingPage /></ProtectedRoute>} />
-      <Route path='/auth/signup' element={<SignUpPage />} />
-      <Route path='/auth/signin' element={<SignInPage />} />
-      <Route path='/auth/email-login' element={<EmailLoginPage />} />
-      <Route path='/auth/forgot-password' element={<ForgotPasswordPage />} />
-      <Route path='/auth/reset-password' element={<ResetPasswordPage />} />
-      <Route path='/auth/verfiy-otp' element={<OTPVerificationPage />} />
-    </Route>
+
+      {/* Main App Routes (inside MainLayout) */}
+      <Route path='/' element={<MainLayout />} >
+        <Route index element={
+          <ProtectedRoute>
+            <HomePage />
+          </ProtectedRoute>
+        } />
+        <Route path='*' element={<NotFoundPage />} />
+        <Route path='/profile' element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+        <Route path='/profile/suggested-friends' element={<ProtectedRoute><SuggestedFriendsPage /></ProtectedRoute>} />
+        <Route path='/profile/suggested-followers' element={<ProtectedRoute><SuggestedFollowersPage /></ProtectedRoute>} />
+        <Route path='/profile/friends' element={<ProtectedRoute><FriendsPage /></ProtectedRoute>} />
+        <Route path='/profile/followers' element={<ProtectedRoute><FollowersPage /></ProtectedRoute>} />
+        <Route path='/profile/following' element={<ProtectedRoute><FollowingPage /></ProtectedRoute>} />
+        <Route path='/auth/signup' element={<SignUpPage />} />
+        <Route path='/auth/signin' element={<SignInPage />} />
+        <Route path='/auth/email-login' element={<EmailLoginPage />} />
+        <Route path='/auth/forgot-password' element={<ForgotPasswordPage />} />
+        <Route path='/auth/reset-password' element={<ResetPasswordPage />} />
+        <Route path='/auth/verfiy-otp' element={<OTPVerificationPage />} />
+      </Route>
+    </>
   )
 );
 
