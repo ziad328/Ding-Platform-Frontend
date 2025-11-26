@@ -58,3 +58,13 @@ export interface FriendsPayload {
   nextOffset?: number | null;
 }
 
+export interface FriendRequest extends Friend {}
+
+export interface FriendRequestsPayload {
+  data: FriendRequest[];
+  count: number;
+  hasMore?: boolean;
+  total?: number;
+  nextOffset?: number | null;
+}
+
