@@ -33,19 +33,25 @@ export const friendSuggestionsApi = apiSlice.injectEndpoints({
       transformResponse: (response: SuggestionsResponse) => {
         const payload = response?.data ?? { data: [], meta: null };
         const meta = payload.meta;
-        
+        const normalizedData = (payload.data ?? []).map((item) => ({
+          ...item,
+          name: item.name ?? item.user?.name ?? '',
+          username: item.username ?? item.user?.username ?? '',
+          headline: item.headline ?? item.user?.headline ?? '',
+        }));
+
         if (!meta) {
           return {
-            data: payload.data,
+            data: normalizedData,
             count: 0,
             hasMore: false,
             total: 0,
             nextOffset: null,
           };
         }
-        
+
         return {
-          data: payload.data,
+          data: normalizedData,
           count: meta.total,
           hasMore: meta.hasMore,
           total: meta.total,
