@@ -1,7 +1,13 @@
 import { configureStore } from '@reduxjs/toolkit';
 import authReducer from './slices/auth/auth';
 import userReducers from './slices/user/user';
+import profileReducer from './slices/profile/profile';
 import sessionReducer from './slices/session/session';
+import followersReducer from './slices/social/followers/followers';
+import followingReducer from './slices/social/following/following';
+import friendsReducer from './slices/social/friends/friends';
+import friendSuggestionsReducer from './slices/social/suggestions/friend/friendSuggestions';
+import followSuggestionsReducer from './slices/social/suggestions/follow/followSuggestions';
 import { apiSlice } from './ApiSlice';
 import storage from 'redux-persist/lib/storage';
 import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from 'redux-persist';
@@ -19,7 +25,13 @@ export const store = configureStore({
   reducer: {
     auth: persistedAuthReducer,
     user: userReducers,
+    profile: profileReducer,
     session: sessionReducer,
+    followers: followersReducer,
+    following: followingReducer,
+    friends: friendsReducer,
+    friendSuggestions: friendSuggestionsReducer,
+    followSuggestions: followSuggestionsReducer,
     [apiSlice.reducerPath]: apiSlice.reducer,
   },
   middleware: (getDefaultMiddleware) =>

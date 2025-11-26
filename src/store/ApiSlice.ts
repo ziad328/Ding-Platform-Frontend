@@ -54,7 +54,19 @@ const baseQueryWithReAuth = async (
   return result;
 };
 
+const tagTypes = [
+  'Followers',
+  'Following',
+  'Friends',
+  'FriendSuggestions',
+  'FollowSuggestions',
+  'FriendRequests',
+  'SocialStats',
+  'Profile',
+] as const;
+
 export const apiSlice = createApi({
   baseQuery: baseQueryWithReAuth,
+  tagTypes,
   endpoints: () => ({}),
 });

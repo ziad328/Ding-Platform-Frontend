@@ -29,7 +29,7 @@ export default function ResetPasswordPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const [resetPassword] = useResetPasswordMutation();
-  
+
   // Get email from navigation state
   const email = location.state?.email;
 
@@ -43,15 +43,15 @@ export default function ResetPasswordPage() {
     }
 
     try {
-      await resetPassword({ 
-        email, 
-        newPassword: values.newPassword 
+      await resetPassword({
+        email,
+        newPassword: values.newPassword
       }).unwrap();
-      
+
       enqueueSnackbar('Password reset successfully!', {
         variant: 'success'
       });
-      
+
       navigate('/auth/signin');
     } catch (error) {
       enqueueSnackbar((error as any)?.data?.message || 'Failed to reset password', {
@@ -78,7 +78,7 @@ export default function ResetPasswordPage() {
   });
 
   return (
-    <div className="min-h-screen flex flex-col bg-neutral-w-50">
+    <div className="min-h-screen flex flex-col bg-neutral-w-50 dark:bg-dark-bg-primary">
       {/* Logo */}
       <div className="w-full py-4 px-4 sm:py-6">
         <div className="flex items-center justify-center">
@@ -88,10 +88,10 @@ export default function ResetPasswordPage() {
 
       {/* Main content */}
       <div className="flex-1 flex items-center justify-center p-3 sm:p-4 md:p-6">
-        <div className="w-full max-w-md bg-neutral-w-900 rounded-lg shadow-xl p-5 sm:p-6 md:p-8">
-          
+        <div className="w-full max-w-md bg-neutral-w-900 dark:bg-dark-bg-secondary rounded-lg shadow-xl p-5 sm:p-6 md:p-8">
+
           {/* Title */}
-          <h1 className="text-xl font-medium text-center text-primary-700 pt-8 mb-8 sm:mb-10 md:mb-16">
+          <h1 className="text-xl font-medium text-center text-primary-700 dark:text-primary-400 pt-8 mb-8 sm:mb-10 md:mb-16">
             Reset Password
           </h1>
 
@@ -124,7 +124,7 @@ export default function ResetPasswordPage() {
             type="button"
             onClick={() => formik.handleSubmit()}
             disabled={formik.isSubmitting || !formik.isValid}
-            className="w-full cursor-pointer bg-primary-700 text-white text-sm sm:text-base rounded-md mb-12 py-2.5 font-medium hover:bg-primary-800 active:bg-primary-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation flex items-center justify-center gap-2"
+            className="w-full cursor-pointer bg-primary-700 dark:bg-primary-600 text-white text-sm sm:text-base rounded-md mb-12 py-2.5 font-medium hover:bg-primary-800 dark:hover:bg-primary-700 active:bg-primary-900 dark:active:bg-primary-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation flex items-center justify-center gap-2"
           >
             {formik.isSubmitting && (
               <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

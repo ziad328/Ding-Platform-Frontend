@@ -17,7 +17,7 @@ export default function OTPVerificationPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
-  
+
   // Get email and type from navigation state
   const email = location.state?.email;
   const verificationType = location.state?.type || 'email'; // 'email' or 'forgot-password'
@@ -28,7 +28,7 @@ export default function OTPVerificationPage() {
       navigate('/auth/signup');
       return;
     }
-    
+
     // Focus first input on mount
     if (inputRefs.current[0]) {
       inputRefs.current[0].focus();
@@ -96,7 +96,7 @@ export default function OTPVerificationPage() {
   const handleVerify = async () => {
     const otpCode = otp.join('');
     if (otpCode.length !== 6) return;
-    
+
     setIsSubmitting(true);
     try {
       let response;
@@ -116,8 +116,8 @@ export default function OTPVerificationPage() {
       }
     } catch (error) {
       console.error('Verification error:', error);
-      enqueueSnackbar((error as any)?.data?.message || (error as any)?.data || 'Verification failed', { 
-        variant: 'error', 
+      enqueueSnackbar((error as any)?.data?.message || (error as any)?.data || 'Verification failed', {
+        variant: 'error',
       });
     } finally {
       setIsSubmitting(false);
@@ -126,7 +126,7 @@ export default function OTPVerificationPage() {
 
   const handleResend = async () => {
     if (timeLeft > 0 || isResending) return;
-    
+
     setIsResending(true);
     try {
       if (verificationType === 'forgot-password') {
@@ -140,8 +140,8 @@ export default function OTPVerificationPage() {
       enqueueSnackbar('Code sent successfully!', { variant: 'success' });
     } catch (error) {
       console.error('Resend error:', error);
-      enqueueSnackbar((error as any)?.data.data?.message || (error as any)?.data.data, { 
-        variant: 'error', 
+      enqueueSnackbar((error as any)?.data.data?.message || (error as any)?.data.data, {
+        variant: 'error',
       });
     } finally {
       setIsResending(false);
@@ -151,35 +151,35 @@ export default function OTPVerificationPage() {
   const isComplete = otp.every(digit => digit !== '');
 
   return (
-    <div className="min-h-screen flex flex-col bg-neutral-w-50">
+    <div className="min-h-screen flex flex-col bg-neutral-w-50 dark:bg-dark-bg-primary">
       {/* Header with Back Button and Logo */}
       <div className="w-full py-4 px-4 sm:py-6">
         <div className="relative flex items-center justify-center">
           <button
             onClick={() => navigate(-1)}
-            className="absolute left-0 flex items-center gap-1 text-neutral-b-600 hover:text-primary-700 transition-colors cursor-pointer touch-manipulation"
+            className="absolute left-0 flex items-center gap-1 text-neutral-b-600 dark:text-dark-text-secondary hover:text-primary-700 dark:hover:text-primary-500 transition-colors cursor-pointer touch-manipulation"
           >
             <ChevronLeft size={20} className="sm:w-6 sm:h-6" />
             <span className="text-sm sm:text-base font-medium">Back</span>
           </button>
-          
+
           <Logo />
         </div>
       </div>
 
       {/* Main content */}
       <div className="flex-1 flex items-center justify-center p-3 sm:p-4 md:p-6">
-        <div className="w-full max-w-md bg-neutral-w-900 rounded-lg shadow-xl p-4 sm:p-6 md:p-8">
-          
+        <div className="w-full max-w-md bg-neutral-w-900 dark:bg-dark-bg-secondary rounded-lg shadow-xl p-4 sm:p-6 md:p-8">
+
           {/* Title */}
-          <h1 className="text-xl font-bold text-center text-primary-700 pt-8 mb-4 sm:mb-5">
+          <h1 className="text-xl font-bold text-center text-primary-700 dark:text-primary-400 pt-8 mb-4 sm:mb-5">
             {verificationType === 'forgot-password' ? 'Enter reset code' : 'Enter verification code'}
           </h1>
 
           {/* Description */}
-          <p className="text-xs sm:text-sm text-center text-neutral-b-500 mb-8 sm:mb-10 px-2">
-            {verificationType === 'forgot-password' 
-              ? `Password reset code sent to ${email}` 
+          <p className="text-xs sm:text-sm text-center text-neutral-b-500 dark:text-dark-text-muted mb-8 sm:mb-10 px-2">
+            {verificationType === 'forgot-password'
+              ? `Password reset code sent to ${email}`
               : `Code sent to ${email}`
             }
           </p>
@@ -197,7 +197,7 @@ export default function OTPVerificationPage() {
                 onChange={(e) => handleChange(index, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(index, e)}
                 onPaste={handlePaste}
-                className="w-9 h-9 sm:w-12 sm:h-12 md:w-14 md:h-14 text-center text-sm sm:text-lg md:text-xl font-semibold border-2 rounded-md sm:rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors border-neutral-w-400 flex-shrink-0"
+                className="w-9 h-9 sm:w-12 sm:h-12 md:w-14 md:h-14 text-center text-sm sm:text-lg md:text-xl font-semibold border-2 rounded-md sm:rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors border-neutral-w-400 dark:border-dark-border dark:bg-dark-bg-primary dark:text-dark-text-primary flex-shrink-0"
               />
             ))}
           </div>
@@ -205,9 +205,9 @@ export default function OTPVerificationPage() {
           {/* Resend Timer */}
           <div className="text-center mb-6 sm:mb-10 md:mb-12">
             {timeLeft > 0 ? (
-              <span className="text-xs sm:text-sm text-neutral-b-500 ">
+              <span className="text-xs sm:text-sm text-neutral-b-500 dark:text-dark-text-muted">
                 Resend in{' '}
-                <span className="font-medium text-primary-700">
+                <span className="font-medium text-primary-700 dark:text-primary-400">
                   {formatTime(timeLeft)}
                 </span>
               </span>
@@ -215,11 +215,10 @@ export default function OTPVerificationPage() {
               <button
                 onClick={timeLeft > 0 || isResending ? undefined : handleResend}
                 disabled={timeLeft > 0 || isResending}
-                className={`text-xs sm:text-sm font-medium touch-manipulation flex items-center justify-center gap-2 min-w-[100px] mx-auto ${
-                  timeLeft > 0 || isResending
-                    ? 'text-neutral-b-400 cursor-not-allowed' 
-                    : 'text-primary-700 hover:underline cursor-pointer'
-                }`}
+                className={`text-xs sm:text-sm font-medium touch-manipulation flex items-center justify-center gap-2 min-w-[100px] mx-auto ${timeLeft > 0 || isResending
+                    ? 'text-neutral-b-400 cursor-not-allowed'
+                    : 'text-primary-700 dark:text-primary-400 hover:underline cursor-pointer'
+                  }`}
               >
                 {isResending && (
                   <svg className="animate-spin h-3 w-3 text-neutral-b-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -239,7 +238,7 @@ export default function OTPVerificationPage() {
             type="button"
             onClick={handleVerify}
             disabled={!isComplete || isSubmitting}
-            className="w-full cursor-pointer bg-primary-700 text-white text-sm sm:text-base rounded-md mb-8 sm:mb-12 py-2.5 font-medium hover:bg-primary-800 active:bg-primary-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
+            className="w-full cursor-pointer bg-primary-700 dark:bg-primary-600 text-white text-sm sm:text-base rounded-md mb-8 sm:mb-12 py-2.5 font-medium hover:bg-primary-800 dark:hover:bg-primary-700 active:bg-primary-900 dark:active:bg-primary-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
           >
             {isSubmitting ? 'Verifying...' : 'Verify'}
           </button>

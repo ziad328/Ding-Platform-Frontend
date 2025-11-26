@@ -60,11 +60,11 @@ export default function SignUpPage() {
       const errorData = error as any;
       if (errorData?.status === 409) {
         console.log("errorData", errorData);
-        enqueueSnackbar(errorData?.data?.message || 'this email is already exist', { 
+        enqueueSnackbar(errorData?.data?.message || 'this email is already exist', {
           variant: 'error',
         });
       } else {
-        enqueueSnackbar(errorData?.data?.message || 'Registration failed', { 
+        enqueueSnackbar(errorData?.data?.message || 'Registration failed', {
           variant: 'error',
         });
       }
@@ -100,7 +100,7 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-neutral-w-50">
+    <div className="min-h-screen flex flex-col bg-neutral-w-50 dark:bg-dark-bg-primary">
       {/* Logo */}
       <div className="w-full pt-6 px-4">
         <div className="flex items-center justify-center">
@@ -110,10 +110,10 @@ export default function SignUpPage() {
 
       {/* Main content */}
       <div className="flex-1 flex items-center justify-center p-3 sm:p-4 md:p-6">
-        <div className="w-full max-w-md bg-neutral-w-900 rounded-lg shadow-xl p-5 sm:p-6 md:p-8">
+        <div className="w-full max-w-md bg-neutral-w-900 dark:bg-dark-bg-secondary rounded-lg shadow-xl p-5 sm:p-6 md:p-8">
 
           {/* Title */}
-          <h1 className="auth-title text-3xl sm:text-4xl text-primary-700 text-center mt-8 mb-16">
+          <h1 className="auth-title text-3xl sm:text-4xl text-primary-700 dark:text-primary-400 text-center mt-8 mb-16">
             Create Your World
           </h1>
 
@@ -174,7 +174,7 @@ export default function SignUpPage() {
                   checked={formik.values.agreedToTerms}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
-                  className="peer w-4 h-4 sm:w-5 sm:h-5 mt-0.5 sm:mt-1 appearance-none border-2 border-neutral-w-400 rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-500 checked:bg-primary-700 checked:border-primary-700 touch-manipulation"
+                  className="peer w-4 h-4 sm:w-5 sm:h-5 mt-0.5 sm:mt-1 appearance-none border-2 border-neutral-w-400 dark:border-dark-border rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-500 checked:bg-primary-700 dark:checked:bg-primary-600 checked:border-primary-700 dark:checked:border-primary-600 touch-manipulation"
                 />
                 <svg
                   className="absolute w-3 h-3 sm:w-3.5 sm:h-3.5 mt-0 sm:mt-0.5 pointer-events-none hidden peer-checked:block text-white left-1"
@@ -188,12 +188,12 @@ export default function SignUpPage() {
                   <polyline points="1.5 6 4.5 9 10.5 1"></polyline>
                 </svg>
               </div>
-              <label htmlFor="agreedToTerms" className="text-sm sm:text-base font-normal text-neutral-b-500 cursor-pointer leading-relaxed">
+              <label htmlFor="agreedToTerms" className="text-sm sm:text-base font-normal text-neutral-b-500 dark:text-dark-text-muted cursor-pointer leading-relaxed">
                 I agree to the Terms and Privacy Policy.
               </label>
             </div>
             {formik.touched.agreedToTerms && formik.errors.agreedToTerms && (
-              <div className="text-semantic-r-800 text-xs sm:text-sm mt-1">{formik.errors.agreedToTerms}</div>
+              <div className="text-semantic-r-800 dark:text-semantic-r-700 text-xs sm:text-sm mt-1">{formik.errors.agreedToTerms}</div>
             )}
           </div>
 
@@ -202,7 +202,7 @@ export default function SignUpPage() {
             type="button"
             onClick={() => formik.handleSubmit()}
             disabled={formik.isSubmitting || !formik.isValid}
-            className="w-full mb-4 cursor-pointer bg-primary-700 text-white text-sm sm:text-base rounded-md py-2.5 font-medium hover:bg-primary-800 active:bg-primary-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation flex items-center justify-center gap-2"
+            className="w-full mb-4 cursor-pointer bg-primary-700 dark:bg-primary-600 text-white text-sm sm:text-base rounded-md py-2.5 font-medium hover:bg-primary-800 dark:hover:bg-primary-700 active:bg-primary-900 dark:active:bg-primary-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation flex items-center justify-center gap-2"
           >
             {formik.isSubmitting && (
               <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -213,13 +213,13 @@ export default function SignUpPage() {
             {formik.isSubmitting ? 'Signing up...' : 'Continue'}
           </button>
 
-           {/* Divider */}
+          {/* Divider */}
           <div className="relative mb-4">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-neutral-w-300"></div>
+              <div className="w-full border-t border-neutral-w-300 dark:border-dark-border"></div>
             </div>
             <div className="relative flex justify-center text-xs sm:text-sm">
-              <span className="px-2 font-medium bg-neutral-w-900 text-neutral-b-500">OR</span>
+              <span className="px-2 font-medium bg-neutral-w-900 dark:bg-dark-bg-secondary text-neutral-b-500 dark:text-dark-text-muted">OR</span>
             </div>
           </div>
 
@@ -227,29 +227,29 @@ export default function SignUpPage() {
           <div className="flex gap-4 mb-12">
             <button
               onClick={handleGoogleSignIn}
-              className="flex-1 cursor-pointer flex items-center justify-center bg-white border border-neutral-w-400 rounded-lg py-3 px-4 hover:bg-neutral-w-200 active:bg-neutral-w-300 transition-colors touch-manipulation"
+              className="flex-1 cursor-pointer flex items-center justify-center bg-white dark:bg-dark-bg-primary border border-neutral-w-400 dark:border-dark-border rounded-lg py-3 px-4 hover:bg-neutral-w-200 dark:hover:bg-dark-bg-tertiary active:bg-neutral-w-300 dark:active:bg-dark-border transition-colors touch-manipulation"
             >
               <img src={googleSvg} alt="Google" className="w-5 h-5" />
             </button>
 
             <button
               onClick={handleEmailLogin}
-              className="flex-1 cursor-pointer flex items-center justify-center bg-white border border-neutral-w-400 rounded-lg py-3 px-4 hover:bg-neutral-w-200 active:bg-neutral-w-300 transition-colors touch-manipulation"
+              className="flex-1 cursor-pointer flex items-center justify-center bg-white dark:bg-dark-bg-primary border border-neutral-w-400 dark:border-dark-border rounded-lg py-3 px-4 hover:bg-neutral-w-200 dark:hover:bg-dark-bg-tertiary active:bg-neutral-w-300 dark:active:bg-dark-border transition-colors touch-manipulation"
             >
               <img src={email} alt="Email" className="w-5 h-5" />
             </button>
           </div>
 
           {/* Footer */}
-          <div className=" text-center text-xs sm:text-sm font-medium text-neutral-b-600">
+          <div className="text-center text-xs sm:text-sm font-medium text-neutral-b-600 dark:text-dark-text-secondary">
             Have an account?{' '}
-            <NavLink to="/auth/Signin" className="text-primary-700 hover:underline">
+            <NavLink to="/auth/Signin" className="text-primary-700 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-500 hover:underline">
               Log In
             </NavLink>
           </div>
-          
+
         </div>
       </div>
-    </div>  
+    </div>
   );
 }
