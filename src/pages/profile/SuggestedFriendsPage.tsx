@@ -16,37 +16,14 @@ import {
   clearFriendSuggestions,
 } from '../../store/slices/social/suggestions/friend/friendSuggestions';
 import { useGetFriendSuggestionsQuery, useLazyGetFriendSuggestionsQuery } from '../../store/slices/social/suggestions/friend/friendSuggestionsApi';
+import { useToggleFriendRequestMutation } from '../../store/slices/social/friends/friendsApi';
 
-const firstNames = ['Olivia', 'Liam', 'Emma', 'Noah', 'Ava', 'Ethan', 'Sophia', 'Mason', 'Isabella', 'Logan', 'Mia', 'Lucas'];
-const lastNames = ['Anderson', 'Baker', 'Chen', 'Diaz', 'Edwards', 'Fisher', 'Garcia', 'Harris', 'Ivanov', 'Johnson', 'Khan', 'Lewis'];
-const roles = ['Product Designer', 'Software Engineer', 'Marketing Lead', 'Data Scientist', 'Project Manager', 'UX Researcher', 'DevOps Engineer', 'Content Strategist'];
-const locations = ['New York, USA', 'London, UK', 'Berlin, Germany', 'Paris, France', 'Cairo, Egypt', 'Dubai, UAE', 'Toronto, Canada', 'Sydney, Australia'];
-const companies = ['Nova Labs', 'Orbit Health', 'PixelForge', 'Skyline Ventures', 'Northwind Tech', 'Lumos Studio', 'BluePeak Data', 'Cascade Systems'];
-const educations = ['Stanford University', 'MIT', 'University of Toronto', 'Sorbonne University', 'UCLA', 'Imperial College London', 'ETH Zurich', 'University of Sydney'];
-const bios = [
-  'Building delightful user experiences with a focus on accessibility and inclusive design.',
-  'Scaling cloud-native platforms and mentoring teams on DevOps best practices.',
-  'Helping product squads validate ideas quickly using data-driven experiments.',
-  'Obsessed with solving customer problems through storytelling and community.',
-  'Bridging design and engineering to deliver polished, production-ready interfaces.',
-  'Making AI systems explainable and ethical for everyday businesses.',
-];
-const focusAreas = [
-  'SaaS · Growth · Design Systems',
-  'Developer Experience · DevOps · Cloud',
-  'Product Analytics · Experimentation',
-  'Community · Content · Partnerships',
-  'Frontend Architecture · Design Tokens',
-  'AI/ML · Responsible Tech · Research',
-];
-
-type SuggestedFriend = Omit<ProfilePreviewFriend, 'id'> & {
-  id: number;
+type SuggestedFriend = ProfilePreviewFriend & {
+  userId: string | null;
   mutualConnections: number;
   availability: string;
-  bio: string;
-  focus: string;
-  education: string;
+  score?: number;
+  reason?: string;
 };
 
 const SuggestedFriendsPage = () => {
@@ -56,6 +33,14 @@ const SuggestedFriendsPage = () => {
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const previousSuggestionsLengthRef = useRef<number>(0);
+  const [requestStates, setRequestStates] = useState<Record<
+    string,
+    {
+      hasRequest: boolean;
+      isPending: boolean;
+      error: string | null;
+    }
+  >>({});
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -77,6 +62,7 @@ const SuggestedFriendsPage = () => {
 
   // Lazy query for fetching additional pages
   const [fetchNextPageQuery, { isFetching: isFetchingNextPage }] = useLazyGetFriendSuggestionsQuery();
+  const [toggleFriendRequest] = useToggleFriendRequestMutation();
 
   // Only show full loading skeleton on initial load (when there's no data)
   // During pagination, we show the bottom skeleton loader instead
@@ -95,27 +81,97 @@ const SuggestedFriendsPage = () => {
     refetch();
   }, [dispatch, refetch]);
 
-  // Enrich API data with display information
+  const getReasonLabel = (reason?: string, mutualFriends?: number) => {
+    if (reason === 'mutual_friends') {
+      const count = mutualFriends ?? 0;
+      if (count === 0) return 'Popular in your network';
+      if (count === 1) return '1 mutual friend';
+      return `${count} mutual friends`;
+    }
+    if (!reason) return 'Suggested connection';
+    return reason.replace(/_/g, ' ');
+  };
+
+  // Map API data into the richer UI model
   const suggestedFriends: SuggestedFriend[] = useMemo(
     () =>
-      suggestions.map((suggestion, index) => ({
-        id: parseInt(suggestion.userId) || index + 1,
-        name: suggestion.name || `${firstNames[index % firstNames.length]} ${lastNames[(index * 3) % lastNames.length]}`,
-        role: roles[index % roles.length],
-        mutualConnections: (index * 7) % 58 + 3,
-        location: suggestion.headline || locations[index % locations.length],
-        availability: index % 2 === 0 ? 'Open to mentoring' : 'Exploring new roles',
-        bio: bios[index % bios.length],
-        focus: focusAreas[index % focusAreas.length],
-        company: companies[index % companies.length],
-        education: educations[index % educations.length],
-        avatar: `https://i.pravatar.cc/150?img=${(index % 70) + 1}`,
-      })),
+      suggestions.map((suggestion, index) => {
+        const userId = suggestion.userId ?? null;
+        const fallbackId = userId ?? `suggested-${index}`;
+        const name = suggestion.user?.name || suggestion.name || `Community member ${index + 1}`;
+        const mutualConnections = suggestion.mutualFriends ?? 0;
+        const reasonLabel = getReasonLabel(suggestion.reason, mutualConnections);
+        const location = suggestion.user?.location || suggestion.headline || '';
+
+        return {
+          id: fallbackId,
+          userId,
+          name,
+          role: reasonLabel,
+          company: suggestion.user?.company ?? '',
+          location,
+          avatar: suggestion.user?.image ?? null,
+          bio: suggestion.bio ?? undefined,
+          focus: undefined,
+          education: undefined,
+          mutualConnections,
+          availability:
+            suggestion.reason === 'mutual_friends'
+              ? 'Connected through shared friends'
+              : 'Suggested connection',
+          score: suggestion.score,
+          reason: suggestion.reason,
+        };
+      }),
     [suggestions]
   );
 
-  const handleNavigateToProfile = (friendId: number) => {
+  const handleNavigateToProfile = (friendId: number | string) => {
     navigate(`/profile?user=${friendId}`);
+  };
+
+  const handleToggleFriendRequest = async (friend: SuggestedFriend) => {
+    const targetUserId = friend.userId;
+    if (!targetUserId) return;
+    const currentState = requestStates[targetUserId];
+    if (currentState?.isPending) return;
+
+    const nextHasRequest = currentState?.hasRequest ?? false;
+
+    setRequestStates((prev) => ({
+      ...prev,
+      [targetUserId]: {
+        hasRequest: nextHasRequest,
+        isPending: true,
+        error: null,
+      },
+    }));
+
+    try {
+      await toggleFriendRequest(targetUserId).unwrap();
+      setRequestStates((prev) => ({
+        ...prev,
+        [targetUserId]: {
+          hasRequest: !nextHasRequest,
+          isPending: false,
+          error: null,
+        },
+      }));
+    } catch (err) {
+      const requestErrorMessage =
+        (err as { data?: { message?: string }; error?: string })?.data?.message ||
+        (err as { data?: { message?: string }; error?: string })?.error ||
+        'Unable to update friend request.';
+
+      setRequestStates((prev) => ({
+        ...prev,
+        [targetUserId]: {
+          hasRequest: nextHasRequest,
+          isPending: false,
+          error: requestErrorMessage,
+        },
+      }));
+    }
   };
 
   const clearPreviewTimeout = () => {
@@ -262,12 +318,14 @@ const SuggestedFriendsPage = () => {
                 <p className="text-sm text-neutral-b-600 dark:text-dark-text-secondary">No friend suggestions available at the moment. Check back later for new recommendations.</p>
               </div>
             ) : (
-              <div 
+              <div
                 ref={scrollContainerRef}
                 className="max-h-[60vh] overflow-y-auto hide-scrollbar pr-1 sm:pr-2 space-y-3 sm:space-y-4 divide-y divide-neutral-w-200 dark:divide-dark-border"
               >
-              {suggestedFriends.map((friend) => (
-                <div key={friend.id} className="first:pt-0 pb-3">
+              {suggestedFriends.map((friend) => {
+                const requestState = friend.userId ? requestStates[friend.userId] : undefined;
+                return (
+                  <div key={friend.id} className="first:pt-0 pb-3">
                   <div
                     className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between group"
                   >
@@ -302,24 +360,35 @@ const SuggestedFriendsPage = () => {
                           {friend.name}
                         </p>
                         <p className="text-xs sm:text-sm text-neutral-b-500 dark:text-dark-text-muted">{friend.role}</p>
-                        <p className="text-xs text-neutral-b-400 dark:text-dark-text-muted mt-1">
-                          {friend.location} · {friend.mutualConnections} mutual connections
-                        </p>
+                        {(friend.location || friend.mutualConnections > 0) && (
+                          <p className="text-xs text-neutral-b-400 dark:text-dark-text-muted mt-1">
+                            {friend.location || 'From your network'}
+                            {friend.mutualConnections > 0 ? ` · ${friend.mutualConnections} mutual friends` : ''}
+                          </p>
+                        )}
                         <p className="text-xs text-primary-600 dark:text-primary-400 mt-1">{friend.availability}</p>
                       </div>
                     </button>
                     <div className="flex items-center gap-2 sm:gap-3">
-                      <button
-                        type="button"
-                        className="inline-flex items-center gap-1 px-3 py-1.5 text-xs sm:text-sm font-medium text-white bg-primary-600 dark:bg-primary-500 rounded-lg hover:bg-primary-700 dark:hover:bg-primary-600 transition-colors"
-                      >
-                        <UserPlus className="w-4 h-4" />
-                        Add Friend
-                      </button>
+                      <div className="flex flex-col items-start gap-1">
+                        <button
+                          type="button"
+                          onClick={() => handleToggleFriendRequest(friend)}
+                          disabled={!friend.userId || requestState?.isPending}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 text-xs sm:text-sm font-medium text-white bg-primary-600 dark:bg-primary-500 rounded-lg hover:bg-primary-700 dark:hover:bg-primary-600 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                        >
+                          <UserPlus className={`w-4 h-4 ${requestState?.hasRequest ? 'rotate-45 transition-transform' : ''}`} />
+                          {requestState?.hasRequest ? 'Cancel Request' : 'Add Friend'}
+                        </button>
+                        {requestState?.error && (
+                          <p className="text-xs text-red-600 dark:text-red-400">{requestState.error}</p>
+                        )}
+                      </div>
                     </div>
                     </div>
                   </div>
-                ))}
+                );
+              })}
                 {/* Loading skeleton - shows when fetching more suggestions */}
                 {(isFetchingMore || isFetchingNextPage) && suggestedFriends.length > 0 && (
                   <div className="pt-3 animate-pulse">

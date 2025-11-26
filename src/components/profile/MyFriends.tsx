@@ -1,7 +1,12 @@
 import { User, MessageCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-const MyFriends = () => {
+interface MyFriendsProps {
+    friendsCount?: number;
+    isStatsLoading?: boolean;
+}
+
+const MyFriends = ({ friendsCount, isStatsLoading }: MyFriendsProps) => {
     const friends = [
         { name: 'Robert Fox', role: 'Software Engineer' },
         { name: 'Courtney Henry', role: 'Product Designer' },
@@ -9,9 +14,18 @@ const MyFriends = () => {
         { name: 'Devon Lane', role: 'Data Analyst' },
     ];
 
+    const friendsLabel = isStatsLoading ? '...' : friendsCount ?? 0;
+
     return (
         <div className="bg-white dark:bg-dark-bg-secondary rounded-lg sm:rounded-xl shadow-sm p-3 sm:p-4 md:p-5 space-y-3 overflow-hidden">
-            <h3 className="text-sm sm:text-base font-semibold text-neutral-b-900 dark:text-dark-text-primary mb-3 sm:mb-4">My Friends</h3>
+            <div className="flex items-center justify-between gap-2 mb-3 sm:mb-4">
+                <h3 className="text-sm sm:text-base font-semibold text-neutral-b-900 dark:text-dark-text-primary">
+                    My Friends
+                </h3>
+                <span className="text-xs sm:text-sm text-neutral-b-500 dark:text-dark-text-muted">
+                    {friendsLabel}
+                </span>
+            </div>
             <div className="space-y-2.5 sm:space-y-3">
                 {friends.map((friend, index) => (
                     <div key={index} className="flex items-center justify-between gap-2 min-w-0">

@@ -58,3 +58,26 @@ export interface FriendsPayload {
   nextOffset?: number | null;
 }
 
+export interface FriendRequest extends Friend {}
+
+export interface FriendRequestsPayload {
+  data: FriendRequest[];
+  count: number;
+  hasMore?: boolean;
+  total?: number;
+  nextOffset?: number | null;
+}
+
+export interface SocialStats {
+  friendsCount: number;
+  followingCount: number;
+  followersCount: number;
+}
+
+export interface SocialStatsResponse {
+  code: number;
+  success: boolean;
+  message: string;
+  data: SocialStats;
+}
+

@@ -10,6 +10,16 @@ import {
 import { useGetFriendSuggestionsQuery } from '../../store/slices/social/suggestions/friend/friendSuggestionsApi';
 import { SuggestedFriendsSkeleton } from './ProfileSkeletons';
 
+const buildFallbackUsername = (name?: string, userId?: string) => {
+  if (name) {
+    return name.toLowerCase().replace(/\s+/g, '.').slice(0, 20);
+  }
+  if (userId) {
+    return userId.slice(0, 10);
+  }
+  return 'member';
+};
+
 const SuggestedFriends = () => {
   const suggestions = useSelector(selectFriendSuggestions);
   const status = useSelector(selectFriendSuggestionsStatus);
@@ -48,22 +58,35 @@ const SuggestedFriends = () => {
       )}
       {!isErrorState && displaySuggestions.length > 0 && (
         <div className="space-y-2.5 sm:space-y-3">
-          {displaySuggestions.map((friend) => (
-            <div key={friend.userId} className="flex items-center justify-between gap-2 min-w-0">
-              <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-neutral-w-300 dark:bg-dark-bg-tertiary flex items-center justify-center shrink-0">
-                  <User className="w-4 h-4 sm:w-5 sm:h-5 text-neutral-b-500 dark:text-dark-text-muted" />
+          {displaySuggestions.map((friend, index) => {
+            const name = friend.user?.name || friend.name || `Community member ${index + 1}`;
+            const username = buildFallbackUsername(friend.username || friend.user?.username || friend.name, friend.userId);
+            const mutuals = friend.mutualFriends ?? 0;
+
+            return (
+              <div key={friend.userId} className="flex items-center justify-between gap-2 min-w-0">
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-neutral-w-300 dark:bg-dark-bg-tertiary flex items-center justify-center shrink-0 overflow-hidden">
+                    {friend.user?.image ? (
+                      <img src={friend.user.image} alt={name} className="w-full h-full object-cover" loading="lazy" />
+                    ) : (
+                      <User className="w-4 h-4 sm:w-5 sm:h-5 text-neutral-b-500 dark:text-dark-text-muted" />
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1 overflow-hidden">
+                    <h4 className="text-xs sm:text-sm font-medium text-neutral-b-900 dark:text-dark-text-primary truncate">{name}</h4>
+                    <p className="text-[11px] text-neutral-b-500 dark:text-dark-text-muted mt-0.5 truncate">@{username}</p>
+                    {mutuals > 0 && (
+                      <p className="text-[11px] text-neutral-b-400 dark:text-dark-text-muted truncate">{mutuals} mutual friends</p>
+                    )}
+                  </div>
                 </div>
-                <div className="min-w-0 flex-1 overflow-hidden">
-                  <h4 className="text-xs sm:text-sm font-medium text-neutral-b-900 dark:text-dark-text-primary truncate">{friend.name}</h4>
-                  <p className="text-xs text-neutral-b-500 dark:text-dark-text-muted mt-0.5 truncate">@{friend.username}</p>
-                </div>
+                <button className="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-500 p-0.5 sm:p-1 transition-colors shrink-0">
+                  <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+                </button>
               </div>
-              <button className="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-500 p-0.5 sm:p-1 transition-colors shrink-0">
-                <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
-              </button>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
       <div className="pt-2 border-t border-neutral-w-300 dark:border-dark-border">

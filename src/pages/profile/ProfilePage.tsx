@@ -8,15 +8,37 @@ import SuggestedFriends from '../../components/profile/SuggestedFriends';
 import MyFriends from '../../components/profile/MyFriends';
 import SuggestedFollowers from '../../components/profile/SuggestedFollowers';
 import Footer from '../../components/profile/Footer';
+import ProfileAboutCard from '../../components/profile/ProfileAboutCard';
+import { useGetSocialStatsQuery } from '../../store/slices/social/stats/socialStatsApi';
+import { useGetPostsCountQuery } from '../../store/slices/posts/postsStatsApi';
 import {
   ProfileHeaderSkeleton,
   PostSkeleton,
   SettingsSkeleton,
 } from '../../components/profile/ProfileSkeletons';
+import { useGetCurrentProfileQuery } from '../../store/slices/profile/profileApi';
 
 const ProfilePage = () => {
   const [activeTab, setActiveTab] = useState('My Posts');
   const [isLoading, setIsLoading] = useState(true);
+  const {
+    data: profile,
+    isLoading: isProfileLoading,
+    isFetching: isProfileFetching,
+  } = useGetCurrentProfileQuery();
+  const isProfilePending = isProfileLoading || isProfileFetching;
+  const {
+    data: socialStats,
+    isLoading: isSocialStatsLoading,
+    isFetching: isSocialStatsFetching,
+  } = useGetSocialStatsQuery();
+  const isStatsLoading = isSocialStatsLoading || isSocialStatsFetching;
+  const {
+    data: postsCountResponse,
+    isLoading: isPostsCountLoading,
+    isFetching: isPostsCountFetching,
+  } = useGetPostsCountQuery();
+  const isPostsCountPending = isPostsCountLoading || isPostsCountFetching;
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'auto' });
@@ -75,10 +97,19 @@ const ProfilePage = () => {
     <div className="max-w-7xl mx-auto px-2 sm:px-4 mb-6 sm:mb-8">
       {/* Profile Header with Tabs - Full Width */}
       <div className="mb-3 sm:mb-4">
-        {isLoading ? (
+        {isLoading || isProfilePending ? (
           <ProfileHeaderSkeleton />
         ) : (
-          <ProfileHeader activeTab={activeTab} setActiveTab={setActiveTab} />
+          <ProfileHeader
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            profile={profile ?? null}
+            followersCount={socialStats?.followersCount}
+            followingCount={socialStats?.followingCount}
+            isStatsLoading={isStatsLoading}
+            postsCount={postsCountResponse?.postsCount}
+            isPostsCountLoading={isPostsCountPending}
+          />
         )}
       </div>
 
@@ -130,7 +161,11 @@ const ProfilePage = () => {
 
         {/* Sidebar */}
         <div className="lg:col-span-4 space-y-3 sm:space-y-4">
-          <MyFriends />
+          <ProfileAboutCard profile={profile ?? null} isLoading={isLoading || isProfilePending} />
+          <MyFriends
+            friendsCount={socialStats?.friendsCount}
+            isStatsLoading={isStatsLoading}
+          />
           <SuggestedFriends />
           <SuggestedFollowers />
           <Footer />

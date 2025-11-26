@@ -60,9 +60,20 @@ export const followSuggestionsApi = apiSlice.injectEndpoints({
             ]
           : [{ type: 'FollowSuggestions' as const, id: 'LIST' }],
     }),
+    followUser: builder.mutation<{ message?: string }, string>({
+      query: (userId) => ({
+        url: `social/follow/${userId}`,
+        method: 'POST',
+      }),
+      invalidatesTags: (_result, _error, userId) => [
+        { type: 'FollowSuggestions', id: userId },
+        { type: 'FollowSuggestions', id: 'LIST' },
+        { type: 'Following', id: 'LIST' },
+      ],
+    }),
   }),
   overrideExisting: false,
 });
 
-export const { useGetFollowSuggestionsQuery, useLazyGetFollowSuggestionsQuery } = followSuggestionsApi;
+export const { useGetFollowSuggestionsQuery, useLazyGetFollowSuggestionsQuery, useFollowUserMutation } = followSuggestionsApi;
 

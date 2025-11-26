@@ -15,31 +15,13 @@ import {
   selectFollowSuggestionsIsFetchingMore,
   clearFollowSuggestions,
 } from '../../store/slices/social/suggestions/follow/followSuggestions';
-import { useGetFollowSuggestionsQuery, useLazyGetFollowSuggestionsQuery } from '../../store/slices/social/suggestions/follow/followSuggestionsApi';
+import { useGetFollowSuggestionsQuery, useLazyGetFollowSuggestionsQuery, useFollowUserMutation } from '../../store/slices/social/suggestions/follow/followSuggestionsApi';
 
-const creatorNames = ['Harper', 'Kai', 'Zara', 'Mateo', 'Evelyn', 'Omar', 'Sofia', 'Leo', 'Amelia', 'Jonas', 'Layla', 'Aarav'];
-const creatorLastNames = ['Nguyen', 'Silva', 'Bennett', 'Okafor', 'Kim', 'Santos', 'Mehta', 'Hassan', 'Olsen', 'Rivera', 'Ali', 'Hughes'];
-const niches = ['Product Strategy', 'AI Ops', 'Climate Tech', 'Fintech', 'Design Leadership', 'Data Governance', 'Web3', 'People Ops'];
-const regions = ['Tokyo, Japan', 'San Francisco, USA', 'Lisbon, Portugal', 'Nairobi, Kenya', 'Seoul, South Korea', 'Austin, USA', 'Barcelona, Spain', 'Stockholm, Sweden'];
-const organizations = ['Atlas Labs', 'Fjord Ventures', 'Helix Health', 'TerraGrid', 'Aurora Finance', 'Beacon Studio', 'North Star AI', 'Civicly'];
-const taglines = [
-  'Sharing frameworks for building purpose-driven teams.',
-  'Documenting the journey of scaling AI responsibly.',
-  'Breaking down complex fintech ideas into action plans.',
-  'Designing products that make sustainability actionable.',
-];
-const focusDescriptors = [
-  'Leadership · Growth · Community',
-  'AI Safety · Ops · Tooling',
-  'Founders · Storytelling · No-Code',
-  'Culture · Hiring · Enablement',
-];
-
-type SuggestedFollower = Omit<ProfilePreviewFriend, 'id'> & {
-  id: number;
-  followers: number;
-  sharedTopics: string;
-  cadence: string;
+type SuggestedFollower = ProfilePreviewFriend & {
+  userId: string | null;
+  mutualConnections: number;
+  reason?: string;
+  score?: number;
 };
 
 const SuggestedFollowersPage = () => {
@@ -49,6 +31,14 @@ const SuggestedFollowersPage = () => {
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const previousSuggestionsLengthRef = useRef<number>(0);
+  const [followStates, setFollowStates] = useState<Record<
+    string,
+    {
+      isPending: boolean;
+      isFollowing: boolean;
+      error: string | null;
+    }
+  >>({});
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -70,6 +60,7 @@ const SuggestedFollowersPage = () => {
 
   // Lazy query for fetching additional pages
   const [fetchNextPageQuery, { isFetching: isFetchingNextPage }] = useLazyGetFollowSuggestionsQuery();
+  const [followUser] = useFollowUserMutation();
 
   // Only show full loading skeleton on initial load (when there's no data)
   // During pagination, we show the bottom skeleton loader instead
@@ -89,25 +80,95 @@ const SuggestedFollowersPage = () => {
   }, [dispatch, refetch]);
 
   // Enrich API data with display information
+  const getReasonLabel = (reason?: string, mutualFriends?: number) => {
+    if (reason === 'common_following') {
+      const count = mutualFriends ?? 0;
+      if (count === 0) return 'Popular with the people you follow';
+      if (count === 1) return 'Followed by 1 person you follow';
+      return `Followed by ${count} people you follow`;
+    }
+    if (!reason) return 'Suggested creator';
+    return reason.replace(/_/g, ' ');
+  };
+
   const suggestedFollowers: SuggestedFollower[] = useMemo(
     () =>
-      suggestions.map((suggestion, index) => ({
-        id: parseInt(suggestion.userId) || index + 1,
-        name: suggestion.name || `${creatorNames[index % creatorNames.length]} ${creatorLastNames[(index * 5) % creatorLastNames.length]}`,
-        role: niches[index % niches.length],
-        company: organizations[index % organizations.length],
-        location: suggestion.headline || regions[index % regions.length],
-        bio: taglines[index % taglines.length],
-        focus: focusDescriptors[index % focusDescriptors.length],
-        avatar: `https://i.pravatar.cc/150?img=${(index % 70) + 1}`,
-        followers: 1200 + index * 23,
-        sharedTopics: focusDescriptors[index % focusDescriptors.length],
-        cadence: index % 2 === 0 ? 'Posts weekly' : 'Daily short takes',
-      })),
+      suggestions.map((suggestion, index) => {
+        const userId = suggestion.userId ?? null;
+        const fallbackId = userId ?? `suggested-follower-${index}`;
+        const name = suggestion.user?.name || suggestion.name || `Creator ${index + 1}`;
+        const mutualConnections = suggestion.mutualFriends ?? 0;
+        const reasonLabel = getReasonLabel(suggestion.reason, mutualConnections);
+        const location = suggestion.user?.location || suggestion.headline || '';
+
+        return {
+          id: fallbackId,
+          userId,
+          name,
+          role: reasonLabel,
+          company: suggestion.user?.company ?? '',
+          location,
+          avatar: suggestion.user?.image ?? null,
+          bio: suggestion.bio ?? undefined,
+          focus: undefined,
+          education: undefined,
+          mutualConnections,
+          reason: suggestion.reason,
+          score: suggestion.score,
+        };
+      }),
     [suggestions]
   );
 
-  const handleNavigateToProfile = (followerId: number) => {
+  const handleFollowClick = async (follower: SuggestedFollower) => {
+    const targetUserId = follower.userId;
+    if (!targetUserId) return;
+
+    const currentState = followStates[targetUserId];
+    if (currentState?.isPending || currentState?.isFollowing) return;
+
+    setFollowStates((prev) => ({
+      ...prev,
+      [targetUserId]: {
+        isPending: true,
+        isFollowing: currentState?.isFollowing ?? false,
+        error: null,
+      },
+    }));
+
+    try {
+      await followUser(targetUserId).unwrap();
+      setFollowStates((prev) => ({
+        ...prev,
+        [targetUserId]: {
+          isPending: false,
+          isFollowing: true,
+          error: null,
+        },
+      }));
+    } catch (err) {
+      const requestErrorMessage =
+        (err as { data?: { message?: string }; error?: string })?.data?.message ||
+        (err as { data?: { message?: string }; error?: string })?.error ||
+        'Unable to follow this user.';
+
+      setFollowStates((prev) => ({
+        ...prev,
+        [targetUserId]: {
+          isPending: false,
+          isFollowing: false,
+          error: requestErrorMessage,
+        },
+      }));
+    }
+  };
+
+  const getFollowState = (userId: string | null) => {
+    if (!userId) return undefined;
+    return followStates[userId];
+  };
+
+  const handleNavigateToProfile = (followerId: number | string) => {
     navigate(`/profile?user=${followerId}`);
   };
 
@@ -203,6 +264,9 @@ const SuggestedFollowersPage = () => {
     };
   }, []);
 
+  const previewFollowerUserId = previewTarget?.follower?.userId ?? null;
+  const previewFollowState = previewFollowerUserId ? getFollowState(previewFollowerUserId) : undefined;
+
   return (
     <div className="w-full mx-auto">
       <div className="bg-white dark:bg-dark-bg-secondary rounded-lg sm:rounded-xl shadow-sm p-4 sm:p-6">
@@ -258,7 +322,11 @@ const SuggestedFollowersPage = () => {
                 ref={scrollContainerRef}
                 className="max-h-[60vh] overflow-y-auto hide-scrollbar pr-1 sm:pr-2 space-y-3 sm:space-y-4 divide-y divide-neutral-w-200 dark:divide-dark-border"
               >
-              {suggestedFollowers.map((follower) => (
+              {suggestedFollowers.map((follower) => {
+                const followState = getFollowState(follower.userId);
+                const isPendingFollow = followState?.isPending;
+                const isAlreadyFollowing = followState?.isFollowing;
+                return (
                 <div key={follower.id} className="first:pt-0 pb-3">
                   <div
                     className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between group"
@@ -294,27 +362,40 @@ const SuggestedFollowersPage = () => {
                           {follower.name}
                         </p>
                         <p className="text-xs sm:text-sm text-neutral-b-500 dark:text-dark-text-muted">{follower.role}</p>
-                        <p className="text-xs text-neutral-b-400 dark:text-dark-text-muted mt-1">
-                          {follower.location} · {follower.followers.toLocaleString()} followers
-                        </p>
-                        <p className="text-xs text-primary-600 dark:text-primary-400 mt-1">{follower.cadence}</p>
+                        {(follower.location || follower.mutualConnections > 0) && (
+                          <p className="text-xs text-neutral-b-400 dark:text-dark-text-muted mt-1">
+                            {follower.location || 'Active in your circles'}
+                            {follower.mutualConnections > 0 ? ` · ${follower.mutualConnections} mutual followers` : ''}
+                          </p>
+                        )}
+                        {follower.bio && (
+                          <p className="text-xs text-primary-600 dark:text-primary-400 mt-1 line-clamp-2">{follower.bio}</p>
+                        )}
                       </div>
                     </button>
                     <div className="flex items-center gap-2 sm:gap-3">
-                      <div className="text-xs text-neutral-b-500 dark:text-dark-text-muted hidden sm:block">
-                        {follower.sharedTopics}
-                      </div>
+                      {follower.role && (
+                        <div className="text-xs text-neutral-b-500 dark:text-dark-text-muted hidden sm:block">
+                          {follower.role}
+                        </div>
+                      )}
                       <button
                         type="button"
-                        className="inline-flex items-center gap-1 px-3 py-1.5 text-xs sm:text-sm font-medium text-white bg-primary-600 dark:bg-primary-500 rounded-lg hover:bg-primary-700 dark:hover:bg-primary-600 transition-colors"
+                        onClick={() => handleFollowClick(follower)}
+                        disabled={!follower.userId || isPendingFollow || isAlreadyFollowing}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 text-xs sm:text-sm font-medium text-white bg-primary-600 dark:bg-primary-500 rounded-lg hover:bg-primary-700 dark:hover:bg-primary-600 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                       >
                         <UserCheck className="w-4 h-4" />
-                        Follow
+                        {isAlreadyFollowing ? 'Following' : 'Follow'}
                       </button>
+                      {followState?.error && (
+                        <p className="text-xs text-red-600 dark:text-red-400">{followState.error}</p>
+                      )}
                     </div>
                     </div>
                   </div>
-                ))}
+                );
+              })}
                 {/* Loading skeleton - shows when fetching more suggestions */}
                 {(isFetchingMore || isFetchingNextPage) && suggestedFollowers.length > 0 && (
                   <div className="pt-3 animate-pulse">
@@ -351,7 +432,15 @@ const SuggestedFollowersPage = () => {
         visible={isPreviewVisible && !!previewTarget}
         onMouseEnter={clearPreviewTimeout}
         onMouseLeave={handlePreviewLeave}
-        primaryActionLabel="Follow"
+        primaryActionLabel={previewFollowState?.isFollowing ? 'Following' : 'Follow'}
+        primaryActionDisabled={
+          !previewFollowerUserId || previewFollowState?.isPending || previewFollowState?.isFollowing
+        }
+        onPrimaryAction={() => {
+          if (previewTarget?.follower) {
+            handleFollowClick(previewTarget.follower);
+          }
+        }}
         secondaryActionLabel="Message"
       />
     </div>

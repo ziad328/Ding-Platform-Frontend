@@ -17,14 +17,6 @@ interface FollowingResponse {
   };
 }
 
-const defaultFollowingPayload: FollowingPayload = {
-  data: [],
-  count: 0,
-  hasMore: false,
-  total: 0,
-  nextOffset: null,
-};
-
 export const followingApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getFollowing: builder.query<FollowingPayload, FollowingQueryParams | void>({
@@ -38,7 +30,7 @@ export const followingApi = apiSlice.injectEndpoints({
           method: 'GET',
         };
       },
-      transformResponse: (response: FollowingResponse, _meta, arg) => {
+      transformResponse: (response: FollowingResponse) => {
         const payload = response?.data ?? { data: [], meta: null };
         const meta = payload.meta;
         
