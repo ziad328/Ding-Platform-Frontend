@@ -1,6 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit';
 import authReducer from './slices/auth/auth';
 import userReducers from './slices/user/user';
+import profileReducer from './slices/profile/profile';
 import sessionReducer from './slices/session/session';
 import followersReducer from './slices/social/followers/followers';
 import followingReducer from './slices/social/following/following';
@@ -24,6 +25,7 @@ export const store = configureStore({
   reducer: {
     auth: persistedAuthReducer,
     user: userReducers,
+    profile: profileReducer,
     session: sessionReducer,
     followers: followersReducer,
     following: followingReducer,

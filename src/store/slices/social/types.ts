@@ -68,3 +68,16 @@ export interface FriendRequestsPayload {
   nextOffset?: number | null;
 }
 
+export interface SocialStats {
+  friendsCount: number;
+  followingCount: number;
+  followersCount: number;
+}
+
+export interface SocialStatsResponse {
+  code: number;
+  success: boolean;
+  message: string;
+  data: SocialStats;
+}
+

@@ -105,6 +105,28 @@ export const friendsApi = apiSlice.injectEndpoints({
         { type: 'Friends', id: 'LIST' },
       ],
     }),
+    acceptFriendRequest: builder.mutation<{ message: string }, string>({
+      query: (userId) => ({
+        url: `social/friends/accept/${userId}`,
+        method: 'POST',
+      }),
+      invalidatesTags: (_result, _error, userId) => [
+        { type: 'FriendRequests', id: userId },
+        { type: 'FriendRequests', id: 'LIST' },
+        { type: 'Friends', id: userId },
+        { type: 'Friends', id: 'LIST' },
+      ],
+    }),
+    rejectFriendRequest: builder.mutation<{ message: string }, string>({
+      query: (userId) => ({
+        url: `social/friends/reject/${userId}`,
+        method: 'POST',
+      }),
+      invalidatesTags: (_result, _error, userId) => [
+        { type: 'FriendRequests', id: userId },
+        { type: 'FriendRequests', id: 'LIST' },
+      ],
+    }),
   }),
   overrideExisting: false,
 });
@@ -116,5 +138,7 @@ export const {
   useLazyGetFriendRequestsQuery,
   useDeleteFriendMutation,
   useToggleFriendRequestMutation,
+  useAcceptFriendRequestMutation,
+  useRejectFriendRequestMutation,
 } = friendsApi;
 

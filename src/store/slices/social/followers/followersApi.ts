@@ -30,7 +30,7 @@ export const followersApi = apiSlice.injectEndpoints({
           method: 'GET',
         };
       },
-      transformResponse: (response: FollowersResponse, _meta, arg) => {
+      transformResponse: (response: FollowersResponse) => {
         const payload = response?.data ?? { data: [], meta: null };
         const meta = payload.meta;
         

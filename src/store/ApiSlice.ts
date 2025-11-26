@@ -61,6 +61,8 @@ const tagTypes = [
   'FriendSuggestions',
   'FollowSuggestions',
   'FriendRequests',
+  'SocialStats',
+  'Profile',
 ] as const;
 
 export const apiSlice = createApi({

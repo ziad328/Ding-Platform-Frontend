@@ -1,19 +1,48 @@
 import React, { useState } from 'react';
-import { User, Edit2, LayoutGrid, Bookmark, Settings } from 'lucide-react';
+import { User, Edit2, LayoutGrid, Bookmark, Settings, MapPin, Globe } from 'lucide-react';
 import { selectCurrentUser } from '../../store/slices/auth/auth';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import type { ProfileData } from '../../store/slices/profile/profile';
 interface ProfileHeaderProps {
     activeTab: string;
     setActiveTab: (tab: string) => void;
+    profile: ProfileData | null;
+    followersCount?: number;
+    followingCount?: number;
+    isStatsLoading?: boolean;
+    postsCount?: number;
+    isPostsCountLoading?: boolean;
 }
 
-const ProfileHeader: React.FC<ProfileHeaderProps> = ({ activeTab, setActiveTab }) => {
+const ProfileHeader: React.FC<ProfileHeaderProps> = ({
+    activeTab,
+    setActiveTab,
+    profile,
+    followersCount,
+    followingCount,
+    isStatsLoading,
+    postsCount,
+    isPostsCountLoading,
+}) => {
     const [isHoveringCover, setIsHoveringCover] = useState(false);
     const [isHoveringAvatar, setIsHoveringAvatar] = useState(false);
     const user = useSelector(selectCurrentUser);
-    console.log(user);
     const navigate = useNavigate();
+    const displayName = profile?.user?.name ?? user?.name ?? 'Your Name';
+    const username = profile?.user?.email ?? user?.email ?? undefined;
+    const usernameHandle = username ? `@${username.split('@')[0]}` : '';
+    const avatarSrc = profile?.user?.image ?? user?.image ?? null;
+    const coverStyles = profile?.coverPhoto
+        ? {
+            backgroundImage: `url(${profile.coverPhoto})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+        }
+        : undefined;
+    const bio = profile?.bio;
+    const location = profile?.location;
+    const website = profile?.website;
     const tabs = [
         { name: 'My Posts', icon: LayoutGrid },
         { name: 'Saved Posts', icon: Bookmark },
@@ -25,6 +54,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ activeTab, setActiveTab }
             {/* Cover Photo */}
             <div
                 className="relative h-24 sm:h-32 md:h-40 lg:h-48 bg-linear-to-r from-neutral-b-100 to-neutral-w-300 dark:from-dark-bg-tertiary dark:to-dark-bg-secondary group cursor-pointer"
+                style={coverStyles}
                 onMouseEnter={() => setIsHoveringCover(true)}
                 onMouseLeave={() => setIsHoveringCover(false)}
             >
@@ -48,7 +78,11 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ activeTab, setActiveTab }
                                 onMouseEnter={() => setIsHoveringAvatar(true)}
                                 onMouseLeave={() => setIsHoveringAvatar(false)}
                             >
-                                {user?.image ? <img src={user?.image} alt="profile" className="w-full h-full rounded-full" /> : <User className="w-7 h-7 sm:w-10 sm:h-10 md:w-12 md:h-12 text-neutral-b-400 dark:text-dark-text-muted" />}
+                                {avatarSrc ? (
+                                    <img src={avatarSrc} alt="profile" className="w-full h-full rounded-full object-cover" />
+                                ) : (
+                                    <User className="w-7 h-7 sm:w-10 sm:h-10 md:w-12 md:h-12 text-neutral-b-400 dark:text-dark-text-muted" />
+                                )}
                                 <div className={`absolute inset-0 bg-neutral-b-600 dark:bg-neutral-b-800 rounded-full flex items-center justify-center transition-all duration-300 ${isHoveringAvatar ? 'opacity-60' : 'opacity-0'
                                     }`}>
                                     <Edit2 className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
@@ -58,9 +92,38 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ activeTab, setActiveTab }
 
                         {/* User Details */}
                         <div>
-                            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-neutral-b-900 dark:text-dark-text-primary mb-0.5 sm:mb-1">{user?.name}</h1>
-                            <p className="text-xs sm:text-sm text-neutral-b-500 dark:text-dark-text-muted mb-1 sm:mb-2">@robert</p>
-                            <p className="text-xs sm:text-sm text-neutral-b-600 dark:text-dark-text-secondary">Software Engineer</p>
+                            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-neutral-b-900 dark:text-dark-text-primary mb-0.5 sm:mb-1">
+                                {displayName}
+                            </h1>
+                            {usernameHandle && (
+                                <p className="text-xs sm:text-sm text-neutral-b-500 dark:text-dark-text-muted mb-1 sm:mb-2">
+                                    {usernameHandle}
+                                </p>
+                            )}
+                            {bio && (
+                                <p className="text-xs sm:text-sm text-neutral-b-600 dark:text-dark-text-secondary mb-1 sm:mb-2">
+                                    {bio}
+                                </p>
+                            )}
+                            <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-neutral-b-500 dark:text-dark-text-muted">
+                                {location && (
+                                    <span className="flex items-center gap-1">
+                                        <MapPin className="w-3.5 h-3.5" />
+                                        {location}
+                                    </span>
+                                )}
+                                {website && (
+                                    <a
+                                        href={website}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="flex items-center gap-1 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+                                    >
+                                        <Globe className="w-3.5 h-3.5" />
+                                        {website.replace(/^https?:\/\//, '')}
+                                    </a>
+                                )}
+                            </div>
                         </div>
                     </div>
 
@@ -72,7 +135,9 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ activeTab, setActiveTab }
                             className="group text-center focus:outline-none hover:text-primary-600 dark:hover:text-primary-400 transition-colors cursor-pointer"
                             aria-label="View posts tab"
                         >
-                            <p className="text-lg sm:text-xl md:text-2xl font-bold text-neutral-b-900 dark:text-dark-text-primary mb-0.5 sm:mb-1 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">12</p>
+                            <p className="text-lg sm:text-xl md:text-2xl font-bold text-neutral-b-900 dark:text-dark-text-primary mb-0.5 sm:mb-1 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+                                {isPostsCountLoading ? '...' : postsCount ?? 0}
+                            </p>
                             <p className="text-xs sm:text-sm text-neutral-b-500 dark:text-dark-text-muted group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">Posts</p>
                         </button>
                         <button
@@ -81,7 +146,9 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ activeTab, setActiveTab }
                             className="group text-center focus:outline-none hover:text-primary-600 dark:hover:text-primary-400 transition-colors cursor-pointer"
                             aria-label="View all followers"
                         >
-                            <p className="text-lg sm:text-xl md:text-2xl font-bold text-neutral-b-900 dark:text-dark-text-primary mb-0.5 sm:mb-1 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">207</p>
+                            <p className="text-lg sm:text-xl md:text-2xl font-bold text-neutral-b-900 dark:text-dark-text-primary mb-0.5 sm:mb-1 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+                                {isStatsLoading ? '...' : followersCount ?? 0}
+                            </p>
                             <p className="text-xs sm:text-sm text-neutral-b-500 dark:text-dark-text-muted group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">Followers</p>
                         </button>
                         <button
@@ -90,7 +157,9 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ activeTab, setActiveTab }
                             className="group text-center focus:outline-none hover:text-primary-600 dark:hover:text-primary-400 transition-colors cursor-pointer"
                             aria-label="View all following"
                         >
-                            <p className="text-lg sm:text-xl md:text-2xl font-bold text-neutral-b-900 dark:text-dark-text-primary mb-0.5 sm:mb-1 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">64</p>
+                            <p className="text-lg sm:text-xl md:text-2xl font-bold text-neutral-b-900 dark:text-dark-text-primary mb-0.5 sm:mb-1 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+                                {isStatsLoading ? '...' : followingCount ?? 0}
+                            </p>
                             <p className="text-xs sm:text-sm text-neutral-b-500 dark:text-dark-text-muted group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">Following</p>
                         </button>
                     </div>

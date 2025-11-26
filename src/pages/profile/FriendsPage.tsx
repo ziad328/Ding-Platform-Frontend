@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState, useCallback, type RefObject } from 'react';
-import { ArrowLeft, MessageCircle, UserMinus, User } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState, useCallback, type RefObject, type ReactNode } from 'react';
+import { ArrowLeft, MessageCircle, UserMinus, User, UserPlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import ProfileHoverPreview from '../../components/profile/ProfileHoverPreview';
@@ -20,6 +20,8 @@ import {
   useGetFriendsQuery,
   useLazyGetFriendRequestsQuery,
   useLazyGetFriendsQuery,
+  useRejectFriendRequestMutation,
+  useAcceptFriendRequestMutation,
 } from '../../store/slices/social/friends/friendsApi';
 
 type FriendProfile = ProfilePreviewFriend & {
@@ -30,6 +32,7 @@ type FriendProfile = ProfilePreviewFriend & {
 const FriendsPage = () => {
   const [previewTarget, setPreviewTarget] = useState<{ friend: FriendProfile; rect: DOMRect } | null>(null);
   const [pendingRemovalId, setPendingRemovalId] = useState<string | null>(null);
+  const [pendingRequestActionId, setPendingRequestActionId] = useState<string | null>(null);
   const [isPreviewVisible, setIsPreviewVisible] = useState(false);
   const previewTimeoutRef = useRef<number | null>(null);
   const friendsSentinelRef = useRef<HTMLDivElement | null>(null);
@@ -61,6 +64,8 @@ const FriendsPage = () => {
   const [fetchNextPageQuery, { isFetching: isFetchingNextPage }] = useLazyGetFriendsQuery();
 
   const [deleteFriend] = useDeleteFriendMutation();
+  const [rejectFriendRequest] = useRejectFriendRequestMutation();
+  const [acceptFriendRequest] = useAcceptFriendRequestMutation();
   const {
     data: friendRequestsPayload,
     isLoading: isRequestQueryLoading,
@@ -353,6 +358,7 @@ const FriendsPage = () => {
       setPreviewTarget(null);
       setIsPreviewVisible(false);
       setPendingRemovalId(null);
+      setPendingRequestActionId(null);
     };
   }, []);
 
@@ -367,6 +373,73 @@ const FriendsPage = () => {
       setPendingRemovalId(null);
     }
   };
+
+  const handleRejectFriendRequest = useCallback(
+    async (userId: string) => {
+      if (pendingRequestActionId) return;
+      setPendingRequestActionId(userId);
+      try {
+        await rejectFriendRequest(userId).unwrap();
+        setFriendRequestsState((prev) => {
+          const filteredData = prev.data.filter((friend) => friend.userId !== userId);
+          const removed = filteredData.length !== prev.data.length;
+          if (!removed) {
+            return prev;
+          }
+
+          const nextCount = Math.max(prev.count - 1, 0);
+          const nextTotal = Math.max((prev.total ?? prev.count) - 1, 0);
+
+          return {
+            ...prev,
+            data: filteredData,
+            count: nextCount,
+            total: nextTotal,
+          };
+        });
+        refetchFriendRequests();
+      } catch (error) {
+        console.error('Failed to reject friend request', error);
+      } finally {
+        setPendingRequestActionId(null);
+      }
+    },
+    [pendingRequestActionId, rejectFriendRequest, refetchFriendRequests],
+  );
+
+  const handleAcceptFriendRequest = useCallback(
+    async (userId: string) => {
+      if (pendingRequestActionId) return;
+      setPendingRequestActionId(userId);
+      try {
+        await acceptFriendRequest(userId).unwrap();
+        setFriendRequestsState((prev) => {
+          const filteredData = prev.data.filter((friend) => friend.userId !== userId);
+          const removed = filteredData.length !== prev.data.length;
+          if (!removed) {
+            return prev;
+          }
+
+          const nextCount = Math.max(prev.count - 1, 0);
+          const nextTotal = Math.max((prev.total ?? prev.count) - 1, 0);
+
+          return {
+            ...prev,
+            data: filteredData,
+            count: nextCount,
+            total: nextTotal,
+          };
+        });
+        refetchFriendRequests();
+        refetch();
+      } catch (error) {
+        console.error('Failed to accept friend request', error);
+      } finally {
+        setPendingRequestActionId(null);
+      }
+    },
+    [acceptFriendRequest, pendingRequestActionId, refetch, refetchFriendRequests],
+  );
 
   const handleRequestsRetry = useCallback(() => {
     setFriendRequestsState({
@@ -407,6 +480,7 @@ const FriendsPage = () => {
     isFetchingMoreState,
     isFetchingNextPageState,
     endOfListMessage,
+    renderActions,
   }: {
     profiles: FriendProfile[];
     rawCount: number;
@@ -421,6 +495,7 @@ const FriendsPage = () => {
     isFetchingMoreState: boolean;
     isFetchingNextPageState: boolean;
     endOfListMessage: string;
+    renderActions?: (friend: FriendProfile) => ReactNode;
   }) => {
     if (isInitialLoadingState) {
       return (
@@ -470,56 +545,64 @@ const FriendsPage = () => {
         ref={containerRef}
         className="max-h-[60vh] overflow-y-auto hide-scrollbar pr-1 sm:pr-2 space-y-3 sm:space-y-4 divide-y divide-neutral-w-200 dark:divide-dark-border"
       >
-        {profiles.map((friend) => (
-          <div key={friend.id} className="first:pt-0 pb-3">
-            <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-start gap-3 sm:gap-4">
-                <div
-                  className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-neutral-w-900 dark:bg-dark-bg-secondary border-3 sm:border-4 border-white dark:border-dark-bg-secondary flex items-center justify-center shrink-0 overflow-hidden cursor-pointer"
-                  onMouseEnter={(event) => handlePreviewEnter(friend, event.currentTarget)}
-                  onMouseLeave={handlePreviewLeave}
-                >
-                  {friend.avatar ? (
-                    <img src={friend.avatar} alt={friend.name} className="w-full h-full rounded-full object-cover" loading="lazy" />
-                  ) : (
-                    <User className="w-6 h-6 sm:w-7 sm:h-7 text-neutral-b-400 dark:text-dark-text-muted" />
-                  )}
-                </div>
-                <div>
-                  <p
-                    className="text-sm sm:text-base font-semibold text-neutral-b-900 dark:text-dark-text-primary hover:text-primary-600 dark:hover:text-primary-400 transition-colors cursor-pointer inline-block"
+        {profiles.map((friend) => {
+          const actionControls = renderActions ? (
+            renderActions(friend)
+          ) : (
+            <div className="flex items-center gap-2 sm:gap-3">
+              <button
+                type="button"
+                className="inline-flex items-center gap-1 px-3 py-1.5 text-xs sm:text-sm font-medium text-primary-600 dark:text-primary-400 border border-primary-100 dark:border-primary-900/50 rounded-lg hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
+              >
+                <MessageCircle className="w-4 h-4" />
+                Message
+              </button>
+              <button
+                type="button"
+                onClick={() => handleRemoveFriend(friend.id)}
+                disabled={pendingRemovalId === friend.id}
+                className="inline-flex items-center gap-1 px-3 py-1.5 text-xs sm:text-sm font-medium text-neutral-b-700 dark:text-dark-text-primary border border-neutral-w-300 dark:border-dark-border rounded-lg hover:bg-neutral-w-200 dark:hover:bg-dark-bg-tertiary transition-colors disabled:opacity-50"
+              >
+                <UserMinus className="w-4 h-4" />
+                {pendingRemovalId === friend.id ? 'Removing...' : 'Remove'}
+              </button>
+            </div>
+          );
+
+          return (
+            <div key={friend.id} className="first:pt-0 pb-3">
+              <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-start gap-3 sm:gap-4">
+                  <div
+                    className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-neutral-w-900 dark:bg-dark-bg-secondary border-3 sm:border-4 border-white dark:border-dark-bg-secondary flex items-center justify-center shrink-0 overflow-hidden cursor-pointer"
                     onMouseEnter={(event) => handlePreviewEnter(friend, event.currentTarget)}
                     onMouseLeave={handlePreviewLeave}
                   >
-                    {friend.name}
-                  </p>
-                  <p className="text-xs text-neutral-b-500 dark:text-dark-text-muted">@{friend.username}</p>
-                  {friend.bio && (
-                    <p className="text-xs sm:text-sm text-neutral-b-500 dark:text-dark-text-secondary mt-1 line-clamp-2">{friend.bio}</p>
-                  )}
+                    {friend.avatar ? (
+                      <img src={friend.avatar} alt={friend.name} className="w-full h-full rounded-full object-cover" loading="lazy" />
+                    ) : (
+                      <User className="w-6 h-6 sm:w-7 sm:h-7 text-neutral-b-400 dark:text-dark-text-muted" />
+                    )}
+                  </div>
+                  <div>
+                    <p
+                      className="text-sm sm:text-base font-semibold text-neutral-b-900 dark:text-dark-text-primary hover:text-primary-600 dark:hover:text-primary-400 transition-colors cursor-pointer inline-block"
+                      onMouseEnter={(event) => handlePreviewEnter(friend, event.currentTarget)}
+                      onMouseLeave={handlePreviewLeave}
+                    >
+                      {friend.name}
+                    </p>
+                    <p className="text-xs text-neutral-b-500 dark:text-dark-text-muted">@{friend.username}</p>
+                    {friend.bio && (
+                      <p className="text-xs sm:text-sm text-neutral-b-500 dark:text-dark-text-secondary mt-1 line-clamp-2">{friend.bio}</p>
+                    )}
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center gap-2 sm:gap-3">
-                <button
-                  type="button"
-                  className="inline-flex items-center gap-1 px-3 py-1.5 text-xs sm:text-sm font-medium text-primary-600 dark:text-primary-400 border border-primary-100 dark:border-primary-900/50 rounded-lg hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
-                >
-                  <MessageCircle className="w-4 h-4" />
-                  Message
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleRemoveFriend(friend.id)}
-                  disabled={pendingRemovalId === friend.id}
-                  className="inline-flex items-center gap-1 px-3 py-1.5 text-xs sm:text-sm font-medium text-neutral-b-700 dark:text-dark-text-primary border border-neutral-w-300 dark:border-dark-border rounded-lg hover:bg-neutral-w-200 dark:hover:bg-dark-bg-tertiary transition-colors disabled:opacity-50"
-                >
-                  <UserMinus className="w-4 h-4" />
-                  {pendingRemovalId === friend.id ? 'Removing...' : 'Remove'}
-                </button>
+                {actionControls}
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
         {(isFetchingMoreState || isFetchingNextPageState) && profiles.length > 0 && (
           <div className="pt-3 animate-pulse">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -624,6 +707,35 @@ const FriendsPage = () => {
               isFetchingMoreState: isRequestFetchingMore,
               isFetchingNextPageState: isFetchingFriendRequestsNextPage,
               endOfListMessage: 'All caught up! You have reviewed every friend request.',
+              renderActions: (friend) => (
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <button
+                    type="button"
+                    className="inline-flex items-center gap-1 px-3 py-1.5 text-xs sm:text-sm font-medium text-primary-600 dark:text-primary-400 border border-primary-100 dark:border-primary-900/50 rounded-lg hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    Message
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleAcceptFriendRequest(friend.id)}
+                    disabled={pendingRequestActionId === friend.id}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 text-xs sm:text-sm font-medium text-green-600 dark:text-green-400 border border-green-200 dark:border-green-900/40 rounded-lg hover:bg-green-50 dark:hover:bg-green-900/10 transition-colors disabled:opacity-50"
+                  >
+                    <UserPlus className="w-4 h-4" />
+                    {pendingRequestActionId === friend.id ? 'Processing...' : 'Accept'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleRejectFriendRequest(friend.id)}
+                    disabled={pendingRequestActionId === friend.id}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 text-xs sm:text-sm font-medium text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/40 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors disabled:opacity-50"
+                  >
+                    <UserMinus className="w-4 h-4" />
+                    {pendingRequestActionId === friend.id ? 'Processing...' : 'Reject'}
+                  </button>
+                </div>
+              ),
             })}
       </div>
       <ProfileHoverPreview

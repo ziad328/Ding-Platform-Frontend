@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { User, UserPlus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
@@ -7,18 +7,94 @@ import {
   selectFollowSuggestionsError,
   selectFollowSuggestionsStatus,
 } from '../../store/slices/social/suggestions/follow/followSuggestions';
-import { useGetFollowSuggestionsQuery } from '../../store/slices/social/suggestions/follow/followSuggestionsApi';
+import { useGetFollowSuggestionsQuery, useFollowUserMutation } from '../../store/slices/social/suggestions/follow/followSuggestionsApi';
 import { SuggestedFollowersSkeleton } from './ProfileSkeletons';
+
+const buildFallbackUsername = (name?: string, userId?: string) => {
+  if (name) {
+    return name.toLowerCase().replace(/\s+/g, '.').slice(0, 20);
+  }
+  if (userId) {
+    return userId.slice(0, 10);
+  }
+  return 'creator';
+};
 
 const SuggestedFollowers = () => {
   const suggestions = useSelector(selectFollowSuggestions);
   const status = useSelector(selectFollowSuggestionsStatus);
   const error = useSelector(selectFollowSuggestionsError);
   const { isLoading: queryLoading, isError: queryError, error: queryErrorPayload, refetch } = useGetFollowSuggestionsQuery();
+  const [followUser] = useFollowUserMutation();
+  const [followStates, setFollowStates] = useState<Record<
+    string,
+    {
+      isPending: boolean;
+      isFollowing: boolean;
+      error: string | null;
+    }
+  >>({});
 
   const isLoading = queryLoading || status === 'loading' || status === 'idle';
   const isErrorState = queryError || status === 'failed';
-  const displaySuggestions = useMemo(() => suggestions.slice(0, 4), [suggestions]);
+  const displayFollowers = useMemo(
+    () =>
+      suggestions.slice(0, 4).map((suggestion, index) => {
+        const name = suggestion.user?.name || suggestion.name || `Creator ${index + 1}`;
+        const username = buildFallbackUsername(suggestion.username || suggestion.user?.username || name, suggestion.userId);
+        const mutualFollowers = suggestion.mutualFriends ?? 0;
+
+        return {
+          id: suggestion.userId ?? `follower-${index}`,
+          userId: suggestion.userId ?? null,
+          name,
+          username,
+          avatar: suggestion.user?.image ?? null,
+          mutualFollowers,
+        };
+      }),
+    [suggestions]
+  );
+
+  const handleFollow = async (userId: string | null) => {
+    if (!userId) return;
+    const currentState = followStates[userId];
+    if (currentState?.isPending || currentState?.isFollowing) return;
+
+    setFollowStates((prev) => ({
+      ...prev,
+      [userId]: {
+        isPending: true,
+        isFollowing: currentState?.isFollowing ?? false,
+        error: null,
+      },
+    }));
+
+    try {
+      await followUser(userId).unwrap();
+      setFollowStates((prev) => ({
+        ...prev,
+        [userId]: {
+          isPending: false,
+          isFollowing: true,
+          error: null,
+        },
+      }));
+    } catch (err) {
+      const requestErrorMessage =
+        (err as { data?: { message?: string }; error?: string })?.data?.message ||
+        (err as { data?: { message?: string }; error?: string })?.error ||
+        'Unable to follow this user.';
+      setFollowStates((prev) => ({
+        ...prev,
+        [userId]: {
+          isPending: false,
+          isFollowing: false,
+          error: requestErrorMessage,
+        },
+      }));
+    }
+  };
 
   if (isLoading && !isErrorState) {
     return <SuggestedFollowersSkeleton />;
@@ -43,28 +119,50 @@ const SuggestedFollowers = () => {
           </button>
         </div>
       )}
-      {!isErrorState && displaySuggestions.length === 0 && (
+      {!isErrorState && displayFollowers.length === 0 && (
         <p className="text-xs text-neutral-b-500 dark:text-dark-text-muted">No follower recommendations right now.</p>
       )}
-      {!isErrorState && displaySuggestions.length > 0 && (
+      {!isErrorState && displayFollowers.length > 0 && (
         <div className="space-y-2.5 sm:space-y-3">
-          {displaySuggestions.map((follower) => (
-            <div key={follower.userId} className="flex items-center justify-between gap-2 min-w-0">
+          {displayFollowers.map((follower) => {
+            const followState = follower.userId ? followStates[follower.userId] : undefined;
+            const isPendingFollow = followState?.isPending;
+            const isAlreadyFollowing = followState?.isFollowing;
+            return (
+            <div key={follower.id} className="flex items-center justify-between gap-2 min-w-0">
               <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-neutral-w-300 dark:bg-dark-bg-tertiary flex items-center justify-center shrink-0">
-                  <User className="w-4 h-4 sm:w-5 sm:h-5 text-neutral-b-500 dark:text-dark-text-muted" />
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-neutral-w-300 dark:bg-dark-bg-tertiary flex items-center justify-center shrink-0 overflow-hidden">
+                  {follower.avatar ? (
+                    <img src={follower.avatar} alt={follower.name} className="w-full h-full object-cover" loading="lazy" />
+                  ) : (
+                    <User className="w-4 h-4 sm:w-5 sm:h-5 text-neutral-b-500 dark:text-dark-text-muted" />
+                  )}
                 </div>
                 <div className="min-w-0 flex-1 overflow-hidden">
                   <h4 className="text-xs sm:text-sm font-medium text-neutral-b-900 dark:text-dark-text-primary truncate">{follower.name}</h4>
-                  <p className="text-xs text-neutral-b-500 dark:text-dark-text-muted mt-0.5 truncate">{follower.headline || `@${follower.username}`}</p>
+                  <p className="text-[11px] text-neutral-b-500 dark:text-dark-text-muted mt-0.5 truncate">@{follower.username}</p>
+                  {follower.mutualFollowers > 0 && (
+                    <p className="text-[11px] text-neutral-b-400 dark:text-dark-text-muted truncate">
+                      {follower.mutualFollowers} mutual followers
+                    </p>
+                  )}
                 </div>
               </div>
-              <button className="inline-flex items-center gap-1 text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-500 text-xs sm:text-sm font-medium transition-colors shrink-0">
+              <div className="flex flex-col items-end">
+              <button
+                type="button"
+                onClick={() => handleFollow(follower.userId)}
+                disabled={!follower.userId || isPendingFollow || isAlreadyFollowing}
+                className="inline-flex items-center gap-1 text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-500 text-xs sm:text-sm font-medium transition-colors shrink-0 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
                 <UserPlus className="w-4 h-4 sm:w-5 sm:h-5" />
-                <span className="hidden sm:inline">Follow</span>
+                <span className="hidden sm:inline">{isAlreadyFollowing ? 'Following' : 'Follow'}</span>
               </button>
+              {followState?.error && <p className="text-[11px] text-red-600 dark:text-red-400 mt-1">{followState.error}</p>}
+              </div>
             </div>
-          ))}
+          );
+          })}
         </div>
       )}
       <div className="pt-2 border-t border-neutral-w-300 dark:border-dark-border">
