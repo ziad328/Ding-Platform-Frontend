@@ -5,6 +5,7 @@ import { selectCurrentUser } from '../../store/slices/auth/auth';
 import MediaCarousel from '../common/MediaCarousel';
 
 interface MediaFile {
+    id: string;
     file: File;
     preview: string;
     type: 'image' | 'video';
@@ -72,13 +73,29 @@ const PostCreation = () => {
                 return;
             }
 
+
             const reader = new FileReader();
+            const uniqueId = crypto.randomUUID(); // Generate ID before async operation
             reader.onloadend = () => {
-                setMediaFiles(prev => [...prev, {
-                    file,
-                    preview: reader.result as string,
-                    type: isImage ? 'image' : 'video'
-                }]);
+                setMediaFiles(prev => {
+                    // Check if this file is already in the list (prevent StrictMode duplicates)
+                    const isDuplicate = prev.some(media =>
+                        media.file.name === file.name &&
+                        media.file.size === file.size &&
+                        media.file.lastModified === file.lastModified
+                    );
+
+                    if (isDuplicate) {
+                        return prev; // Don't add duplicate
+                    }
+
+                    return [...prev, {
+                        id: uniqueId,
+                        file,
+                        preview: reader.result as string,
+                        type: isImage ? 'image' : 'video'
+                    }];
+                });
             };
             reader.readAsDataURL(file);
         });

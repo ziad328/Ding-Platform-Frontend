@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 
 interface MediaFile {
+    id: string;
     file: File;
     preview: string;
     type: 'image' | 'video';
@@ -76,7 +77,7 @@ const MediaCarousel = ({ mediaFiles, onRemove }: MediaCarouselProps) => {
                 {/* Media Display */}
                 <AnimatePresence initial={false} custom={direction} mode="wait">
                     <motion.div
-                        key={currentIndex}
+                        key={mediaFiles[currentIndex].id}
                         custom={direction}
                         variants={variants}
                         initial="enter"
@@ -157,9 +158,9 @@ const MediaCarousel = ({ mediaFiles, onRemove }: MediaCarouselProps) => {
             {/* Pagination Dots */}
             {mediaFiles.length > 1 && (
                 <div className="flex items-center justify-center gap-2 mt-3">
-                    {mediaFiles.map((_, index) => (
+                    {mediaFiles.map((media, index) => (
                         <motion.button
-                            key={index}
+                            key={media.id}
                             onClick={() => setCurrentIndex([index, index > currentIndex ? 1 : -1])}
                             className={`rounded-full transition-all ${index === currentIndex
                                 ? 'bg-primary-600 dark:bg-primary-500'
