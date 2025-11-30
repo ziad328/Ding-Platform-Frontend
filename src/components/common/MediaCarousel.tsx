@@ -43,7 +43,9 @@ const MediaCarousel = ({ mediaFiles, onRemove }: MediaCarouselProps) => {
         }
     }, [mediaFiles.length, currentIndex]);
 
+    // Safety checks
     if (mediaFiles.length === 0) return null;
+    if (currentIndex >= mediaFiles.length) return null;
 
     const variants = {
         enter: (direction: number) => ({
