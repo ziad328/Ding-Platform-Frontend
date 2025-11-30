@@ -4,20 +4,20 @@ import SuggestedFriends from '../../components/profile/SuggestedFriends';
 
 const HomePage = () => {
     return (
-        <div className="w-full mx-auto mb-4 sm:mb-6 md:max-w-2xl lg:max-w-4xl xl:max-w-6xl">
-            <div className="flex flex-col gap-3 lg:grid lg:grid-cols-3 lg:gap-4">
-                {/* Center Feed - Main Content */}
-                <div className="w-full lg:col-span-2">
+        <div className="w-full max-w-7xl mx-auto px-3 py-3 sm:px-4 sm:py-4 md:px-6 md:py-6">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4 md:gap-6">
+                {/* Main Feed - Full width on mobile, 8 cols on desktop */}
+                <div className="lg:col-span-8 space-y-3 sm:space-y-4">
                     <PostCreation />
                     <FeedPosts />
                 </div>
 
-                {/* Right Sidebar - Suggested Friends - Hidden on mobile */}
-                <div className="hidden lg:block lg:col-span-1">
-                    <div className="sticky top-0 xl:ml-10">
+                {/* Right Sidebar - Hidden on mobile, visible on large screens */}
+                <aside className="hidden lg:block lg:col-span-4">
+                    <div className="sticky top-4">
                         <SuggestedFriends />
                     </div>
-                </div>
+                </aside>
             </div>
         </div>
     );

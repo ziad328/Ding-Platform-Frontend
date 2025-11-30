@@ -1,55 +1,145 @@
+import { useEffect, useRef, useCallback } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import Post from '../profile/Post';
-
-// Mock data for demonstration - matching the existing Post component structure
-const mockPosts = [
-    {
-        id: 1,
-        author: 'Bessie Cooper',
-        role: 'Digital Marketer',
-        time: '2 hours ago',
-        content: "In today's fast-paced, digitally driven world, digital marketing is not just a strategy; it's a necessity for businesses of all sizes, at...",
-        likes: 24,
-        comments: 5,
-        image: null,
-    },
-    {
-        id: 2,
-        author: 'Daniel Brown',
-        role: 'Digital Marketer',
-        time: '3 hours ago',
-        content: 'Fantastic post! Your content always brings a smile to my face. Keep up the great work! 👍',
-        likes: 18,
-        comments: 3,
-        image: null,
-    },
-    {
-        id: 3,
-        author: 'David Martinez',
-        role: 'Back-end Developer',
-        time: '5 hours ago',
-        content: 'Your positivity is contagious! Thanks for brightening up my feed. Have a fantastic day!',
-        likes: 32,
-        comments: 8,
-        image: null,
-    },
-    {
-        id: 4,
-        author: 'Jacob Jones',
-        role: 'Sales Manager',
-        time: '1 day ago',
-        content: "Prepare to be dazzled by our latest collection! From trendy fashion to must-have gadgets, we've got something for everyone.",
-        likes: 56,
-        comments: 12,
-        image: 'https://images.unsplash.com/photo-1593642532842-98d0fd5ebc1a?w=800&h=400&fit=crop',
-    },
-];
+import { FeedLoadingSkeleton, FeedPostSkeleton } from './FeedSkeletons';
+import { useLazyGetFeedQuery } from '../../store/slices/feed/feedApi';
+import {
+    selectFeedPosts,
+    selectFeedLoading,
+    selectFeedError,
+    selectCurrentPage,
+    selectHasMore,
+    incrementPage,
+} from '../../store/slices/feed/feed';
 
 const FeedPosts = () => {
+    const dispatch = useDispatch();
+    const posts = useSelector(selectFeedPosts);
+    const loading = useSelector(selectFeedLoading);
+    const error = useSelector(selectFeedError);
+    const currentPage = useSelector(selectCurrentPage);
+    const hasMore = useSelector(selectHasMore);
+
+    const [triggerFetch, { isFetching }] = useLazyGetFeedQuery();
+    const observerRef = useRef<IntersectionObserver | null>(null);
+    const loadMoreRef = useRef<HTMLDivElement | null>(null);
+    const isInitialLoad = useRef(true);
+
+    // Initial load
+    useEffect(() => {
+        if (isInitialLoad.current) {
+            triggerFetch({ page: 1, limit: 20 });
+            isInitialLoad.current = false;
+        }
+    }, [triggerFetch]);
+
+    // Load more when scrolling to 80% of posts
+    const handleLoadMore = useCallback(() => {
+        if (!isFetching && hasMore && posts.length > 0) {
+            dispatch(incrementPage());
+            triggerFetch({ page: currentPage + 1, limit: 20 });
+        }
+    }, [isFetching, hasMore, posts.length, currentPage, dispatch, triggerFetch]);
+
+    // Set up intersection observer for infinite scroll
+    useEffect(() => {
+        if (observerRef.current) {
+            observerRef.current.disconnect();
+        }
+
+        observerRef.current = new IntersectionObserver(
+            (entries) => {
+                const [entry] = entries;
+                if (entry.isIntersecting) {
+                    handleLoadMore();
+                }
+            },
+            {
+                root: null,
+                rootMargin: '200px', // Start loading 200px before reaching the trigger
+                threshold: 0.1,
+            }
+        );
+
+        if (loadMoreRef.current) {
+            observerRef.current.observe(loadMoreRef.current);
+        }
+
+        return () => {
+            if (observerRef.current) {
+                observerRef.current.disconnect();
+            }
+        };
+    }, [handleLoadMore]);
+
+    // Calculate position for load more trigger (at 80% of posts)
+    const triggerIndex = Math.floor(posts.length * 0.8);
+
+    // Initial loading state
+    if (loading && posts.length === 0) {
+        return (
+            <div className="space-y-3 sm:space-y-4">
+                <FeedLoadingSkeleton count={4} />
+            </div>
+        );
+    }
+
+    // Error state
+    if (error && posts.length === 0) {
+        return (
+            <div className="bg-white dark:bg-dark-bg-secondary rounded-lg sm:rounded-xl shadow-sm p-6 sm:p-8 text-center">
+                <p className="text-neutral-b-700 dark:text-dark-text-secondary text-sm sm:text-base mb-4">
+                    {error}
+                </p>
+                <button
+                    onClick={() => triggerFetch({ page: 1, limit: 20 })}
+                    className="px-3 py-1.5 sm:px-4 sm:py-2 bg-primary-600 dark:bg-primary-500 text-white text-xs sm:text-sm font-semibold rounded-lg hover:bg-primary-700 dark:hover:bg-primary-600 transition-colors cursor-pointer"
+                >
+                    Try Again
+                </button>
+            </div>
+        );
+    }
+
+    // Empty state
+    if (posts.length === 0 && !loading) {
+        return (
+            <div className="bg-white dark:bg-dark-bg-secondary rounded-lg sm:rounded-xl shadow-sm p-8 sm:p-12 text-center">
+                <p className="text-neutral-b-700 dark:text-dark-text-secondary text-base sm:text-lg">
+                    No posts yet. Be the first to share something!
+                </p>
+            </div>
+        );
+    }
+
     return (
-        <div className="flex flex-col gap-3">
-            {mockPosts.map((post) => (
-                <Post key={post.id} post={post} />
+        <div className="space-y-3 sm:space-y-4">
+            {posts.map((post, index) => (
+                <div key={post.id}>
+                    <Post post={post} />
+                    {/* Place load more trigger at 80% of posts */}
+                    {index === triggerIndex && hasMore && (
+                        <div ref={loadMoreRef} className="h-1" />
+                    )}
+                </div>
             ))}
+
+            {/* Show loading skeletons when fetching more */}
+            {isFetching && posts.length > 0 && (
+                <div className="space-y-3 sm:space-y-4">
+                    <FeedPostSkeleton />
+                    <FeedPostSkeleton withImage />
+                </div>
+            )}
+
+            {/* End of feed message */}
+            {!hasMore && posts.length > 0 && (
+                <div className="text-center py-6 sm:py-8">
+                    <p className="text-neutral-b-500 dark:text-dark-text-muted text-xs sm:text-sm">
+                        You've reached the end of your feed
+                    </p>
+                </div>
+            )}
         </div>
     );
 };

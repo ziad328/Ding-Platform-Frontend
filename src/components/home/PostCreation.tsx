@@ -45,10 +45,9 @@ const PostCreation = () => {
 
     const handleMediaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(e.target.files || []);
-        setLimitMessage(''); // Clear any previous messages
+        setLimitMessage('');
 
         files.forEach(file => {
-            // Check if file is image or video
             const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
             const validVideoTypes = ['video/mp4', 'video/webm', 'video/ogg'];
 
@@ -60,11 +59,9 @@ const PostCreation = () => {
                 return;
             }
 
-            // Count current images and videos
             const currentImages = mediaFiles.filter(m => m.type === 'image').length;
             const currentVideos = mediaFiles.filter(m => m.type === 'video').length;
 
-            // Check limits
             if (isImage && currentImages >= 5) {
                 setLimitMessage('Maximum of 5 photos reached. Remove a photo to add more.');
                 return;
@@ -74,7 +71,6 @@ const PostCreation = () => {
                 return;
             }
 
-            // Create preview
             const reader = new FileReader();
             reader.onloadend = () => {
                 setMediaFiles(prev => [...prev, {
@@ -86,7 +82,6 @@ const PostCreation = () => {
             reader.readAsDataURL(file);
         });
 
-        // Reset input
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
         }
@@ -94,11 +89,12 @@ const PostCreation = () => {
 
     const handleRemoveMedia = (index: number) => {
         setMediaFiles(prev => prev.filter((_, i) => i !== index));
-        setLimitMessage(''); // Clear message when removing
+        setLimitMessage('');
     };
 
     return (
         <div className="bg-white dark:bg-dark-bg-secondary rounded-lg shadow-sm p-3 mb-3 sm:rounded-xl sm:p-4 md:p-5">
+            {/* Header with Avatar and Textarea */}
             <div className="flex gap-2 pb-3 items-start sm:gap-3">
                 {/* User Avatar */}
                 <div className="w-8 h-8 rounded-full bg-primary-600 dark:bg-primary-500 flex items-center justify-center shrink-0 sm:w-10 sm:h-10">
@@ -153,14 +149,14 @@ const PostCreation = () => {
             />
 
             {/* Actions */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 mt-2 sm:mt-3">
+            <div className="flex items-center justify-between gap-2 mt-2 sm:mt-3">
                 <div className="flex items-center gap-2 flex-wrap overflow-x-auto">
                     <button
                         onClick={handleMediaClick}
                         disabled={isLimitReached}
-                        className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg transition-colors sm:gap-2 sm:px-3 sm:py-2 shrink-0 ${isLimitReached
-                                ? 'bg-neutral-w-300 dark:bg-dark-bg-tertiary text-neutral-b-400 dark:text-dark-text-muted cursor-not-allowed'
-                                : 'hover:bg-neutral-w-300 dark:hover:bg-dark-bg-tertiary'
+                        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-colors border sm:gap-2 sm:px-3 sm:py-2 shrink-0 ${isLimitReached
+                                ? 'bg-neutral-w-300 dark:bg-dark-bg-tertiary text-neutral-b-400 dark:text-dark-text-muted border-neutral-w-400 dark:border-dark-border cursor-not-allowed'
+                                : 'bg-white dark:bg-dark-bg-secondary text-neutral-b-700 dark:text-dark-text-secondary border-neutral-w-400 dark:border-dark-border hover:bg-neutral-w-200 dark:hover:bg-dark-bg-tertiary cursor-pointer'
                             }`}
                     >
                         <Image className={`w-4 h-4 sm:w-5 sm:h-5 ${isLimitReached ? 'text-neutral-b-400 dark:text-dark-text-muted' : 'text-primary-600 dark:text-primary-400'}`} />
@@ -204,7 +200,9 @@ const PostCreation = () => {
 
                 <button
                     onClick={handlePost}
-                    className={`flex items-center justify-center gap-1.5 px-3 py-1.5 bg-primary-600 dark:bg-primary-500 text-white rounded-lg hover:bg-primary-700 dark:hover:bg-primary-600 transition-colors sm:gap-2 sm:px-4 sm:py-2 shrink-0 ${!postContent.trim() && mediaFiles.length === 0 ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                    className={`flex items-center justify-center gap-1.5 px-3 py-1.5 bg-primary-600 dark:bg-primary-500 text-white rounded-lg hover:bg-primary-700 dark:hover:bg-primary-600 transition-colors sm:gap-2 sm:px-4 sm:py-2 shrink-0 ${!postContent.trim() && mediaFiles.length === 0 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                        }`}
+                    disabled={!postContent.trim() && mediaFiles.length === 0}
                 >
                     <span className="text-xs font-semibold sm:text-sm">Post</span>
                     <Send className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
