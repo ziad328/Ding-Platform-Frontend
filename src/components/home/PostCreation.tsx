@@ -1,7 +1,8 @@
 import { useState, useRef } from 'react';
-import { Image, Send, X, Play } from 'lucide-react';
+import { Image, Send, X } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { selectCurrentUser } from '../../store/slices/auth/auth';
+import MediaCarousel from '../common/MediaCarousel';
 
 interface MediaFile {
     file: File;
@@ -138,6 +139,14 @@ const PostCreation = () => {
                 </div>
             )}
 
+            {/* Media Carousel - Show when media files exist */}
+            {mediaFiles.length > 0 && (
+                <MediaCarousel
+                    mediaFiles={mediaFiles}
+                    onRemove={handleRemoveMedia}
+                />
+            )}
+
             {/* Hidden file input */}
             <input
                 ref={fileInputRef}
@@ -150,53 +159,19 @@ const PostCreation = () => {
 
             {/* Actions */}
             <div className="flex items-center justify-between gap-2 mt-2 sm:mt-3">
-                <div className="flex items-center gap-2 flex-wrap overflow-x-auto">
-                    <button
-                        onClick={handleMediaClick}
-                        disabled={isLimitReached}
-                        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-colors border sm:gap-2 sm:px-3 sm:py-2 shrink-0 ${isLimitReached
-                                ? 'bg-neutral-w-300 dark:bg-dark-bg-tertiary text-neutral-b-400 dark:text-dark-text-muted border-neutral-w-400 dark:border-dark-border cursor-not-allowed'
-                                : 'bg-white dark:bg-dark-bg-secondary text-neutral-b-700 dark:text-dark-text-secondary border-neutral-w-400 dark:border-dark-border hover:bg-neutral-w-200 dark:hover:bg-dark-bg-tertiary cursor-pointer'
-                            }`}
-                    >
-                        <Image className={`w-4 h-4 sm:w-5 sm:h-5 ${isLimitReached ? 'text-neutral-b-400 dark:text-dark-text-muted' : 'text-primary-600 dark:text-primary-400'}`} />
-                        <span className={`text-xs font-medium sm:text-sm ${isLimitReached ? 'text-neutral-b-400 dark:text-dark-text-muted' : 'text-neutral-b-700 dark:text-dark-text-secondary'}`}>
-                            Add Media
-                        </span>
-                    </button>
-
-                    {/* Media Preview Thumbnails */}
-                    {mediaFiles.map((media, index) => (
-                        <div key={index} className="relative w-12 h-12 sm:w-15 sm:h-15 rounded-lg overflow-hidden group shrink-0">
-                            {media.type === 'video' ? (
-                                <>
-                                    <video
-                                        src={media.preview}
-                                        className="w-full h-full object-cover"
-                                    />
-                                    {/* Video indicator badge */}
-                                    <div className="absolute bottom-0.5 right-0.5 sm:bottom-1 sm:right-1 bg-neutral-b-900/80 dark:bg-dark-bg-primary/80 rounded-full p-0.5 sm:p-1">
-                                        <Play className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white fill-white" />
-                                    </div>
-                                </>
-                            ) : (
-                                <img
-                                    src={media.preview}
-                                    alt={`Upload preview ${index + 1}`}
-                                    className="w-full h-full object-cover"
-                                />
-                            )}
-                            {/* Remove button - appears on hover */}
-                            <button
-                                onClick={() => handleRemoveMedia(index)}
-                                className="absolute inset-0 bg-neutral-b-900/80 dark:bg-dark-bg-primary/80 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                                aria-label="Remove media"
-                            >
-                                <X className="w-4 h-4 sm:w-5 sm:h-5" />
-                            </button>
-                        </div>
-                    ))}
-                </div>
+                <button
+                    onClick={handleMediaClick}
+                    disabled={isLimitReached}
+                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-colors border sm:gap-2 sm:px-3 sm:py-2 shrink-0 ${isLimitReached
+                        ? 'bg-neutral-w-300 dark:bg-dark-bg-tertiary text-neutral-b-400 dark:text-dark-text-muted border-neutral-w-400 dark:border-dark-border cursor-not-allowed'
+                        : 'bg-white dark:bg-dark-bg-secondary text-neutral-b-700 dark:text-dark-text-secondary border-neutral-w-400 dark:border-dark-border hover:bg-neutral-w-200 dark:hover:bg-dark-bg-tertiary cursor-pointer'
+                        }`}
+                >
+                    <Image className={`w-4 h-4 sm:w-5 sm:h-5 ${isLimitReached ? 'text-neutral-b-400 dark:text-dark-text-muted' : 'text-primary-600 dark:text-primary-400'}`} />
+                    <span className={`text-xs font-medium sm:text-sm ${isLimitReached ? 'text-neutral-b-400 dark:text-dark-text-muted' : 'text-neutral-b-700 dark:text-dark-text-secondary'}`}>
+                        Add Media {mediaFiles.length > 0 && `(${mediaFiles.length})`}
+                    </span>
+                </button>
 
                 <button
                     onClick={handlePost}
