@@ -1,13 +1,17 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Image, Send, X } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { selectCurrentUser } from '../../store/slices/auth/auth';
 import MediaCarousel from '../common/MediaCarousel';
 
+// File size limits
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10 MB
+const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50 MB
+
 interface MediaFile {
     id: string;
     file: File;
-    preview: string;
+    preview: string; // Object URL for better memory management
     type: 'image' | 'video';
 }
 
@@ -26,6 +30,14 @@ const PostCreation = () => {
         if (postContent.trim() || mediaFiles.length > 0) {
             // TODO: Implement post creation logic with media
             console.log('Creating post:', { content: postContent, media: mediaFiles.map(m => m.file) });
+
+            // Cleanup object URLs before clearing
+            mediaFiles.forEach(media => {
+                if (media.preview) {
+                    URL.revokeObjectURL(media.preview);
+                }
+            });
+
             setPostContent('');
             setMediaFiles([]);
             setLimitMessage('');
@@ -61,6 +73,16 @@ const PostCreation = () => {
                 return;
             }
 
+            // Check file size limits
+            if (isImage && file.size > MAX_IMAGE_SIZE) {
+                setLimitMessage(`Image "${file.name}" is too large. Maximum size is 10 MB.`);
+                return;
+            }
+            if (isVideo && file.size > MAX_VIDEO_SIZE) {
+                setLimitMessage(`Video "${file.name}" is too large. Maximum size is 50 MB.`);
+                return;
+            }
+
             const currentImages = mediaFiles.filter(m => m.type === 'image').length;
             const currentVideos = mediaFiles.filter(m => m.type === 'video').length;
 
@@ -73,10 +95,11 @@ const PostCreation = () => {
                 return;
             }
 
+            try {
+                // Use object URL instead of data URL for better memory management
+                const preview = URL.createObjectURL(file);
+                const uniqueId = crypto.randomUUID();
 
-            const reader = new FileReader();
-            const uniqueId = crypto.randomUUID(); // Generate ID before async operation
-            reader.onloadend = () => {
                 setMediaFiles(prev => {
                     // Check if this file is already in the list (prevent StrictMode duplicates)
                     const isDuplicate = prev.some(media =>
@@ -86,18 +109,21 @@ const PostCreation = () => {
                     );
 
                     if (isDuplicate) {
-                        return prev; // Don't add duplicate
+                        URL.revokeObjectURL(preview); // Clean up if duplicate
+                        return prev;
                     }
 
                     return [...prev, {
                         id: uniqueId,
                         file,
-                        preview: reader.result as string,
+                        preview,
                         type: isImage ? 'image' : 'video'
                     }];
                 });
-            };
-            reader.readAsDataURL(file);
+            } catch (error) {
+                console.error('Error processing file:', error);
+                setLimitMessage(`Failed to load "${file.name}". Please try again.`);
+            }
         });
 
         if (fileInputRef.current) {
@@ -106,9 +132,26 @@ const PostCreation = () => {
     };
 
     const handleRemoveMedia = (index: number) => {
+        // Revoke object URL to free memory
+        const mediaToRemove = mediaFiles[index];
+        if (mediaToRemove?.preview) {
+            URL.revokeObjectURL(mediaToRemove.preview);
+        }
         setMediaFiles(prev => prev.filter((_, i) => i !== index));
         setLimitMessage('');
     };
+
+    // Cleanup object URLs on unmount or when clearing all media
+    useEffect(() => {
+        return () => {
+            // Cleanup all object URLs when component unmounts
+            mediaFiles.forEach(media => {
+                if (media.preview) {
+                    URL.revokeObjectURL(media.preview);
+                }
+            });
+        };
+    }, [mediaFiles]);
 
     return (
         <div className="bg-white dark:bg-dark-bg-secondary rounded-lg shadow-sm p-3 mb-3 sm:rounded-xl sm:p-4 md:p-5">
@@ -148,7 +191,7 @@ const PostCreation = () => {
                     <p className="text-xs text-semantic-y-900 dark:text-semantic-y-700 flex-1">{limitMessage}</p>
                     <button
                         onClick={() => setLimitMessage('')}
-                        className="text-semantic-y-900 dark:text-semantic-y-700 hover:text-semantic-y-800 dark:hover:text-semantic-y-600 transition-colors shrink-0"
+                        className="text-semantic-y-900 dark:text-semantic-y-700 hover:text-semantic-y-800 dark:hover:text-semantic-y-600 transition-colors shrink-0 cursor-pointer"
                         aria-label="Close message"
                     >
                         <X className="w-4 h-4" />
@@ -183,6 +226,7 @@ const PostCreation = () => {
                         ? 'bg-neutral-w-300 dark:bg-dark-bg-tertiary text-neutral-b-400 dark:text-dark-text-muted border-neutral-w-400 dark:border-dark-border cursor-not-allowed'
                         : 'bg-white dark:bg-dark-bg-secondary text-neutral-b-700 dark:text-dark-text-secondary border-neutral-w-400 dark:border-dark-border hover:bg-neutral-w-200 dark:hover:bg-dark-bg-tertiary cursor-pointer'
                         }`}
+                    title="Images: max 10MB, Videos: max 50MB"
                 >
                     <Image className={`w-4 h-4 sm:w-5 sm:h-5 ${isLimitReached ? 'text-neutral-b-400 dark:text-dark-text-muted' : 'text-primary-600 dark:text-primary-400'}`} />
                     <span className={`text-xs font-medium sm:text-sm ${isLimitReached ? 'text-neutral-b-400 dark:text-dark-text-muted' : 'text-neutral-b-700 dark:text-dark-text-secondary'}`}>
