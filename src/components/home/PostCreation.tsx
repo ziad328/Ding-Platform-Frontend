@@ -61,7 +61,12 @@ const PostCreation = () => {
         const files = Array.from(e.target.files || []);
         setLimitMessage('');
 
-        files.forEach(file => {
+        // Track running counts for this batch of files
+        let runningImageCount = mediaFiles.filter(m => m.type === 'image').length;
+        let runningVideoCount = mediaFiles.filter(m => m.type === 'video').length;
+        const newMediaFiles: MediaFile[] = [];
+
+        for (const file of files) {
             const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
             const validVideoTypes = ['video/mp4', 'video/webm', 'video/ogg'];
 
@@ -70,29 +75,38 @@ const PostCreation = () => {
 
             if (!isImage && !isVideo) {
                 setLimitMessage('Please select valid image (JPEG, PNG, GIF, WebP) or video (MP4, WebM, OGG) files.');
-                return;
+                continue;
             }
 
             // Check file size limits
             if (isImage && file.size > MAX_IMAGE_SIZE) {
                 setLimitMessage(`Image "${file.name}" is too large. Maximum size is 10 MB.`);
-                return;
+                continue;
             }
             if (isVideo && file.size > MAX_VIDEO_SIZE) {
                 setLimitMessage(`Video "${file.name}" is too large. Maximum size is 50 MB.`);
-                return;
+                continue;
             }
 
-            const currentImages = mediaFiles.filter(m => m.type === 'image').length;
-            const currentVideos = mediaFiles.filter(m => m.type === 'video').length;
-
-            if (isImage && currentImages >= 5) {
+            // Check limits with running count (includes files being added in this batch)
+            if (isImage && runningImageCount >= 5) {
                 setLimitMessage('Maximum of 5 photos reached. Remove a photo to add more.');
-                return;
+                continue;
             }
-            if (isVideo && currentVideos >= 3) {
+            if (isVideo && runningVideoCount >= 3) {
                 setLimitMessage('Maximum of 3 videos reached. Remove a video to add more.');
-                return;
+                continue;
+            }
+
+            // Check for duplicates
+            const isDuplicate = mediaFiles.some(media =>
+                media.file.name === file.name &&
+                media.file.size === file.size &&
+                media.file.lastModified === file.lastModified
+            );
+
+            if (isDuplicate) {
+                continue;
             }
 
             try {
@@ -100,31 +114,29 @@ const PostCreation = () => {
                 const preview = URL.createObjectURL(file);
                 const uniqueId = crypto.randomUUID();
 
-                setMediaFiles(prev => {
-                    // Check if this file is already in the list (prevent StrictMode duplicates)
-                    const isDuplicate = prev.some(media =>
-                        media.file.name === file.name &&
-                        media.file.size === file.size &&
-                        media.file.lastModified === file.lastModified
-                    );
-
-                    if (isDuplicate) {
-                        URL.revokeObjectURL(preview); // Clean up if duplicate
-                        return prev;
-                    }
-
-                    return [...prev, {
-                        id: uniqueId,
-                        file,
-                        preview,
-                        type: isImage ? 'image' : 'video'
-                    }];
+                newMediaFiles.push({
+                    id: uniqueId,
+                    file,
+                    preview,
+                    type: isImage ? 'image' : 'video'
                 });
+
+                // Update running counts
+                if (isImage) {
+                    runningImageCount++;
+                } else {
+                    runningVideoCount++;
+                }
             } catch (error) {
                 console.error('Error processing file:', error);
                 setLimitMessage(`Failed to load "${file.name}". Please try again.`);
             }
-        });
+        }
+
+        // Add all new media files at once
+        if (newMediaFiles.length > 0) {
+            setMediaFiles(prev => [...prev, ...newMediaFiles]);
+        }
 
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
@@ -141,17 +153,19 @@ const PostCreation = () => {
         setLimitMessage('');
     };
 
-    // Cleanup object URLs on unmount or when clearing all media
+    // Cleanup object URLs on unmount
     useEffect(() => {
+        const currentMediaFiles = mediaFiles;
         return () => {
             // Cleanup all object URLs when component unmounts
-            mediaFiles.forEach(media => {
+            currentMediaFiles.forEach(media => {
                 if (media.preview) {
                     URL.revokeObjectURL(media.preview);
                 }
             });
         };
-    }, [mediaFiles]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     return (
         <div className="bg-white dark:bg-dark-bg-secondary rounded-lg shadow-sm p-3 mb-3 sm:rounded-xl sm:p-4 md:p-5">
