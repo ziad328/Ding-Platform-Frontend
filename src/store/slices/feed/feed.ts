@@ -65,11 +65,11 @@ export const {
     resetFeed,
 } = feedSlice.actions;
 
-export const selectFeedPosts = (state: RootState) => state.feed.posts;
-export const selectFeedLoading = (state: RootState) => state.feed.loading;
-export const selectFeedError = (state: RootState) => state.feed.error;
-export const selectCurrentPage = (state: RootState) => state.feed.currentPage;
-export const selectHasMore = (state: RootState) => state.feed.hasMore;
-export const selectTotalPosts = (state: RootState) => state.feed.totalPosts;
+export const selectFeedPosts = (state: RootState) => state.feed?.posts ?? [];
+export const selectFeedLoading = (state: RootState) => state.feed?.loading ?? false;
+export const selectFeedError = (state: RootState) => state.feed?.error ?? null;
+export const selectCurrentPage = (state: RootState) => state.feed?.currentPage ?? 1;
+export const selectHasMore = (state: RootState) => state.feed?.hasMore ?? true;
+export const selectTotalPosts = (state: RootState) => state.feed?.totalPosts ?? 0;
 
 export default feedSlice.reducer;

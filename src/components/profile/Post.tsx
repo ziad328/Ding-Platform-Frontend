@@ -3,25 +3,41 @@ import { User, Heart, MessageCircle, Bookmark, MoreHorizontal } from 'lucide-rea
 
 interface PostProps {
     post: {
-        id: number;
-        author: string;
-        role: string;
-        time: string;
+        id: string;
         content: string;
-        likes: number;
-        comments: number;
-        image?: string | null;
+        authorId: string;
+        authorName: string;
+        createdAt: string;
+        mediaUrls: string[];
+        privacy: string;
     };
 }
 
 const Post: React.FC<PostProps> = ({ post }) => {
     const [isLiked, setIsLiked] = useState(false);
     const [isSaved, setIsSaved] = useState(false);
-    const [likeCount, setLikeCount] = useState(post.likes);
+    const [likeCount, setLikeCount] = useState(0);
+    const commentCount = 0; // Static value until comment functionality is implemented
 
     const handleLike = () => {
         setIsLiked(!isLiked);
         setLikeCount(isLiked ? likeCount - 1 : likeCount + 1);
+    };
+
+    // Format the date to a relative time string
+    const formatTime = (dateString: string) => {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffInMs = now.getTime() - date.getTime();
+        const diffInMins = Math.floor(diffInMs / 60000);
+        const diffInHours = Math.floor(diffInMs / 3600000);
+        const diffInDays = Math.floor(diffInMs / 86400000);
+
+        if (diffInMins < 1) return 'Just now';
+        if (diffInMins < 60) return `${diffInMins}m ago`;
+        if (diffInHours < 24) return `${diffInHours}h ago`;
+        if (diffInDays < 7) return `${diffInDays}d ago`;
+        return date.toLocaleDateString();
     };
 
     return (
@@ -33,12 +49,12 @@ const Post: React.FC<PostProps> = ({ post }) => {
                         <User className="w-4 h-4 sm:w-5 sm:h-5 text-neutral-b-500 dark:text-dark-text-muted" />
                     </div>
                     <div>
-                        <h3 className="text-xs sm:text-sm font-semibold text-neutral-b-900 dark:text-dark-text-primary">{post.author}</h3>
-                        <p className="text-xs text-neutral-b-500 dark:text-dark-text-muted mt-0.5">{post.role}</p>
+                        <h3 className="text-xs sm:text-sm font-semibold text-neutral-b-900 dark:text-dark-text-primary">{post.authorName}</h3>
+                        <p className="text-xs text-neutral-b-500 dark:text-dark-text-muted mt-0.5">{post.privacy}</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-1 sm:gap-2">
-                    <span className="text-xs text-neutral-b-400 dark:text-dark-text-muted">{post.time}</span>
+                    <span className="text-xs text-neutral-b-400 dark:text-dark-text-muted">{formatTime(post.createdAt)}</span>
                     <button className="text-neutral-b-400 dark:text-dark-text-muted hover:text-neutral-b-700 dark:hover:text-dark-text-secondary p-0.5 sm:p-1 transition-colors">
                         <MoreHorizontal className="w-4 h-4" />
                     </button>
@@ -48,11 +64,11 @@ const Post: React.FC<PostProps> = ({ post }) => {
             {/* Post Content */}
             <p className="text-xs sm:text-sm text-neutral-b-700 dark:text-dark-text-secondary mb-2 sm:mb-3 leading-relaxed">{post.content}</p>
 
-            {/* Post Image */}
-            {post.image && (
+            {/* Post Media */}
+            {post.mediaUrls && post.mediaUrls.length > 0 && (
                 <div className="rounded-md sm:rounded-lg overflow-hidden mb-2 sm:mb-3 bg-neutral-w-300 dark:bg-dark-bg-tertiary">
                     <img
-                        src={post.image}
+                        src={post.mediaUrls[0]}
                         alt="Post content"
                         className="w-full h-40 sm:h-48 md:h-64 object-cover"
                     />
@@ -72,7 +88,7 @@ const Post: React.FC<PostProps> = ({ post }) => {
                     </button>
                     <button className="flex items-center gap-1.5 sm:gap-2 text-neutral-b-500 dark:text-dark-text-muted hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
                         <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5" />
-                        <span className="text-xs sm:text-sm font-medium">{post.comments}</span>
+                        <span className="text-xs sm:text-sm font-medium">{commentCount}</span>
                     </button>
                 </div>
                 <button

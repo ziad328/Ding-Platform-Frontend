@@ -35,11 +35,11 @@ const FeedPosts = () => {
 
     // Load more when scrolling to 80% of posts
     const handleLoadMore = useCallback(() => {
-        if (!isFetching && hasMore && posts.length > 0) {
+        if (!isFetching && hasMore && posts && posts.length > 0) {
             dispatch(incrementPage());
             triggerFetch({ page: currentPage + 1, limit: 20 });
         }
-    }, [isFetching, hasMore, posts.length, currentPage, dispatch, triggerFetch]);
+    }, [isFetching, hasMore, posts, currentPage, dispatch, triggerFetch]);
 
     // Set up intersection observer for infinite scroll
     useEffect(() => {
@@ -73,10 +73,10 @@ const FeedPosts = () => {
     }, [handleLoadMore]);
 
     // Calculate position for load more trigger (at 80% of posts)
-    const triggerIndex = Math.floor(posts.length * 0.8);
+    const triggerIndex = posts ? Math.floor(posts.length * 0.8) : 0;
 
     // Initial loading state
-    if (loading && posts.length === 0) {
+    if (loading && (!posts || posts.length === 0)) {
         return (
             <div className="space-y-3 sm:space-y-4">
                 <FeedLoadingSkeleton count={4} />
@@ -85,7 +85,7 @@ const FeedPosts = () => {
     }
 
     // Error state
-    if (error && posts.length === 0) {
+    if (error && (!posts || posts.length === 0)) {
         return (
             <div className="bg-white dark:bg-dark-bg-secondary rounded-lg sm:rounded-xl shadow-sm p-6 sm:p-8 text-center">
                 <p className="text-neutral-b-700 dark:text-dark-text-secondary text-sm sm:text-base mb-4">
@@ -114,7 +114,7 @@ const FeedPosts = () => {
 
     return (
         <div className="space-y-3 sm:space-y-4">
-            {posts.map((post, index) => (
+            {posts && posts.map((post, index) => (
                 <div key={post.id}>
                     <Post post={post} />
                     {/* Place load more trigger at 80% of posts */}
@@ -125,7 +125,7 @@ const FeedPosts = () => {
             ))}
 
             {/* Show loading skeletons when fetching more */}
-            {isFetching && posts.length > 0 && (
+            {isFetching && posts && posts.length > 0 && (
                 <div className="space-y-3 sm:space-y-4">
                     <FeedPostSkeleton />
                     <FeedPostSkeleton withImage />
@@ -133,7 +133,7 @@ const FeedPosts = () => {
             )}
 
             {/* End of feed message */}
-            {!hasMore && posts.length > 0 && (
+            {!hasMore && posts && posts.length > 0 && (
                 <div className="text-center py-6 sm:py-8">
                     <p className="text-neutral-b-500 dark:text-dark-text-muted text-xs sm:text-sm">
                         You've reached the end of your feed
