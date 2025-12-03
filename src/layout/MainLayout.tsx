@@ -4,6 +4,7 @@ import Sidebar from "../components/sidebar/Sidebar";
 import { useSelector } from "react-redux";
 import { selectCurrentToken, selectCurrentUser } from "../store/slices/auth/auth";
 import { useDarkMode } from "../hook/useDarkMode";
+import ScrollToTop from "../components/ScrollToTop";
 
 function MainLayout() {
   const token = useSelector(selectCurrentToken);
@@ -19,6 +20,7 @@ function MainLayout() {
 
   return (
     <div className="h-screen bg-neutral-w-200 dark:bg-dark-bg-primary overflow-hidden flex flex-col">
+      <ScrollToTop />
       <Navbar />
 
       <div className="flex flex-1 overflow-hidden w-full">
