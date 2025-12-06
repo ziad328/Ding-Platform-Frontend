@@ -4,7 +4,7 @@ import Sidebar from "../components/sidebar/Sidebar";
 import { useSelector } from "react-redux";
 import { selectCurrentToken, selectCurrentUser } from "../store/slices/auth/auth";
 import { useDarkMode } from "../hook/useDarkMode";
-import ScrollToTop from "../components/ScrollToTop";
+import ScrollToTop from "../components/common/ScrollToTop";
 
 function MainLayout() {
   const token = useSelector(selectCurrentToken);
