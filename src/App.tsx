@@ -18,6 +18,7 @@ import ResetPasswordPage from './pages/authentication/ResetPasswordPage';
 import EmailLoginPage from './pages/authentication/EmailLoginPage';
 import OTPVerificationPage from './pages/authentication/OTPVerificationPage';
 import LandingPage from './pages/landing/LandingPage';
+import MessagesPage from './pages/messages/MessagesPage';
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -46,6 +47,7 @@ const router = createBrowserRouter(
         <Route path='profile/friends' element={<FriendsPage />} />
         <Route path='profile/followers' element={<FollowersPage />} />
         <Route path='profile/following' element={<FollowingPage />} />
+        <Route path='messages' element={<MessagesPage />} />
         <Route path='*' element={<NotFoundPage />} />
       </Route>
     </>
