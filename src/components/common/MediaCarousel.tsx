@@ -26,6 +26,12 @@ const MediaCarousel = ({ mediaFiles, onRemove }: MediaCarouselProps) => {
     // Keyboard navigation
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
+            // Ignore arrow keys when user is typing in input/textarea
+            const target = e.target as HTMLElement;
+            if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+                return;
+            }
+
             if (e.key === 'ArrowLeft') {
                 paginate(-1);
             } else if (e.key === 'ArrowRight') {
