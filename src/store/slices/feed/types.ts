@@ -1,11 +1,11 @@
 export interface FeedPost {
     id: string;
+    author: string;
+    time: string;
     content: string;
-    authorId: string;
-    authorName: string;
-    createdAt: string;
-    mediaUrls: string[];
-    privacy: string;
+    likes: number;
+    comments: number;
+    image: string | null;
 }
 
 export interface FeedPagination {
@@ -17,6 +17,10 @@ export interface FeedPagination {
 
 export interface FeedData {
     data: FeedPost[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
 }
 
 export interface FeedResponse {

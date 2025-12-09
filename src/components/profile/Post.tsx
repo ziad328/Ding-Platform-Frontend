@@ -4,20 +4,20 @@ import { User, Heart, MessageCircle, Bookmark, MoreHorizontal } from 'lucide-rea
 interface PostProps {
     post: {
         id: string;
+        author: string;
+        time: string;
         content: string;
-        authorId: string;
-        authorName: string;
-        createdAt: string;
-        mediaUrls: string[];
-        privacy: string;
+        likes: number;
+        comments: number;
+        image: string | null;
     };
 }
 
 const Post: React.FC<PostProps> = ({ post }) => {
     const [isLiked, setIsLiked] = useState(false);
     const [isSaved, setIsSaved] = useState(false);
-    const [likeCount, setLikeCount] = useState(0);
-    const commentCount = 0; // Static value until comment functionality is implemented
+    const [likeCount, setLikeCount] = useState(post.likes);
+    const commentCount = post.comments;
 
     const handleLike = () => {
         setIsLiked(!isLiked);
@@ -49,12 +49,11 @@ const Post: React.FC<PostProps> = ({ post }) => {
                         <User className="w-4 h-4 sm:w-5 sm:h-5 text-neutral-b-500 dark:text-dark-text-muted" />
                     </div>
                     <div>
-                        <h3 className="text-xs sm:text-sm font-semibold text-neutral-b-900 dark:text-dark-text-primary">{post.authorName}</h3>
-                        <p className="text-xs text-neutral-b-500 dark:text-dark-text-muted mt-0.5">{post.privacy}</p>
+                        <h3 className="text-xs sm:text-sm font-semibold text-neutral-b-900 dark:text-dark-text-primary">{post.author}</h3>
                     </div>
                 </div>
                 <div className="flex items-center gap-1 sm:gap-2">
-                    <span className="text-xs text-neutral-b-400 dark:text-dark-text-muted">{formatTime(post.createdAt)}</span>
+                    <span className="text-xs text-neutral-b-400 dark:text-dark-text-muted">{formatTime(post.time)}</span>
                     <button className="text-neutral-b-400 dark:text-dark-text-muted hover:text-neutral-b-700 dark:hover:text-dark-text-secondary p-0.5 sm:p-1 transition-colors">
                         <MoreHorizontal className="w-4 h-4" />
                     </button>
@@ -65,10 +64,10 @@ const Post: React.FC<PostProps> = ({ post }) => {
             <p className="text-xs sm:text-sm text-neutral-b-700 dark:text-dark-text-secondary mb-2 sm:mb-3 leading-relaxed">{post.content}</p>
 
             {/* Post Media */}
-            {post.mediaUrls && post.mediaUrls.length > 0 && (
+            {post.image && (
                 <div className="rounded-md sm:rounded-lg overflow-hidden mb-2 sm:mb-3 bg-neutral-w-300 dark:bg-dark-bg-tertiary">
                     <img
-                        src={post.mediaUrls[0]}
+                        src={post.image}
                         alt="Post content"
                         className="w-full h-40 sm:h-48 md:h-64 object-cover"
                     />

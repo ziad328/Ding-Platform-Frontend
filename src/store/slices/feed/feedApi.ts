@@ -29,11 +29,10 @@ export const feedApi = apiSlice.injectEndpoints({
                         dispatch(appendFeedPosts(data.data));
                     }
 
-                    // Update pagination state - since API doesn't return pagination info,
-                    // we'll determine hasMore based on the number of posts returned
-                    const hasMore = data.data.length >= 20; // If we got a full page, there might be more
+                    // Update pagination state using actual backend response
+                    const hasMore = data.page < data.totalPages;
                     dispatch(setHasMore(hasMore));
-                    dispatch(setTotalPosts(data.data.length)); // This is just the current batch
+                    dispatch(setTotalPosts(data.total));
                 } catch (error) {
                     dispatch(
                         setFeedError(
