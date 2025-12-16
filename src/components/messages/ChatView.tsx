@@ -1,5 +1,4 @@
 import React from 'react';
-import ChatHeader from './ChatHeader';
 import MessageBubble from './MessageBubble';
 import type { Message } from './MessageBubble';
 import MessageInput from './MessageInput';
@@ -9,34 +8,27 @@ interface ChatViewProps {
     conversation: Conversation;
     messages: Message[];
     onSendMessage?: (message: string) => void;
-    onBack?: () => void;
 }
 
 const ChatView: React.FC<ChatViewProps> = ({
     conversation,
     messages,
     onSendMessage,
-    onBack,
 }) => {
     return (
         <div className="h-full flex flex-col bg-white dark:bg-dark-bg-secondary">
-            {/* Chat Header */}
-            <ChatHeader
-                name={conversation.name}
-                role={conversation.role}
-                avatar={conversation.avatar}
-                isOnline={conversation.isOnline}
-                onBack={onBack}
-            />
-
-            {/* Messages Area - Same padding as ChatHeader */}
-            <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-1">
+            {/* Messages Area - Seamless, takes remaining space */}
+            <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-6">
                 {messages.map((message) => (
-                    <MessageBubble key={message.id} message={message} />
+                    <MessageBubble
+                        key={message.id}
+                        message={message}
+                        senderName={conversation.name}
+                    />
                 ))}
             </div>
 
-            {/* Message Input */}
+            {/* Message Input - No top border, seamless with chat */}
             <MessageInput onSendMessage={onSendMessage} />
         </div>
     );

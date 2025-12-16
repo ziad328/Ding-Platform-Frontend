@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import MessageHeader from '../../components/messages/MessageHeader';
 import ConversationList from '../../components/messages/ConversationList';
 import ChatView from '../../components/messages/ChatView';
 import EmptyMessageState from '../../components/messages/EmptyMessageState';
@@ -95,11 +96,18 @@ const MessagesPage = () => {
 
     return (
         <div className="max-w-7xl mx-auto px-2 sm:px-4 mb-6 sm:mb-8 h-[calc(100vh-120px)] sm:h-[calc(100vh-140px)]">
-            <div className="h-full bg-white dark:bg-dark-bg-secondary rounded-lg sm:rounded-xl shadow-sm overflow-hidden">
+            <div className="h-full bg-white dark:bg-dark-bg-secondary rounded-lg sm:rounded-xl shadow-sm overflow-hidden flex flex-col">
+                {/* Full-width Message Header */}
+                <MessageHeader
+                    selectedConversation={selectedConversation}
+                    onBack={handleBackToList}
+                    showMobileBack={isMobileView && !!selectedConversation}
+                />
+
                 {/* Desktop: Two-column layout */}
-                <div className="hidden lg:grid lg:grid-cols-12 h-full">
+                <div className="hidden lg:flex flex-1 min-h-0">
                     {/* Conversation List - Left Column */}
-                    <div className="lg:col-span-4 border-r border-neutral-w-400 dark:border-dark-border">
+                    <div className="w-80 xl:w-96 shrink-0 border-r border-neutral-w-400 dark:border-dark-border">
                         <ConversationList
                             conversations={conversations}
                             selectedId={selectedConversationId}
@@ -109,7 +117,7 @@ const MessagesPage = () => {
                     </div>
 
                     {/* Chat View or Empty State - Right Column */}
-                    <div className="lg:col-span-8">
+                    <div className="flex-1 min-w-0">
                         {selectedConversation ? (
                             <ChatView
                                 conversation={selectedConversation}
@@ -123,7 +131,7 @@ const MessagesPage = () => {
                 </div>
 
                 {/* Mobile: Single view with conditional rendering */}
-                <div className="lg:hidden h-full">
+                <div className="lg:hidden flex-1 min-h-0">
                     {!isMobileView || !selectedConversation ? (
                         <ConversationList
                             conversations={conversations}
@@ -136,7 +144,6 @@ const MessagesPage = () => {
                             conversation={selectedConversation}
                             messages={messages}
                             onSendMessage={handleSendMessage}
-                            onBack={handleBackToList}
                         />
                     )}
                 </div>

@@ -10,18 +10,19 @@ export interface Message {
 
 interface MessageBubbleProps {
     message: Message;
+    senderName?: string;
 }
 
-const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
+const MessageBubble: React.FC<MessageBubbleProps> = ({ message, senderName }) => {
     if (message.isSent) {
         // Sent message - right aligned, teal background
         return (
-            <div className="flex justify-end mb-3 sm:mb-4">
-                <div className="max-w-[85%] sm:max-w-[75%] md:max-w-[70%]">
-                    <div className="bg-primary-600 dark:bg-primary-600 text-white px-3 py-2 sm:px-4 sm:py-3 rounded-2xl rounded-br-md">
+            <div className="flex justify-end mb-4 sm:mb-5">
+                <div className="max-w-[85%] sm:max-w-[75%] md:max-w-[65%]">
+                    <div className="bg-primary-600 dark:bg-primary-600 text-white px-4 py-3 sm:px-5 sm:py-4 rounded-2xl rounded-br-xs">
                         <p className="text-sm leading-relaxed">{message.content}</p>
                     </div>
-                    <p className="text-xs text-neutral-b-500 dark:text-dark-text-muted mt-1 text-right">
+                    <p className="text-xs text-neutral-b-500 dark:text-dark-text-muted mt-1.5 text-right">
                         {message.timestamp}
                     </p>
                 </div>
@@ -29,23 +30,33 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
         );
     }
 
-    // Received message - left aligned, light background
+    // Received message - left aligned with avatar and sender info
     return (
-        <div className="flex gap-2 sm:gap-3 mb-3 sm:mb-4">
+        <div className="flex gap-3 sm:gap-4 mb-4 sm:mb-5">
             {/* Sender Avatar */}
             {message.senderAvatar && (
                 <img
                     src={message.senderAvatar}
-                    alt="Sender"
-                    className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover shrink-0"
+                    alt={senderName || 'Sender'}
+                    className="w-10 h-10 sm:w-11 sm:h-11 rounded-full object-cover shrink-0"
                 />
             )}
 
-            <div className="max-w-[85%] sm:max-w-[75%] md:max-w-[70%]">
-                <div className="bg-neutral-w-200 dark:bg-dark-bg-tertiary text-neutral-b-900 dark:text-dark-text-primary px-3 py-2 sm:px-4 sm:py-3 rounded-2xl rounded-tl-md">
+            <div className="max-w-[85%] sm:max-w-[75%] md:max-w-[65%]">
+                {/* Sender Name */}
+                {senderName && (
+                    <div className="mb-1.5">
+                        <span className="text-sm font-semibold text-neutral-b-900 dark:text-dark-text-primary">
+                            {senderName}
+                        </span>
+                    </div>
+                )}
+
+                {/* Message Content */}
+                <div className="bg-neutral-w-200 dark:bg-dark-bg-tertiary text-neutral-b-900 dark:text-dark-text-primary px-4 py-3 sm:px-5 sm:py-4 rounded-2xl rounded-tl-xs">
                     <p className="text-sm leading-relaxed">{message.content}</p>
                 </div>
-                <p className="text-xs text-neutral-b-500 dark:text-dark-text-muted mt-1">
+                <p className="text-xs text-neutral-b-500 dark:text-dark-text-muted mt-1.5">
                     {message.timestamp}
                 </p>
             </div>

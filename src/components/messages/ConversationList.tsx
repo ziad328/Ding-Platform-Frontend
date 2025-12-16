@@ -18,14 +18,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
 }) => {
     return (
         <div className="h-full flex flex-col bg-white dark:bg-dark-bg-secondary">
-            {/* Header - Fixed height to match ChatHeader */}
-            <div className="flex items-center h-[60px] sm:h-[68px] px-3 sm:px-4 border-b border-neutral-w-400 dark:border-dark-border">
-                <h2 className="text-lg sm:text-xl font-bold text-neutral-b-900 dark:text-dark-text-primary">
-                    Messages
-                </h2>
-            </div>
-
-            {/* Conversation List */}
+            {/* Conversation List - takes remaining space */}
             <div className="flex-1 overflow-y-auto">
                 {conversations.map((conversation) => (
                     <ConversationItem
@@ -37,16 +30,14 @@ const ConversationList: React.FC<ConversationListProps> = ({
                 ))}
             </div>
 
-            {/* New Message Button */}
-            <div className="p-3 sm:p-4 border-t border-neutral-w-400 dark:border-dark-border">
-                <button
-                    onClick={onNewMessage}
-                    className="w-full flex items-center justify-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-medium text-neutral-b-700 dark:text-dark-text-secondary bg-white dark:bg-dark-bg-primary border border-neutral-w-400 dark:border-dark-border rounded-lg hover:bg-neutral-w-100 dark:hover:bg-dark-bg-tertiary transition-colors"
-                >
-                    <Edit className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                    New Message
-                </button>
-            </div>
+            {/* New Message Button - integrated with border-top only, no padding, no button border */}
+            <button
+                onClick={onNewMessage}
+                className="flex items-center justify-center gap-2 py-3 sm:py-4 text-sm font-medium text-neutral-b-700 dark:text-dark-text-secondary border-t border-neutral-w-400 dark:border-dark-border hover:bg-neutral-w-100 dark:hover:bg-dark-bg-tertiary transition-colors"
+            >
+                <Edit className="w-4 h-4" />
+                New Message
+            </button>
         </div>
     );
 };

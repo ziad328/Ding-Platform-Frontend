@@ -65,7 +65,9 @@ function App() {
         justifyContent: 'center',
         alignItems: 'center',
         height: '100vh',
-        fontSize: '1.5rem'
+        fontSize: '1.5rem',
+        backgroundColor: '#0C1024',
+        color: '#838B98',
       }}>
         Loading...
       </div>

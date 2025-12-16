@@ -24,8 +24,8 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
         <div
             onClick={onClick}
             className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 cursor-pointer transition-colors ${isSelected
-                    ? 'bg-primary-50 dark:bg-primary-900/20'
-                    : 'hover:bg-neutral-w-200 dark:hover:bg-dark-bg-tertiary'
+                ? 'bg-neutral-w-200 dark:bg-dark-bg-tertiary'
+                : 'hover:bg-neutral-w-200 dark:hover:bg-dark-bg-tertiary'
                 }`}
         >
             {/* Avatar with online status */}
