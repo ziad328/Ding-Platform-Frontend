@@ -1,24 +1,27 @@
 import './App.css'
+import { lazy, Suspense } from 'react'
 import { createBrowserRouter, createRoutesFromElements, Route, RouterProvider } from 'react-router-dom'
-import HomePage from './pages/home/HomePage'
 import MainLayout from './layout/MainLayout';
 import AuthLayout from './layout/AuthLayout';
 import PublicLayout from './layout/PublicLayout';
-import NotFoundPage from './pages/notfound/NotFoundPage';
-import ProfilePage from './pages/profile/ProfilePage.tsx'
-import SuggestedFriendsPage from './pages/profile/SuggestedFriendsPage.tsx';
-import SuggestedFollowersPage from './pages/profile/SuggestedFollowersPage.tsx';
-import FriendsPage from './pages/profile/FriendsPage.tsx';
-import FollowersPage from './pages/profile/FollowersPage.tsx';
-import FollowingPage from './pages/profile/FollowingPage.tsx';
-import SignUpPage from './pages/authentication/SignUpPage';
-import SignInPage from './pages/authentication/SingInPage';
-import ForgotPasswordPage from './pages/authentication/ForgotPasswordPage';
-import ResetPasswordPage from './pages/authentication/ResetPasswordPage';
-import EmailLoginPage from './pages/authentication/EmailLoginPage';
-import OTPVerificationPage from './pages/authentication/OTPVerificationPage';
-import LandingPage from './pages/landing/LandingPage';
-import MessagesPage from './pages/messages/MessagesPage';
+
+// Lazy load all page components
+const HomePage = lazy(() => import('./pages/home/HomePage'))
+const NotFoundPage = lazy(() => import('./pages/notfound/NotFoundPage'))
+const ProfilePage = lazy(() => import('./pages/profile/ProfilePage.tsx'))
+const SuggestedFriendsPage = lazy(() => import('./pages/profile/SuggestedFriendsPage.tsx'))
+const SuggestedFollowersPage = lazy(() => import('./pages/profile/SuggestedFollowersPage.tsx'))
+const FriendsPage = lazy(() => import('./pages/profile/FriendsPage.tsx'))
+const FollowersPage = lazy(() => import('./pages/profile/FollowersPage.tsx'))
+const FollowingPage = lazy(() => import('./pages/profile/FollowingPage.tsx'))
+const SignUpPage = lazy(() => import('./pages/authentication/SignUpPage'))
+const SignInPage = lazy(() => import('./pages/authentication/SingInPage'))
+const ForgotPasswordPage = lazy(() => import('./pages/authentication/ForgotPasswordPage'))
+const ResetPasswordPage = lazy(() => import('./pages/authentication/ResetPasswordPage'))
+const EmailLoginPage = lazy(() => import('./pages/authentication/EmailLoginPage'))
+const OTPVerificationPage = lazy(() => import('./pages/authentication/OTPVerificationPage'))
+const LandingPage = lazy(() => import('./pages/landing/LandingPage'))
+const MessagesPage = lazy(() => import('./pages/messages/MessagesPage'))
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -56,9 +59,19 @@ const router = createBrowserRouter(
 
 function App() {
   return (
-    <>
+    <Suspense fallback={
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
+        fontSize: '1.5rem'
+      }}>
+        Loading...
+      </div>
+    }>
       <RouterProvider router={router} />
-    </>
+    </Suspense>
   )
 }
 
