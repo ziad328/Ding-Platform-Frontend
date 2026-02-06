@@ -4,6 +4,7 @@ import { createBrowserRouter, createRoutesFromElements, Route, RouterProvider } 
 import MainLayout from './layout/MainLayout';
 import AuthLayout from './layout/AuthLayout';
 import PublicLayout from './layout/PublicLayout';
+import { Toaster } from 'sonner';
 
 // Lazy load all page components
 const HomePage = lazy(() => import('./pages/home/HomePage'))
@@ -72,6 +73,27 @@ function App() {
         Loading...
       </div>
     }>
+      <Toaster
+        position="top-right"
+        closeButton
+        offset="70px"
+        style={{ right: 12 }}
+        toastOptions={{
+          duration: 4000,
+          style: {
+            fontFamily: 'Manrope, Poppins, sans-serif',
+          },
+          classNames: {
+            toast: 'bg-white dark:bg-[#1E293B] border border-[#E2E8F0] dark:border-[#475569] shadow-lg',
+            title: 'text-[#0C1024] dark:text-[#F1F5F9]',
+            description: 'text-[#5D6778] dark:text-[#94A3B8]',
+            error: 'bg-red-50 dark:bg-[#1E293B] border-[#B81616] dark:border-[#CC4F3C]',
+            success: 'bg-green-50 dark:bg-[#1E293B] border-[#036B30] dark:border-[#428553]',
+            warning: 'bg-yellow-50 dark:bg-[#1E293B] border-[#E4A704] dark:border-[#EDB648]',
+            closeButton: 'bg-[#E2E8F0] dark:bg-[#334155] hover:bg-[#CBD5E1] dark:hover:bg-[#475569] text-[#5D6778] dark:text-[#94A3B8]',
+          },
+        }}
+      />
       <RouterProvider router={router} />
     </Suspense>
   )
