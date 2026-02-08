@@ -14,33 +14,15 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          // React core libraries
-          'vendor-react': [
-            'react',
-            'react-dom',
-            'react-router-dom'
-          ],
-          // Redux state management
-          'vendor-redux': [
-            '@reduxjs/toolkit',
-            'react-redux',
-            'redux-persist'
-          ],
-          // UI and animation libraries
-          'vendor-ui': [
-            'framer-motion',
-            'lucide-react',
-            'notistack'
-          ],
-          // Form libraries
-          'vendor-forms': [
-            'formik',
-            'yup'
-          ]
+          'react-vendor': ['react', 'react-dom', 'react/jsx-runtime'],
+          'router': ['react-router-dom'],
+          'animation': ['framer-motion', 'motion'],
+          'state': ['@reduxjs/toolkit', 'react-redux', 'redux-persist'],
+          'forms': ['formik', 'yup'],
+          'ui': ['notistack', 'lucide-react']
         }
       }
     },
-    // Increase chunk size warning limit since we're properly splitting
-    chunkSizeWarningLimit: 1000
+    chunkSizeWarningLimit: 600
   }
 })
