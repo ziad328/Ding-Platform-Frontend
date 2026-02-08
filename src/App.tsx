@@ -5,6 +5,7 @@ import MainLayout from './layout/MainLayout';
 import AuthLayout from './layout/AuthLayout';
 import PublicLayout from './layout/PublicLayout';
 import { Toaster } from 'sonner';
+import { Logo } from './components/atoms/Logo';
 
 // Lazy load all page components
 const HomePage = lazy(() => import('./pages/home/HomePage'))
@@ -67,8 +68,8 @@ const router = createBrowserRouter(
 function App() {
   return (
     <Suspense fallback={
-      <div className="flex justify-center items-center h-screen text-2xl bg-white dark:bg-neutral-b-900 text-neutral-b-500 dark:text-neutral-b-300">
-        Loading...
+      <div className="flex flex-col justify-center items-center h-screen gap-4 bg-white dark:bg-neutral-b-900">
+        <Logo />
       </div>
     }>
       <Toaster
