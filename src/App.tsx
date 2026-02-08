@@ -23,6 +23,9 @@ const EmailLoginPage = lazy(() => import('./pages/authentication/EmailLoginPage'
 const OTPVerificationPage = lazy(() => import('./pages/authentication/OTPVerificationPage'))
 const LandingPage = lazy(() => import('./pages/landing/LandingPage'))
 const MessagesPage = lazy(() => import('./pages/messages/MessagesPage'))
+const ReelsPage = lazy(() => import('./pages/reels/ReelsPage'))
+const MarketplacePage = lazy(() => import('./pages/marketplace/MarketplacePage'))
+const SettingsPage = lazy(() => import('./pages/settings/SettingsPage'))
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -52,6 +55,9 @@ const router = createBrowserRouter(
         <Route path='profile/followers' element={<FollowersPage />} />
         <Route path='profile/following' element={<FollowingPage />} />
         <Route path='messages' element={<MessagesPage />} />
+        <Route path='reels' element={<ReelsPage />} />
+        <Route path='marketplace' element={<MarketplacePage />} />
+        <Route path='settings' element={<SettingsPage />} />
         <Route path='*' element={<NotFoundPage />} />
       </Route>
     </>
