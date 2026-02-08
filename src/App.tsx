@@ -67,15 +67,7 @@ const router = createBrowserRouter(
 function App() {
   return (
     <Suspense fallback={
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100vh',
-        fontSize: '1.5rem',
-        backgroundColor: '#0C1024',
-        color: '#838B98',
-      }}>
+      <div className="flex justify-center items-center h-screen text-2xl bg-white dark:bg-neutral-b-900 text-neutral-b-500 dark:text-neutral-b-300">
         Loading...
       </div>
     }>
