@@ -1,0 +1,222 @@
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import ConversationList from '../../components/messages/ConversationList';
+import ChatView from '../../components/messages/ChatView';
+import EmptyMessageState from '../../components/messages/EmptyMessageState';
+import NewMessageModal from '../../components/messages/NewMessageModal';
+import type { Conversation } from '../../components/messages/ConversationItem';
+import type { Message } from '../../components/messages/MessageBubble';
+
+const MessagesPage = () => {
+    const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
+    const [isMobileView, setIsMobileView] = useState(false);
+    const [isNewMessageModalOpen, setIsNewMessageModalOpen] = useState(false);
+
+    // Mock conversations data
+    const conversations: Conversation[] = [
+        {
+            id: '1',
+            name: 'Bessie Cooper',
+            username: 'bessie_cooper',
+            role: 'Marketing Manager',
+            avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100',
+            lastMessage: "Hi, Robert. I'm facing some chall ...",
+            timestamp: '',
+            lastActive: '1h ago',
+            isOnline: true,
+        },
+        {
+            id: '2',
+            name: 'Thomas Baker',
+            username: 'thomas_baker',
+            role: 'Software Engineer',
+            avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100',
+            lastMessage: 'I have a job interview coming up ...',
+            timestamp: '1d',
+            lastActive: '3h ago',
+            isOnline: false,
+        },
+        {
+            id: '3',
+            name: 'Daniel Brown',
+            username: 'daniel_brown',
+            role: 'Product Designer',
+            avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100',
+            lastMessage: 'Not much, just planning to relax ...',
+            timestamp: '',
+            lastActive: '14h ago',
+            isOnline: false,
+        },
+        {
+            id: '4',
+            name: 'Ronald Richards',
+            username: 'ronald_richards',
+            role: 'DevOps Engineer',
+            avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100',
+            lastMessage: "I'm stuck on the bug in the code ...",
+            timestamp: '',
+            lastActive: '1h ago',
+            isOnline: false,
+        },
+        {
+            id: '5',
+            name: 'Ahmed Seleem',
+            username: 'ahmed_seleem',
+            role: 'Full Stack Developer',
+            avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100',
+            lastMessage: '',
+            timestamp: '',
+            lastActive: '7h ago',
+            isOnline: false,
+        },
+        {
+            id: '6',
+            name: 'Sarah Wilson',
+            username: 'sarah_wilson',
+            role: 'UI/UX Designer',
+            avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100',
+            lastMessage: 'Can we discuss the new designs?',
+            timestamp: '2h',
+            lastActive: '2h ago',
+            isOnline: true,
+        },
+    ];
+
+    // Mock messages for selected conversation
+    const mockMessages: Record<string, Message[]> = {
+        '1': [],
+        '2': [
+            {
+                id: 'm1',
+                content: "Hey, how are you doing?",
+                timestamp: '12:45 PM',
+                isSent: false,
+                senderAvatar: conversations[1].avatar,
+            },
+            {
+                id: 'm2',
+                content: "I'm doing great, thanks for asking! How about you?",
+                timestamp: '12:55 PM',
+                isSent: true,
+            },
+        ],
+    };
+
+    const selectedConversation = conversations.find((c) => c.id === selectedConversationId);
+    const messages = selectedConversationId ? mockMessages[selectedConversationId] || [] : [];
+
+    const handleSelectConversation = (id: string) => {
+        setSelectedConversationId(id);
+        setIsMobileView(true);
+    };
+
+    const handleBackToList = () => {
+        setIsMobileView(false);
+        setTimeout(() => {
+            setSelectedConversationId(null);
+        }, 50);
+    };
+
+    const handleNewMessage = () => {
+        setIsNewMessageModalOpen(true);
+    };
+
+    const handleSelectPerson = (id: string) => {
+        setSelectedConversationId(id);
+        setIsMobileView(true);
+    };
+
+    const handleSendMessage = (message: string) => {
+        console.log('Sending message:', message);
+    };
+
+    // Animation variants for mobile slide transitions
+    const slideVariants = {
+        enterFromRight: { x: '100%', opacity: 1 },
+        enterFromLeft: { x: '-100%', opacity: 1 },
+        center: { x: 0, opacity: 1 },
+        exitToLeft: { x: '-100%', opacity: 1 },
+        exitToRight: { x: '100%', opacity: 1 },
+    };
+
+    return (
+        <div className="h-full overflow-hidden bg-neutral-w-200 dark:bg-dark-bg-primary flex flex-col">
+            {/* Desktop: Two-column layout */}
+            <div className="hidden lg:flex h-full">
+                {/* Conversation List - Left Column */}
+                <div className="w-80 xl:w-96 shrink-0 border-r border-neutral-w-400 dark:border-dark-border/40">
+                    <ConversationList
+                        conversations={conversations}
+                        selectedId={selectedConversationId}
+                        onSelectConversation={setSelectedConversationId}
+                        onNewMessage={handleNewMessage}
+                    />
+                </div>
+
+                {/* Chat View or Empty State - Right Column */}
+                <div className="flex-1 min-w-0">
+                    {selectedConversation ? (
+                        <ChatView
+                            conversation={selectedConversation}
+                            messages={messages}
+                            onSendMessage={handleSendMessage}
+                        />
+                    ) : (
+                        <EmptyMessageState onNewMessage={handleNewMessage} />
+                    )}
+                </div>
+            </div>
+
+            {/* Mobile: Single view with slide transitions */}
+            <div className="lg:hidden h-full relative overflow-hidden">
+                <AnimatePresence initial={false} mode="popLayout">
+                    {!isMobileView ? (
+                        <motion.div
+                            key="conversation-list"
+                            initial="enterFromLeft"
+                            animate="center"
+                            exit="exitToLeft"
+                            variants={slideVariants}
+                            transition={{ type: 'tween', duration: 0.25, ease: 'easeInOut' }}
+                            className="absolute inset-0"
+                        >
+                            <ConversationList
+                                conversations={conversations}
+                                selectedId={selectedConversationId}
+                                onSelectConversation={handleSelectConversation}
+                                onNewMessage={handleNewMessage}
+                            />
+                        </motion.div>
+                    ) : selectedConversation ? (
+                        <motion.div
+                            key="chat-view"
+                            initial="enterFromRight"
+                            animate="center"
+                            exit="exitToRight"
+                            variants={slideVariants}
+                            transition={{ type: 'tween', duration: 0.25, ease: 'easeInOut' }}
+                            className="absolute inset-0"
+                        >
+                            <ChatView
+                                conversation={selectedConversation}
+                                messages={messages}
+                                onSendMessage={handleSendMessage}
+                                onBack={handleBackToList}
+                            />
+                        </motion.div>
+                    ) : null}
+                </AnimatePresence>
+            </div>
+
+            {/* New Message Modal */}
+            <NewMessageModal
+                isOpen={isNewMessageModalOpen}
+                onClose={() => setIsNewMessageModalOpen(false)}
+                onSelectPerson={handleSelectPerson}
+                availablePeople={conversations}
+            />
+        </div>
+    );
+};
+
+export default MessagesPage;

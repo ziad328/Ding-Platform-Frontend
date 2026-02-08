@@ -1,4 +1,4 @@
-import { Outlet, Navigate } from "react-router-dom";
+import { Outlet, Navigate, useLocation } from "react-router-dom";
 import Navbar from "../components/navbar/Navbar";
 import Sidebar from "../components/sidebar/Sidebar";
 import { useSelector } from "react-redux";
@@ -9,9 +9,13 @@ import ScrollToTop from "../components/common/ScrollToTop";
 function MainLayout() {
   const token = useSelector(selectCurrentToken);
   const user = useSelector(selectCurrentUser);
+  const location = useLocation();
 
   // Initialize dark mode
   useDarkMode();
+
+  // Check if we're on the messages page - no padding needed there
+  const isMessagesPage = location.pathname === '/messages';
 
   // If user is not authenticated, redirect to welcome page
   if (!token || !user) {
@@ -26,7 +30,7 @@ function MainLayout() {
       <div className="flex flex-1 overflow-hidden w-full">
         <Sidebar />
 
-        <main className="flex-1 overflow-y-auto pb-14 md:pb-0 px-3 py-4 sm:px-4 sm:py-5 md:px-6 md:py-6">
+        <main className={`flex-1 overflow-y-auto pb-14 md:pb-0 ${isMessagesPage ? '' : 'px-3 py-4 sm:px-4 sm:py-5 md:px-6 md:py-6'}`}>
           <Outlet />
         </main>
       </div>
