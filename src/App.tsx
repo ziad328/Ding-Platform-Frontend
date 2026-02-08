@@ -33,17 +33,45 @@ const router = createBrowserRouter(
     <>
       {/* Public Routes - Landing Page */}
       <Route element={<PublicLayout />}>
-        <Route path='/welcome' element={<LandingPage />} />
+        <Route path='/welcome' element={
+          <Suspense fallback={<LoadingFallback />}>
+            <LandingPage />
+          </Suspense>
+        } />
       </Route>
 
       {/* Authentication Routes */}
       <Route path='/auth' element={<AuthLayout />}>
-        <Route path='signup' element={<SignUpPage />} />
-        <Route path='signin' element={<SignInPage />} />
-        <Route path='email-login' element={<EmailLoginPage />} />
-        <Route path='forgot-password' element={<ForgotPasswordPage />} />
-        <Route path='reset-password' element={<ResetPasswordPage />} />
-        <Route path='verfiy-otp' element={<OTPVerificationPage />} />
+        <Route path='signup' element={
+          <Suspense fallback={<LoadingFallback />}>
+            <SignUpPage />
+          </Suspense>
+        } />
+        <Route path='signin' element={
+          <Suspense fallback={<LoadingFallback />}>
+            <SignInPage />
+          </Suspense>
+        } />
+        <Route path='email-login' element={
+          <Suspense fallback={<LoadingFallback />}>
+            <EmailLoginPage />
+          </Suspense>
+        } />
+        <Route path='forgot-password' element={
+          <Suspense fallback={<LoadingFallback />}>
+            <ForgotPasswordPage />
+          </Suspense>
+        } />
+        <Route path='reset-password' element={
+          <Suspense fallback={<LoadingFallback />}>
+            <ResetPasswordPage />
+          </Suspense>
+        } />
+        <Route path='verfiy-otp' element={
+          <Suspense fallback={<LoadingFallback />}>
+            <OTPVerificationPage />
+          </Suspense>
+        } />
       </Route>
 
       {/* Protected Routes - Main App */}

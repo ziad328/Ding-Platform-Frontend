@@ -197,7 +197,7 @@ export default function OTPVerificationPage() {
                 onChange={(e) => handleChange(index, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(index, e)}
                 onPaste={handlePaste}
-                className="w-9 h-9 sm:w-12 sm:h-12 md:w-14 md:h-14 text-center text-sm sm:text-lg md:text-xl font-semibold border-2 rounded-md sm:rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors border-neutral-w-400 dark:border-dark-border dark:bg-dark-bg-primary dark:text-dark-text-primary flex-shrink-0"
+                className="w-9 h-9 sm:w-12 sm:h-12 md:w-14 md:h-14 text-center text-sm sm:text-lg md:text-xl font-semibold border-2 rounded-md sm:rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors border-neutral-w-400 dark:border-dark-border dark:bg-dark-bg-primary dark:text-dark-text-primary shrink-0"
               />
             ))}
           </div>
