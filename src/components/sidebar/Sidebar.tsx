@@ -1,25 +1,27 @@
-import Home4LineIcon from 'remixicon-react/Home4LineIcon';
-import Home4FillIcon from 'remixicon-react/Home4FillIcon';
-import Chat3LineIcon from 'remixicon-react/Chat3LineIcon';
-import Chat3FillIcon from 'remixicon-react/Chat3FillIcon';
-import FilmLineIcon from 'remixicon-react/FilmLineIcon';
-import FilmFillIcon from 'remixicon-react/FilmFillIcon';
-import Store3LineIcon from 'remixicon-react/Store3LineIcon';
-import Store3FillIcon from 'remixicon-react/Store3FillIcon';
-import UserLineIcon from 'remixicon-react/UserLineIcon';
-import UserFillIcon from 'remixicon-react/UserFillIcon';
-import Settings2LineIcon from 'remixicon-react/Settings2LineIcon';
-import Settings2FillIcon from 'remixicon-react/Settings2FillIcon';
+import {
+  RiHome9Line,
+  RiHome9Fill,
+  RiSendInsLine,
+  RiSendInsFill,
+  RiVideoLine,
+  RiVideoFill,
+  RiStoreLine,
+  RiStoreFill,
+  RiUserLine,
+  RiUserFill,
+  RiSettings2Line,
+  RiSettings2Fill,
+} from '@remixicon/react';
 import { NavLink } from 'react-router-dom';
 
 function Sidebar() {
   const navItems = [
-    { iconOutline: Home4LineIcon, iconFill: Home4FillIcon, label: 'Home', path: '/' },
-    { iconOutline: Chat3LineIcon, iconFill: Chat3FillIcon, label: 'Messages', path: '/messages' },
-    { iconOutline: FilmLineIcon, iconFill: FilmFillIcon, label: 'Reels', path: '/reels' },
-    { iconOutline: Store3LineIcon, iconFill: Store3FillIcon, label: 'Market', path: '/marketplace' },
-    { iconOutline: UserLineIcon, iconFill: UserFillIcon, label: 'Profile', path: '/profile' },
-    { iconOutline: Settings2LineIcon, iconFill: Settings2FillIcon, label: 'Settings', path: '/settings' },
+    { iconOutline: RiHome9Line, iconFill: RiHome9Fill, label: 'Home', path: '/' },
+    { iconOutline: RiSendInsLine, iconFill: RiSendInsFill, label: 'Messages', path: '/messages' },
+    { iconOutline: RiVideoLine, iconFill: RiVideoFill, label: 'Reels', path: '/reels' },
+    { iconOutline: RiStoreLine, iconFill: RiStoreFill, label: 'Market', path: '/marketplace' },
+    { iconOutline: RiUserLine, iconFill: RiUserFill, label: 'Profile', path: '/profile' },
+    { iconOutline: RiSettings2Line, iconFill: RiSettings2Fill, label: 'Settings', path: '/settings' },
   ];
 
   return (
