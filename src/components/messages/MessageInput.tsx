@@ -142,11 +142,11 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage }) => {
         });
     };
 
-    const hasText = message.trim().length > 0;
+    const canSend = message.trim().length > 0 || attachedFiles.length > 0;
     const isDarkMode = document.documentElement.classList.contains('dark');
 
     return (
-        <div className="px-3 sm:px-4 md:px-6 py-2 sm:py-3 bg-neutral-w-100 dark:bg-dark-bg-secondary">
+        <div className="px-3 sm:px-4 md:px-6 py-2 sm:py-3">
             {/* Attachment Previews */}
             <AnimatePresence>
                 {attachedFiles.length > 0 && (
@@ -254,13 +254,13 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage }) => {
 
                 {/* Mic / Send Button */}
                 <motion.button
-                    onClick={hasText ? handleSend : undefined}
+                    onClick={canSend ? handleSend : undefined}
                     className="p-2 sm:p-2.5 rounded-full bg-primary-600 hover:bg-primary-700 text-white transition-colors shrink-0"
-                    aria-label={hasText ? 'Send message' : 'Voice message'}
+                    aria-label={canSend ? 'Send message' : 'Voice message'}
                     whileTap={{ scale: 0.95 }}
                 >
                     <AnimatePresence mode="wait" initial={false}>
-                        {hasText ? (
+                        {canSend ? (
                             <motion.div
                                 key="send"
                                 initial={{ scale: 0, rotate: -90 }}

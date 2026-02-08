@@ -13,16 +13,16 @@ interface MessageBubbleProps {
     senderName?: string;
 }
 
-const MessageBubble: React.FC<MessageBubbleProps> = ({ message, senderName }) => {
+const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
     if (message.isSent) {
-        // Sent message - right aligned, teal background
+        // Sent message - right aligned, primary color background
         return (
-            <div className="flex justify-end mb-4 sm:mb-5">
+            <div className="flex justify-end mb-3">
                 <div className="max-w-[85%] sm:max-w-[75%] md:max-w-[65%]">
-                    <div className="bg-primary-600 dark:bg-primary-600 text-white px-4 py-3 sm:px-5 sm:py-4 rounded-2xl rounded-br-xs">
+                    <div className="bg-primary-600 text-white px-4 py-2.5 rounded-2xl rounded-br-sm">
                         <p className="text-sm leading-relaxed">{message.content}</p>
                     </div>
-                    <p className="text-xs text-neutral-b-500 dark:text-dark-text-muted mt-1.5 text-right">
+                    <p className="text-xs text-neutral-b-500 dark:text-dark-text-muted mt-1 text-right">
                         {message.timestamp}
                     </p>
                 </div>
@@ -30,33 +30,24 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, senderName }) =>
         );
     }
 
-    // Received message - left aligned with avatar and sender info
+    // Received message - left aligned with small avatar
     return (
-        <div className="flex gap-3 sm:gap-4 mb-4 sm:mb-5">
-            {/* Sender Avatar */}
+        <div className="flex items-center gap-2 mb-3">
+            {/* Small Avatar */}
             {message.senderAvatar && (
                 <img
                     src={message.senderAvatar}
-                    alt={senderName || 'Sender'}
-                    className="w-10 h-10 sm:w-11 sm:h-11 rounded-full object-cover shrink-0"
+                    alt="Sender"
+                    className="w-7 h-7 rounded-full object-cover shrink-0"
                 />
             )}
 
             <div className="max-w-[85%] sm:max-w-[75%] md:max-w-[65%]">
-                {/* Sender Name */}
-                {senderName && (
-                    <div className="mb-1.5">
-                        <span className="text-sm font-semibold text-neutral-b-900 dark:text-dark-text-primary">
-                            {senderName}
-                        </span>
-                    </div>
-                )}
-
-                {/* Message Content */}
-                <div className="bg-neutral-w-200 dark:bg-dark-bg-tertiary text-neutral-b-900 dark:text-dark-text-primary px-4 py-3 sm:px-5 sm:py-4 rounded-2xl rounded-tl-xs">
+                {/* Message Content - visible background for light mode */}
+                <div className="bg-neutral-w-400 dark:bg-dark-bg-tertiary text-neutral-b-900 dark:text-dark-text-primary px-4 py-2.5 rounded-2xl rounded-bl-sm">
                     <p className="text-sm leading-relaxed">{message.content}</p>
                 </div>
-                <p className="text-xs text-neutral-b-500 dark:text-dark-text-muted mt-1.5">
+                <p className="text-xs text-neutral-b-500 dark:text-dark-text-muted mt-1">
                     {message.timestamp}
                 </p>
             </div>
