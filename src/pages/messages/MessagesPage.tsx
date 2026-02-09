@@ -1,119 +1,135 @@
-import { useState } from 'react';
+import { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import ConversationList from '../../components/messages/ConversationList';
 import ChatView from '../../components/messages/ChatView';
 import EmptyMessageState from '../../components/messages/EmptyMessageState';
 import NewMessageModal from '../../components/messages/NewMessageModal';
-import type { Conversation } from '../../components/messages/ConversationItem';
-import type { Message } from '../../components/messages/MessageBubble';
+import { useSocket } from '../../hook/useSocket';
+import { useGetRoomsQuery, useGetMessagesQuery } from '../../store/slices/chat';
+import { setMessages, addRoom } from '../../store/slices/chat';
+import type { RootState, AppDispatch } from '../../store/store';
+import type { ChatRoom, ChatMessage } from '../../store/slices/chat/types';
+import { useState } from 'react';
+
+// Main messaging page with conversation list and chat view
+const transformRoomToConversation = (room: ChatRoom, currentUserId: string) => {
+    const otherMember = room.type === 'DIRECT'
+        ? room.members.find(m => m.userId !== currentUserId)
+        : null;
+
+    const lastMessage = room.messages?.[0];
+
+    return {
+        id: room.id,
+        name: room.type === 'DIRECT'
+            ? otherMember?.user.name || 'Unknown User'
+            : room.name || 'Group Chat',
+        username: otherMember?.user.email?.split('@')[0],
+        avatar: otherMember?.user.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(
+            room.type === 'DIRECT' ? otherMember?.user.name || 'U' : room.name || 'G'
+        )}&background=random`,
+        lastMessage: lastMessage?.content || '',
+        timestamp: lastMessage ? formatTimestamp(lastMessage.createdAt) : '',
+        lastActive: '',
+        isOnline: false, // Would need real-time presence data
+        type: room.type,
+        members: room.members,
+    };
+};
+
+const transformMessage = (msg: ChatMessage, currentUserId: string, senderAvatar?: string) => ({
+    id: msg.id,
+    content: msg.content,
+    timestamp: formatTime(msg.createdAt),
+    isSent: msg.userId === currentUserId,
+    senderAvatar: msg.userId !== currentUserId ? senderAvatar : undefined,
+    userId: msg.userId,
+    roomId: msg.roomId,
+    media: msg.media,
+    createdAt: msg.createdAt,
+});
+
+// Format timestamp for conversation list
+const formatTimestamp = (dateStr: string): string => {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffHours = diffMs / (1000 * 60 * 60);
+    const diffDays = diffMs / (1000 * 60 * 60 * 24);
+
+    if (diffHours < 1) return 'now';
+    if (diffHours < 24) return `${Math.floor(diffHours)}h`;
+    if (diffDays < 7) return `${Math.floor(diffDays)}d`;
+    return date.toLocaleDateString();
+};
+
+// Format time for message bubbles
+const formatTime = (dateStr: string): string => {
+    const date = new Date(dateStr);
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+};
 
 const MessagesPage = () => {
-    const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
+    const dispatch = useDispatch<AppDispatch>();
     const [isMobileView, setIsMobileView] = useState(false);
     const [isNewMessageModalOpen, setIsNewMessageModalOpen] = useState(false);
 
-    // Mock conversations data
-    const conversations: Conversation[] = [
-        {
-            id: '1',
-            name: 'Bessie Cooper',
-            username: 'bessie_cooper',
-            role: 'Marketing Manager',
-            avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100',
-            lastMessage: "Hi, Robert. I'm facing some chall ...",
-            timestamp: '',
-            lastActive: '1h ago',
-            isOnline: true,
-        },
-        {
-            id: '2',
-            name: 'Thomas Baker',
-            username: 'thomas_baker',
-            role: 'Software Engineer',
-            avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100',
-            lastMessage: 'I have a job interview coming up ...',
-            timestamp: '1d',
-            lastActive: '3h ago',
-            isOnline: false,
-        },
-        {
-            id: '3',
-            name: 'Daniel Brown',
-            username: 'daniel_brown',
-            role: 'Product Designer',
-            avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100',
-            lastMessage: 'Not much, just planning to relax ...',
-            timestamp: '',
-            lastActive: '14h ago',
-            isOnline: false,
-        },
-        {
-            id: '4',
-            name: 'Ronald Richards',
-            username: 'ronald_richards',
-            role: 'DevOps Engineer',
-            avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100',
-            lastMessage: "I'm stuck on the bug in the code ...",
-            timestamp: '',
-            lastActive: '1h ago',
-            isOnline: false,
-        },
-        {
-            id: '5',
-            name: 'Ahmed Seleem',
-            username: 'ahmed_seleem',
-            role: 'Full Stack Developer',
-            avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100',
-            lastMessage: '',
-            timestamp: '',
-            lastActive: '7h ago',
-            isOnline: false,
-        },
-        {
-            id: '6',
-            name: 'Sarah Wilson',
-            username: 'sarah_wilson',
-            role: 'UI/UX Designer',
-            avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100',
-            lastMessage: 'Can we discuss the new designs?',
-            timestamp: '2h',
-            lastActive: '2h ago',
-            isOnline: true,
-        },
-    ];
+    // Get current user ID from auth state
+    const currentUserId = useSelector((state: RootState) => state.auth.user?.id || '');
 
-    // Mock messages for selected conversation
-    const mockMessages: Record<string, Message[]> = {
-        '1': [],
-        '2': [
-            {
-                id: 'm1',
-                content: "Hey, how are you doing?",
-                timestamp: '12:45 PM',
-                isSent: false,
-                senderAvatar: conversations[1].avatar,
-            },
-            {
-                id: 'm2',
-                content: "I'm doing great, thanks for asking! How about you?",
-                timestamp: '12:55 PM',
-                isSent: true,
-            },
-        ],
+    // Initialize socket connection
+    const { currentRoomId, selectRoom } = useSocket();
+
+    // Fetch rooms from API
+    const { data: rooms = [], isLoading: roomsLoading } = useGetRoomsQuery();
+
+    // Get messages from Redux store (populated by socket or API)
+    const storedMessages = useSelector((state: RootState) => state.chat.messages);
+
+    // Fetch messages for current room
+    const { data: fetchedMessages } = useGetMessagesQuery(
+        { roomId: currentRoomId! },
+        { skip: !currentRoomId }
+    );
+
+    // Update store when messages are fetched
+    useEffect(() => {
+        if (currentRoomId && fetchedMessages) {
+            dispatch(setMessages({ roomId: currentRoomId, messages: fetchedMessages }));
+        }
+    }, [currentRoomId, fetchedMessages, dispatch]);
+
+    // Transform rooms to conversations for UI
+    const conversations = rooms.map(room => transformRoomToConversation(room, currentUserId));
+
+    // Get selected conversation and messages
+    const selectedConversation = conversations.find(c => c.id === currentRoomId);
+    const currentRoom = rooms.find(r => r.id === currentRoomId);
+
+    // Get messages for current room
+    const rawMessages = currentRoomId ? storedMessages[currentRoomId] || [] : [];
+
+    // Get sender avatar for received messages
+    const getOtherUserAvatar = () => {
+        if (!currentRoom) return undefined;
+        const otherMember = currentRoom.members.find(m => m.userId !== currentUserId);
+        return otherMember?.user.image || undefined;
     };
 
-    const selectedConversation = conversations.find((c) => c.id === selectedConversationId);
-    const messages = selectedConversationId ? mockMessages[selectedConversationId] || [] : [];
+    const messages = rawMessages.map(msg =>
+        transformMessage(msg, currentUserId, getOtherUserAvatar())
+    );
 
     const handleSelectConversation = (id: string) => {
-        setSelectedConversationId(id);
+        selectRoom(id);
         setIsMobileView(true);
     };
 
     const handleBackToList = () => {
         setIsMobileView(false);
         setTimeout(() => {
-            setSelectedConversationId(null);
+            selectRoom(null);
         }, 50);
     };
 
@@ -122,12 +138,16 @@ const MessagesPage = () => {
     };
 
     const handleSelectPerson = (id: string) => {
-        setSelectedConversationId(id);
+        selectRoom(id);
         setIsMobileView(true);
+        setIsNewMessageModalOpen(false);
     };
 
-    const handleSendMessage = (message: string) => {
-        console.log('Sending message:', message);
+    const handleRoomCreated = (room: ChatRoom) => {
+        dispatch(addRoom(room));
+        selectRoom(room.id);
+        setIsMobileView(true);
+        setIsNewMessageModalOpen(false);
     };
 
     // Animation variants for mobile slide transitions
@@ -147,9 +167,10 @@ const MessagesPage = () => {
                 <div className="w-80 xl:w-96 shrink-0 border-r border-neutral-w-400 dark:border-dark-border/40">
                     <ConversationList
                         conversations={conversations}
-                        selectedId={selectedConversationId}
-                        onSelectConversation={setSelectedConversationId}
+                        selectedId={currentRoomId}
+                        onSelectConversation={handleSelectConversation}
                         onNewMessage={handleNewMessage}
+                        isLoading={roomsLoading}
                     />
                 </div>
 
@@ -159,7 +180,7 @@ const MessagesPage = () => {
                         <ChatView
                             conversation={selectedConversation}
                             messages={messages}
-                            onSendMessage={handleSendMessage}
+                            roomId={currentRoomId!}
                         />
                     ) : (
                         <EmptyMessageState onNewMessage={handleNewMessage} />
@@ -182,9 +203,10 @@ const MessagesPage = () => {
                         >
                             <ConversationList
                                 conversations={conversations}
-                                selectedId={selectedConversationId}
+                                selectedId={currentRoomId}
                                 onSelectConversation={handleSelectConversation}
                                 onNewMessage={handleNewMessage}
+                                isLoading={roomsLoading}
                             />
                         </motion.div>
                     ) : selectedConversation ? (
@@ -200,7 +222,7 @@ const MessagesPage = () => {
                             <ChatView
                                 conversation={selectedConversation}
                                 messages={messages}
-                                onSendMessage={handleSendMessage}
+                                roomId={currentRoomId!}
                                 onBack={handleBackToList}
                             />
                         </motion.div>
@@ -213,7 +235,7 @@ const MessagesPage = () => {
                 isOpen={isNewMessageModalOpen}
                 onClose={() => setIsNewMessageModalOpen(false)}
                 onSelectPerson={handleSelectPerson}
-                availablePeople={conversations}
+                onRoomCreated={handleRoomCreated}
             />
         </div>
     );
