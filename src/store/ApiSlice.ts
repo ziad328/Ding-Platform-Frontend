@@ -24,27 +24,27 @@ const baseQueryWithReAuth = async (
       url: 'auth/refresh',
       method: 'POST',
     }, api, extraOptions);
-    
+
     if (refreshResult?.data) {
       const user = (api.getState() as { auth: { user: any } }).auth.user;
-      
+
       const refreshData = refreshResult.data as any;
-      
+
       if (refreshData.data && refreshData.data.accessToken) {
-        api.dispatch(setCredentials({ 
-          accessToken: refreshData.data.accessToken, 
-          user: refreshData.data.user || user 
+        api.dispatch(setCredentials({
+          accessToken: refreshData.data.accessToken,
+          user: refreshData.data.user || user
         }));
       } else if (refreshData.accessToken) {
-        api.dispatch(setCredentials({ 
-          accessToken: refreshData.accessToken, 
-          user: refreshData.user || user 
+        api.dispatch(setCredentials({
+          accessToken: refreshData.accessToken,
+          user: refreshData.user || user
         }));
       } else {
         api.dispatch(logOut());
         return result;
       }
-      
+
       result = await baseQuery(args, api, extraOptions);
     } else {
       api.dispatch(logOut());
@@ -66,6 +66,8 @@ const tagTypes = [
   'Posts',
   'Comments',
   'Likes',
+  'Rooms',
+  'Messages',
 ] as const;
 
 export const apiSlice = createApi({
