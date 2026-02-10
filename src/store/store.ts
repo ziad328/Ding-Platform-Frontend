@@ -9,6 +9,9 @@ import friendsReducer from './slices/social/friends/friends';
 import friendSuggestionsReducer from './slices/social/suggestions/friend/friendSuggestions';
 import followSuggestionsReducer from './slices/social/suggestions/follow/followSuggestions';
 import feedReducer from './slices/feed/feed';
+import commentReducer from './slices/comment/commentSlice';
+import likeReducer from './slices/like/likeSlice';
+import { chatReducer } from './slices/chat';
 import { apiSlice } from './ApiSlice';
 import storage from 'redux-persist/lib/storage';
 import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from 'redux-persist';
@@ -34,6 +37,9 @@ export const store = configureStore({
     friendSuggestions: friendSuggestionsReducer,
     followSuggestions: followSuggestionsReducer,
     feed: feedReducer,
+    comments: commentReducer,
+    like: likeReducer,
+    chat: chatReducer,
     [apiSlice.reducerPath]: apiSlice.reducer,
   },
   middleware: (getDefaultMiddleware) =>

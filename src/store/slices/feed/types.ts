@@ -6,6 +6,7 @@ export interface FeedPost {
     likes: number;
     comments: number;
     image: string | null;
+    liked?: boolean;
 }
 
 export interface FeedPagination {

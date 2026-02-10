@@ -5,6 +5,7 @@ import { useSelector } from "react-redux";
 import { selectCurrentToken, selectCurrentUser } from "../store/slices/auth/auth";
 import { useDarkMode } from "../hook/useDarkMode";
 import ScrollToTop from "../components/common/ScrollToTop";
+import ChatSocketBootstrap from "../components/messages/ChatSocketBootstrap";
 
 function MainLayout() {
   const token = useSelector(selectCurrentToken);
@@ -25,6 +26,7 @@ function MainLayout() {
   return (
     <div className="h-screen bg-neutral-w-200 dark:bg-dark-bg-primary overflow-hidden flex flex-col">
       <ScrollToTop />
+      <ChatSocketBootstrap />
       <Navbar />
 
       <div className="flex flex-1 overflow-hidden w-full">

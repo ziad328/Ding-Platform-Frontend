@@ -16,6 +16,7 @@ export const feedApi = apiSlice.injectEndpoints({
                 url: `feed?page=${page}&limit=${limit}`,
                 method: 'GET',
             }),
+            providesTags: ['Posts'],
             transformResponse: (response: FeedResponse) => response.data,
             async onQueryStarted({ page = 1 }, { dispatch, queryFulfilled }) {
                 dispatch(setFeedLoading());

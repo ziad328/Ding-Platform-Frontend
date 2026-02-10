@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { User, Heart, MessageCircle, Bookmark, MoreHorizontal } from 'lucide-react';
+import { useLikePostMutation, useUnlikePostMutation } from '../../store/ApiSlice';
 import CommentSection from './CommentSection';
 
 interface PostProps {
@@ -11,76 +12,37 @@ interface PostProps {
         likes: number;
         comments: number;
         image: string | null;
+        liked?: boolean;
     };
-    comments?: {
-        id: string;
-        author: string;
-        time: string;
-        content: string;
-        likes: number;
-        dislikes: number;
-        replies?: any[];
-    }[];
 }
 
-interface Comment {
-    id: string;
-    author: string;
-    time: string;
-    content: string;
-    likes: number;
-    dislikes: number;
-    replies?: Comment[];
-}
-
-const Post: React.FC<PostProps> = ({ post, comments = [] }) => {
-    const [isLiked, setIsLiked] = useState(false);
+const Post: React.FC<PostProps> = ({ post }) => {
     const [isSaved, setIsSaved] = useState(false);
-    const [likeCount, setLikeCount] = useState(post.likes);
-    const commentCount = post.comments;
     const [showComments, setShowComments] = useState(false);
-    const [commentsList, setCommentsList] = useState(comments);
+    const [isLiked, setIsLiked] = useState(post.liked || false);
+    const [likesCount, setLikesCount] = useState(post.likes);
+    
+    const [likePost, { isLoading: isLiking }] = useLikePostMutation();
+    const [unlikePost, { isLoading: isUnliking }] = useUnlikePostMutation();
 
-    const handleLike = () => {
-        setIsLiked(!isLiked);
-        setLikeCount(isLiked ? likeCount - 1 : likeCount + 1);
+    const handleLike = async () => {
+        try {
+            if (isLiked) {
+                await unlikePost(post.id).unwrap();
+                setIsLiked(false);
+                setLikesCount(prev => prev - 1);
+            } else {
+                await likePost(post.id).unwrap();
+                setIsLiked(true);
+                setLikesCount(prev => prev + 1);
+            }
+        } catch (error) {
+            console.error('Failed to toggle like:', error);
+        }
     };
 
     const handleCommentClick = () => {
         setShowComments(!showComments);
-    };
-
-    const handleAddComment = (content: string, parentId?: string) => {
-        const newComment: Comment = {
-            id: Date.now().toString(),
-            author: 'Current User',
-            time: new Date().toISOString(),
-            content,
-            likes: 0,
-            dislikes: 0
-        };
-
-        if (parentId) {
-            const addReplyToComment = (comments: Comment[]): Comment[] => {
-                return comments.map(comment => {
-                    if (comment.id === parentId) {
-                        return {
-                            ...comment,
-                            replies: [...(comment.replies || []), newComment]
-                        };
-                    } else if (comment.replies) {
-                        return {
-                            ...comment,
-                            replies: addReplyToComment(comment.replies)
-                        };
-                    }
-                    return comment;
-                });
-            };
-            setCommentsList(addReplyToComment(commentsList));
-        } else {
-            setCommentsList([newComment, ...commentsList]);
-        }
     };
 
     // Format the date to a relative time string
@@ -138,18 +100,19 @@ const Post: React.FC<PostProps> = ({ post, comments = [] }) => {
                 <div className="flex items-center gap-4 sm:gap-6">
                     <button
                         onClick={handleLike}
+                        disabled={isLiking || isUnliking}
                         className={`flex items-center gap-1.5 sm:gap-2 transition-colors ${isLiked ? 'text-semantic-r-900 dark:text-semantic-r-700' : 'text-neutral-b-500 dark:text-dark-text-muted hover:text-semantic-r-900 dark:hover:text-semantic-r-700'
-                            }`}
+                            } ${(isLiking || isUnliking) ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
                         <Heart className={`w-4 h-4 sm:w-5 sm:h-5 ${isLiked ? 'fill-current' : ''}`} />
-                        <span className="text-xs sm:text-sm font-medium">{likeCount}</span>
+                        <span className="text-xs sm:text-sm font-medium">{likesCount}</span>
                     </button>
                     <button 
                         onClick={handleCommentClick}
                         className="flex items-center gap-1.5 sm:gap-2 text-neutral-b-500 dark:text-dark-text-muted hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
                     >
                         <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5" />
-                        <span className="text-xs sm:text-sm font-medium">{commentCount}</span>
+                        <span className="text-xs sm:text-sm font-medium">{post.comments}</span>
                     </button>
                 </div>
                 <button
@@ -165,8 +128,7 @@ const Post: React.FC<PostProps> = ({ post, comments = [] }) => {
             {showComments && (
                 <div className="mt-4 pt-4 border-t border-neutral-w-400 dark:border-dark-border">
                     <CommentSection
-                        comments={commentsList}
-                        onAddComment={handleAddComment}
+                        postId={post.id}
                     />
                 </div>
             )}

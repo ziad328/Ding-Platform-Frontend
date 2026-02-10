@@ -1,30 +1,43 @@
 import React, { useState } from 'react';
 import { MessageCircle, Send } from 'lucide-react';
+import { useSelector } from 'react-redux';
 import CommentItem from './CommentItem';
-
-interface Comment {
-    id: string;
-    author: string;
-    time: string;
-    content: string;
-    likes: number;
-    dislikes: number;
-    replies?: Comment[];
-}
+import CommentSkeleton from './CommentSkeleton';
+import { useCreateCommentMutation, useGetPostCommentsQuery } from '../../store/slices/comment/commentApi';
+import type { RootState } from '../../store/store';
+import type { Comment } from '../../store/slices/comment/commentApi';
 
 interface CommentSectionProps {
-    comments: Comment[];
-    onAddComment: (content: string, parentId?: string) => void;
+    postId: string;
 }
 
-const CommentSection: React.FC<CommentSectionProps> = ({ comments, onAddComment }) => {
+const CommentSection: React.FC<CommentSectionProps> = ({ postId }) => {
+    const { user } = useSelector((state: RootState) => state.auth);
+    
     const [newComment, setNewComment] = useState('');
+    const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+    const [createComment, { isLoading: isCreating }] = useCreateCommentMutation();
+    const { data: commentsData, isLoading: isLoadingComments } = useGetPostCommentsQuery({ postId });
+    
+    // Get current post comments from API data
+    const currentComments = Array.isArray(commentsData?.data.data) ? commentsData.data.data : [];
 
-    const handleSubmitComment = (e: React.FormEvent) => {
+    const handleSubmitComment = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (newComment.trim()) {
-            onAddComment(newComment.trim());
-            setNewComment('');
+        if (newComment.trim() && user) {
+            setIsSubmittingComment(true);
+            try {
+                await createComment({
+                    postId,
+                    data: { content: newComment.trim() },
+                }).unwrap();
+                
+                setNewComment('');
+            } catch (error) {
+                console.error('Failed to create comment:', error);
+            } finally {
+                setIsSubmittingComment(false);
+            }
         }
     };
 
@@ -35,19 +48,9 @@ const CommentSection: React.FC<CommentSectionProps> = ({ comments, onAddComment 
         }
     };
 
-    const handleReply = (commentId: string, content: string) => {
-        onAddComment(content, commentId);
-    };
 
     return (
         <div className="bg-white dark:bg-dark-bg-secondary rounded-lg">
-            {/* Comment Section Header */}
-            <div className="flex items-center gap-2 mb-4">
-                <MessageCircle className="w-4 h-4 text-neutral-b-700 dark:text-dark-text-primary" />
-                <h3 className="text-base font-semibold text-neutral-b-900 dark:text-dark-text-primary">
-                    Comments ({comments.length})
-                </h3>
-            </div>
 
             {/* Add Comment Form */}
             <form onSubmit={handleSubmitComment} className="mb-4">
@@ -60,14 +63,15 @@ const CommentSection: React.FC<CommentSectionProps> = ({ comments, onAddComment 
                             value={newComment}
                             onChange={(e) => setNewComment(e.target.value)}
                             onKeyDown={handleKeyDown}
-                            placeholder="Add a comment..."
-                            className="w-full px-2 py-1.5 text-xs sm:text-sm border border-neutral-w-400 dark:border-dark-border rounded-lg bg-white dark:bg-dark-bg-tertiary text-neutral-b-900 dark:text-dark-text-primary placeholder-neutral-b-400 dark:placeholder-dark-text-muted resize-none focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                            placeholder={user ? "Add a comment..." : "Sign in to comment..."}
+                            disabled={!user}
+                            className="w-full px-2 py-1.5 text-xs sm:text-sm border border-neutral-w-400 dark:border-dark-border rounded-lg bg-white dark:bg-dark-bg-tertiary text-neutral-b-900 dark:text-dark-text-primary placeholder-neutral-b-400 dark:placeholder-dark-text-muted resize-none focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             rows={1}
                         />
                         <div className="flex justify-end mt-1">
                             <button
                                 type="submit"
-                                disabled={!newComment.trim()}
+                                disabled={!newComment.trim() || !user || isCreating}
                                 className="flex items-center gap-1 px-3 py-1 text-xs font-medium text-white bg-primary-600 hover:bg-primary-700 disabled:bg-neutral-w-400 dark:disabled:bg-dark-border rounded-full transition-colors"
                             >
                                 <Send className="w-3 h-3" />
@@ -80,7 +84,14 @@ const CommentSection: React.FC<CommentSectionProps> = ({ comments, onAddComment 
 
             {/* Comments List */}
             <div className="space-y-3">
-                {comments.length === 0 ? (
+                {isLoadingComments ? (
+                    <div className="text-center py-4">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600 mx-auto mb-2"></div>
+                        <p className="text-xs text-neutral-b-500 dark:text-dark-text-muted">
+                            Loading comments...
+                        </p>
+                    </div>
+                ) : currentComments.length === 0 && !isSubmittingComment ? (
                     <div className="text-center py-4">
                         <MessageCircle className="w-8 h-8 text-neutral-b-300 dark:text-dark-text-muted mx-auto mb-2" />
                         <p className="text-xs text-neutral-b-500 dark:text-dark-text-muted">
@@ -88,13 +99,39 @@ const CommentSection: React.FC<CommentSectionProps> = ({ comments, onAddComment 
                         </p>
                     </div>
                 ) : (
-                    comments.map((comment) => (
-                        <CommentItem
-                            key={comment.id}
-                            comment={comment}
-                            onReply={handleReply}
-                        />
-                    ))
+                    <>
+                        {/* Show skeleton when submitting a new comment */}
+                        {isSubmittingComment && <CommentSkeleton />}
+                        
+                        {/* Render existing comments */}
+                        {currentComments.map((comment: Comment, index: number) => {
+                            if (!comment) {
+                                console.warn('Null comment found at index:', index);
+                                return null; // Skip null comments
+                            }
+                            
+                            // Use comment.id as the primary key, fallback to index only if needed
+                            const commentKey = comment.id || `comment-${index}`;
+                            
+                            return (
+                                <CommentItem
+                                    key={commentKey}
+                                    comment={comment}
+                                    postId={postId}
+                                />
+                            );
+                        })}
+                        
+                        {/* Show empty state when no comments but not submitting */}
+                        {currentComments.length === 0 && !isSubmittingComment && (
+                            <div className="text-center py-4">
+                                <MessageCircle className="w-8 h-8 text-neutral-b-300 dark:text-dark-text-muted mx-auto mb-2" />
+                                <p className="text-xs text-neutral-b-500 dark:text-dark-text-muted">
+                                    No comments yet. Be the first to comment!
+                                </p>
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
         </div>

@@ -1,7 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { Image, Send, X } from 'lucide-react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { selectCurrentUser } from '../../store/slices/auth/auth';
+import { useCreatePostMutation } from '../../store/slices/posts/postsApi';
+import { useLazyGetFeedQuery } from '../../store/slices/feed/feedApi';
+import { resetFeed } from '../../store/slices/feed/feed';
 import MediaCarousel from '../common/MediaCarousel';
 
 // File size limits
@@ -19,28 +22,58 @@ const PostCreation = () => {
     const [postContent, setPostContent] = useState('');
     const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([]);
     const [limitMessage, setLimitMessage] = useState<string>('');
+    const [errorMessage, setErrorMessage] = useState<string>('');
     const fileInputRef = useRef<HTMLInputElement>(null);
     const user = useSelector(selectCurrentUser);
+    const dispatch = useDispatch();
+    const [createPost, { isLoading }] = useCreatePostMutation();
+    const [triggerFeed] = useLazyGetFeedQuery();
 
     const imageCount = mediaFiles.filter(m => m.type === 'image').length;
     const videoCount = mediaFiles.filter(m => m.type === 'video').length;
     const isLimitReached = imageCount >= 5 && videoCount >= 3;
 
-    const handlePost = () => {
+    const handlePost = async () => {
         if (postContent.trim() || mediaFiles.length > 0) {
-            // TODO: Implement post creation logic with media
-            console.log('Creating post:', { content: postContent, media: mediaFiles.map(m => m.file) });
-
-            // Cleanup object URLs before clearing
-            mediaFiles.forEach(media => {
-                if (media.preview) {
-                    URL.revokeObjectURL(media.preview);
-                }
-            });
-
-            setPostContent('');
-            setMediaFiles([]);
-            setLimitMessage('');
+            setErrorMessage('');
+            
+            try {
+                // Create FormData for multipart/form-data request
+                const formData = new FormData();
+                
+                // Add post content
+                formData.append('content', postContent.trim());
+                formData.append('privacy', 'PUBLIC');
+                formData.append('authorId', user?.id || '');
+                
+                // Add media files
+                const images = mediaFiles.filter(m => m.type === 'image').map(m => m.file);
+                const videos = mediaFiles.filter(m => m.type === 'video').map(m => m.file);
+                
+                images.forEach((image) => {
+                    formData.append(`images`, image);
+                });
+                
+                videos.forEach((video) => {
+                    formData.append(`videos`, video);
+                });
+                
+                // Create post via API
+                await createPost(formData).unwrap();
+                
+                // Reset feed state and refetch to show new post at top
+                dispatch(resetFeed());
+                triggerFeed({ page: 1, limit: 20 });
+                
+                // Reset form on success
+                setPostContent('');
+                setMediaFiles([]);
+                setLimitMessage('');
+                
+            } catch (error: any) {
+                console.error('Error creating post:', error);
+                setErrorMessage(error.data?.message || 'Failed to create post. Please try again.');
+            }
         }
     };
 
@@ -199,6 +232,20 @@ const PostCreation = () => {
                 </div>
             </div>
 
+            {/* Error Message */}
+            {errorMessage && (
+                <div className="mb-2 px-3 py-2 bg-semantic-r-700/10 dark:bg-semantic-r-900/20 border border-semantic-r-700/30 dark:border-semantic-r-900/40 rounded-lg flex items-start justify-between gap-2">
+                    <p className="text-xs text-semantic-r-900 dark:text-semantic-r-700 flex-1">{errorMessage}</p>
+                    <button
+                        onClick={() => setErrorMessage('')}
+                        className="text-semantic-r-900 dark:text-semantic-r-700 hover:text-semantic-r-800 dark:hover:text-semantic-r-600 transition-colors shrink-0 cursor-pointer"
+                        aria-label="Close error message"
+                    >
+                        <X className="w-4 h-4" />
+                    </button>
+                </div>
+            )}
+
             {/* Limit Message */}
             {limitMessage && (
                 <div className="mb-2 px-3 py-2 bg-semantic-y-700/10 dark:bg-semantic-y-900/20 border border-semantic-y-700/30 dark:border-semantic-y-900/40 rounded-lg flex items-start justify-between gap-2">
@@ -250,12 +297,17 @@ const PostCreation = () => {
 
                 <button
                     onClick={handlePost}
-                    className={`flex items-center justify-center gap-1.5 px-3 py-1.5 bg-primary-600 dark:bg-primary-500 text-white rounded-lg hover:bg-primary-700 dark:hover:bg-primary-600 transition-colors sm:gap-2 sm:px-4 sm:py-2 shrink-0 ${!postContent.trim() && mediaFiles.length === 0 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-                        }`}
                     disabled={!postContent.trim() && mediaFiles.length === 0}
+                    className={`flex items-center justify-center gap-1.5 px-3 py-1.5 bg-primary-600 dark:bg-primary-500 text-white rounded-lg hover:bg-primary-700 dark:hover:bg-primary-600 transition-colors sm:gap-2 sm:px-4 sm:py-2 shrink-0 ${
+                        (!postContent.trim() && mediaFiles.length === 0) || isLoading 
+                            ? 'opacity-50 cursor-not-allowed' 
+                            : 'cursor-pointer'
+                    }`}
                 >
-                    <span className="text-xs font-semibold sm:text-sm">Post</span>
-                    <Send className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    <span className="text-xs font-semibold sm:text-sm">
+                        {isLoading ? 'Posting...' : 'Post'}
+                    </span>
+                    {!isLoading && <Send className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
                 </button>
             </div>
         </div>
