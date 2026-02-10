@@ -7,10 +7,11 @@ import {
     joinRoom,
     leaveRoom,
     onNewMessage,
+    onRoomCreated,
     isSocketConnected,
 } from '../services/socketService';
-import { addMessage, setCurrentRoom } from '../store/slices/chat';
-import type { ChatMessage } from '../store/slices/chat/types';
+import { addMessage, addRoom, setCurrentRoom } from '../store/slices/chat';
+import type { ChatMessage, ChatRoom } from '../store/slices/chat/types';
 
 // Hook for managing WebSocket connection lifecycle and room subscriptions
 
@@ -20,24 +21,49 @@ export const useSocket = () => {
     const currentRoomId = useSelector((state: RootState) => state.chat.currentRoomId);
     const previousRoomId = useRef<string | null>(null);
     const isInitialized = useRef(false);
+    const mountCount = useRef(0);
+    const disconnectTimer = useRef<number | null>(null);
 
     const handleNewMessage = useCallback((message: ChatMessage) => {
         dispatch(addMessage(message));
     }, [dispatch]);
 
-    useEffect(() => {
-        if (!token || isInitialized.current) return;
+    const handleRoomCreated = useCallback((room: ChatRoom) => {
+        dispatch(addRoom(room));
+    }, [dispatch]);
 
-        initializeSocket(token);
-        isInitialized.current = true;
-        onNewMessage(handleNewMessage);
+    useEffect(() => {
+        if (!token) return;
+        mountCount.current += 1;
+
+        if (disconnectTimer.current) {
+            window.clearTimeout(disconnectTimer.current);
+            disconnectTimer.current = null;
+        }
+
+        if (!isInitialized.current) {
+            initializeSocket(token);
+            isInitialized.current = true;
+            onNewMessage(handleNewMessage);
+            onRoomCreated(handleRoomCreated);
+        }
 
         return () => {
-            if (previousRoomId.current) {
-                leaveRoom(previousRoomId.current);
+            mountCount.current -= 1;
+
+            // In React StrictMode (dev), effects mount/unmount quickly; delay disconnect to avoid
+            // spurious "WebSocket is closed before the connection is established" noise.
+            if (mountCount.current === 0) {
+                disconnectTimer.current = window.setTimeout(() => {
+                    if (mountCount.current !== 0) return;
+                    if (previousRoomId.current) {
+                        leaveRoom(previousRoomId.current);
+                    }
+                    disconnectSocket();
+                    isInitialized.current = false;
+                    disconnectTimer.current = null;
+                }, 150);
             }
-            disconnectSocket();
-            isInitialized.current = false;
         };
     }, [token, handleNewMessage]);
 

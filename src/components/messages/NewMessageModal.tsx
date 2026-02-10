@@ -1,12 +1,15 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { X, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../../store/store';
 import { useCreateRoomMutation } from '../../store/slices/chat';
 import type { ChatRoom } from '../../store/slices/chat/types';
+import { useGetFriendsQuery } from '../../store/slices/social/friends/friendsApi';
 
 // Modal for creating new conversations with friends
+
+const EMPTY_FRIENDS_LIST: NonNullable<RootState['friends']>['list'] = [];
 
 interface Friend {
     id: string;
@@ -27,16 +30,27 @@ const NewMessageModal: React.FC<NewMessageModalProps> = ({ isOpen, onClose, onSe
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-    const friends = useSelector((state: RootState) => {
-        const friendsData = state.friends?.list || [];
-        return friendsData.map((friend) => ({
-            id: friend.userId,
-            name: friend.user?.name || 'Unknown',
-            username: undefined,
-            avatar: friend.user?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(friend.user?.name || 'U')}&background=random`,
-            email: undefined,
-        }));
-    });
+    // Ensure friends are loaded when opening the modal.
+    // This updates both RTK Query cache and the `friends` slice (via matchers).
+    const { isLoading: isFriendsLoading } = useGetFriendsQuery(
+        { limit: 100, offset: 0 },
+        { skip: !isOpen }
+    );
+
+    const friendsData = useSelector((state: RootState) => state.friends?.list ?? EMPTY_FRIENDS_LIST);
+    const friends = useMemo(
+        () =>
+            friendsData.map((friend) => ({
+                id: friend.userId,
+                name: friend.user?.name || 'Unknown',
+                username: undefined,
+                avatar:
+                    friend.user?.image ||
+                    `https://ui-avatars.com/api/?name=${encodeURIComponent(friend.user?.name || 'U')}&background=random`,
+                email: undefined,
+            })),
+        [friendsData]
+    );
 
     const [createRoom, { isLoading }] = useCreateRoomMutation();
 
@@ -55,7 +69,7 @@ const NewMessageModal: React.FC<NewMessageModalProps> = ({ isOpen, onClose, onSe
         try {
             const roomType = selectedIds.length === 1 ? 'DIRECT' : 'GROUP';
             const response = await createRoom({
-                userIds: selectedIds,
+                memberIds: selectedIds,
                 type: roomType,
                 name: roomType === 'GROUP' ? 'New Group' : undefined,
             }).unwrap();
@@ -99,7 +113,9 @@ const NewMessageModal: React.FC<NewMessageModalProps> = ({ isOpen, onClose, onSe
                         </div>
 
                         <div className="px-4 py-3 shrink-0">
-                            <span className="text-sm font-semibold text-neutral-b-700 dark:text-dark-text-secondary">{friends.length > 0 ? 'Suggested' : 'No friends yet'}</span>
+                            <span className="text-sm font-semibold text-neutral-b-700 dark:text-dark-text-secondary">
+                                {isFriendsLoading ? 'Loading friends...' : friends.length > 0 ? 'Suggested' : 'No friends yet'}
+                            </span>
                         </div>
 
                         <div className="flex-1 overflow-y-auto thin-scrollbar">

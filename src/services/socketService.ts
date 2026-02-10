@@ -1,5 +1,5 @@
 import { io, Socket } from 'socket.io-client';
-import type { ChatMessage } from '../store/slices/chat/types';
+import type { ChatMessage, ChatRoom } from '../store/slices/chat/types';
 
 // WebSocket service singleton for real-time chat with Socket.io
 
@@ -7,6 +7,7 @@ type MessageCallback = (message: ChatMessage) => void;
 type UserEventCallback = (data: { userId: string; userName: string }) => void;
 type TypingCallback = (data: { userId: string; isTyping: boolean }) => void;
 type ErrorCallback = (error: string) => void;
+type RoomCreatedCallback = (room: ChatRoom) => void;
 
 let socket: Socket | null = null;
 let messageCallback: MessageCallback | null = null;
@@ -14,6 +15,17 @@ let userJoinedCallback: UserEventCallback | null = null;
 let userLeftCallback: UserEventCallback | null = null;
 let typingCallback: TypingCallback | null = null;
 let errorCallback: ErrorCallback | null = null;
+let roomCreatedCallback: RoomCreatedCallback | null = null;
+
+const normalizeSocketMessage = (message: any): ChatMessage => {
+    const id = message?.id ?? message?._id;
+    return { ...message, id };
+};
+
+const normalizeSocketRoom = (room: any): ChatRoom => {
+    const id = room?.id ?? room?._id;
+    return { ...room, id };
+};
 
 const getSocketUrl = (): string => {
     const baseUrl = import.meta.env.VITE_BASE_BACK_URL as string;
@@ -64,13 +76,24 @@ export const initializeSocket = (token: string): Socket => {
         console.log(`👋 Left room: ${roomId}`);
     });
 
-    socket.on('newMessage', (message: ChatMessage) => {
-        console.log('📨 New message received:', message);
+    const handleIncomingMessage = (message: ChatMessage) => {
+        const normalized = normalizeSocketMessage(message);
+        console.log('📨 New message received:', normalized);
         if (messageCallback) {
-            messageCallback(message);
+            messageCallback(normalized);
         } else {
             console.warn('No message callback registered');
         }
+    };
+
+    // Support both event names for compatibility (backend emits both).
+    socket.on('newMessage', handleIncomingMessage);
+    socket.on('message', handleIncomingMessage);
+
+    socket.on('roomCreated', (room: ChatRoom) => {
+        const normalized = normalizeSocketRoom(room);
+        console.log('💬 Room created:', normalized);
+        roomCreatedCallback?.(normalized);
     });
 
     socket.on('userJoined', (data: { userId: string; userName: string }) => {
@@ -138,6 +161,10 @@ export const onError = (callback: ErrorCallback): void => {
     errorCallback = callback;
 };
 
+export const onRoomCreated = (callback: RoomCreatedCallback): void => {
+    roomCreatedCallback = callback;
+};
+
 export const disconnectSocket = (): void => {
     if (socket) {
         socket.removeAllListeners();
@@ -149,4 +176,5 @@ export const disconnectSocket = (): void => {
     userLeftCallback = null;
     typingCallback = null;
     errorCallback = null;
+    roomCreatedCallback = null;
 };

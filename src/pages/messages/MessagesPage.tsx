@@ -5,9 +5,8 @@ import ConversationList from '../../components/messages/ConversationList';
 import ChatView from '../../components/messages/ChatView';
 import EmptyMessageState from '../../components/messages/EmptyMessageState';
 import NewMessageModal from '../../components/messages/NewMessageModal';
-import { useSocket } from '../../hook/useSocket';
 import { useGetRoomsQuery, useGetMessagesQuery } from '../../store/slices/chat';
-import { setMessages, addRoom } from '../../store/slices/chat';
+import { setMessages, addRoom, setRooms, setCurrentRoom } from '../../store/slices/chat';
 import type { RootState, AppDispatch } from '../../store/store';
 import type { ChatRoom, ChatMessage } from '../../store/slices/chat/types';
 import { useState } from 'react';
@@ -78,11 +77,26 @@ const MessagesPage = () => {
     // Get current user ID from auth state
     const currentUserId = useSelector((state: RootState) => state.auth.user?.id || '');
 
-    // Initialize socket connection
-    const { currentRoomId, selectRoom } = useSocket();
+    // Current selected room is managed in Redux; socket is bootstrapped globally in `MainLayout`.
+    const currentRoomId = useSelector((state: RootState) => state.chat.currentRoomId);
 
     // Fetch rooms from API
-    const { data: rooms = [], isLoading: roomsLoading } = useGetRoomsQuery();
+    const { data: roomsData, isLoading: roomsLoading, isSuccess: roomsSuccess } = useGetRoomsQuery(undefined, {
+        pollingInterval: 5000,
+        refetchOnMountOrArgChange: true,
+        refetchOnFocus: true,
+        refetchOnReconnect: true,
+    });
+
+    // Use Redux store for rooms so `addRoom()` is reflected immediately.
+    const rooms = useSelector((state: RootState) => state.chat.rooms);
+
+    // Keep store rooms in sync with latest API response.
+    useEffect(() => {
+        if (roomsSuccess && roomsData) {
+            dispatch(setRooms(roomsData));
+        }
+    }, [roomsSuccess, roomsData, dispatch]);
 
     // Get messages from Redux store (populated by socket or API)
     const storedMessages = useSelector((state: RootState) => state.chat.messages);
@@ -90,7 +104,7 @@ const MessagesPage = () => {
     // Fetch messages for current room
     const { data: fetchedMessages } = useGetMessagesQuery(
         { roomId: currentRoomId! },
-        { skip: !currentRoomId }
+        { skip: !currentRoomId, refetchOnMountOrArgChange: true }
     );
 
     // Update store when messages are fetched
@@ -122,14 +136,14 @@ const MessagesPage = () => {
     );
 
     const handleSelectConversation = (id: string) => {
-        selectRoom(id);
+        dispatch(setCurrentRoom(id));
         setIsMobileView(true);
     };
 
     const handleBackToList = () => {
         setIsMobileView(false);
         setTimeout(() => {
-            selectRoom(null);
+            dispatch(setCurrentRoom(null));
         }, 50);
     };
 
@@ -138,14 +152,14 @@ const MessagesPage = () => {
     };
 
     const handleSelectPerson = (id: string) => {
-        selectRoom(id);
+        dispatch(setCurrentRoom(id));
         setIsMobileView(true);
         setIsNewMessageModalOpen(false);
     };
 
     const handleRoomCreated = (room: ChatRoom) => {
         dispatch(addRoom(room));
-        selectRoom(room.id);
+        dispatch(setCurrentRoom(room.id));
         setIsMobileView(true);
         setIsNewMessageModalOpen(false);
     };
