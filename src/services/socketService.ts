@@ -17,6 +17,10 @@ let typingCallback: TypingCallback | null = null;
 let errorCallback: ErrorCallback | null = null;
 let roomCreatedCallback: RoomCreatedCallback | null = null;
 
+// Prevent duplicate processing if server emits both `message` and `newMessage`.
+const processedMessageIds = new Map<string, number>();
+const MESSAGE_DEDUPE_WINDOW_MS = 5000;
+
 const normalizeSocketMessage = (message: any): ChatMessage => {
     const id = message?.id ?? message?._id;
     return { ...message, id };
@@ -78,6 +82,20 @@ export const initializeSocket = (token: string): Socket => {
 
     const handleIncomingMessage = (message: ChatMessage) => {
         const normalized = normalizeSocketMessage(message);
+
+        if (normalized?.id) {
+            const now = Date.now();
+            const lastSeen = processedMessageIds.get(normalized.id);
+            if (lastSeen && now - lastSeen < MESSAGE_DEDUPE_WINDOW_MS) {
+                return;
+            }
+            processedMessageIds.set(normalized.id, now);
+            // Lightweight cleanup
+            for (const [id, ts] of processedMessageIds) {
+                if (now - ts > MESSAGE_DEDUPE_WINDOW_MS) processedMessageIds.delete(id);
+            }
+        }
+
         console.log('📨 New message received:', normalized);
         if (messageCallback) {
             messageCallback(normalized);

@@ -1,5 +1,7 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import type { RootState, AppDispatch } from '../store/store';
 import {
     initializeSocket,
@@ -19,6 +21,9 @@ export const useSocket = () => {
     const dispatch = useDispatch<AppDispatch>();
     const token = useSelector((state: RootState) => state.auth.token);
     const currentRoomId = useSelector((state: RootState) => state.chat.currentRoomId);
+    const currentUserId = useSelector((state: RootState) => state.auth.user?.id);
+    const location = useLocation();
+    const navigate = useNavigate();
     const previousRoomId = useRef<string | null>(null);
     const isInitialized = useRef(false);
     const mountCount = useRef(0);
@@ -26,6 +31,29 @@ export const useSocket = () => {
 
     const handleNewMessage = useCallback((message: ChatMessage) => {
         dispatch(addMessage(message));
+
+        // Show toast when user is not on the Messages tab.
+        if (location.pathname !== '/messages') {
+            // Avoid toasting for messages we sent ourselves.
+            if (currentUserId && message.userId === currentUserId) return;
+
+            const senderName =
+                message.user?.name ||
+                // fallback to email prefix if present
+                (message.user as any)?.email?.split?.('@')?.[0] ||
+                'Someone';
+
+            toast(`New message from ${senderName}`, {
+                description: message.content,
+                action: {
+                    label: 'Open',
+                    onClick: () => {
+                        dispatch(setCurrentRoom(message.roomId));
+                        navigate('/messages');
+                    },
+                },
+            });
+        }
     }, [dispatch]);
 
     const handleRoomCreated = useCallback((room: ChatRoom) => {
