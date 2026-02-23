@@ -49,20 +49,18 @@ const ProfilePage = () => {
   // Mock data
   const myPosts = [
     {
-      id: 1,
+      id: '1',
       author: 'Robert Fox',
-      role: 'Software Engineer',
-      time: '3 days ago',
+      time: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
       content: "Received a lot of questions about breaking into the tech industry lately. If you're starting out or looking to switch careers, feel free to connect with me. I'm here to help and share insights! 🚀",
       likes: 24,
       comments: 5,
       image: null,
     },
     {
-      id: 2,
+      id: '2',
       author: 'Robert Fox',
-      role: 'Software Engineer',
-      time: '27 July, 2022',
+      time: '2022-07-27T12:00:00.000Z',
       content: "Today marks 5 years in the software engineering field. Grateful for all the opportunities and growth along the way. Here's to many more years of coding excellence!",
       likes: 156,
       comments: 23,
@@ -72,20 +70,18 @@ const ProfilePage = () => {
 
   const savedPosts = [
     {
-      id: 3,
+      id: '3',
       author: 'Bessie Cooper',
-      role: 'Digital Marketer',
-      time: '7 hours ago',
+      time: new Date(Date.now() - 7 * 60 * 60 * 1000).toISOString(), // 7 hours ago
       content: "In today's fast-paced, digitally driven world, digital marketing is not just a strategy, it's a necessity for businesses of all sizes. 🚀",
       likes: 89,
       comments: 12,
       image: null,
     },
     {
-      id: 4,
+      id: '4',
       author: 'Jacob Jones',
-      role: 'Sales Manager',
-      time: '1 day ago',
+      time: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
       content: "Prepare to be dazzled by our latest collection! From trendy fashion to must-have gadgets, we've got something for everyone.",
       likes: 234,
       comments: 45,

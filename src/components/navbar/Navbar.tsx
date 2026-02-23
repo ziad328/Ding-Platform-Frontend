@@ -64,7 +64,7 @@ function Navbar() {
   }, [isProfileOpen]);
 
   return (
-    <nav className="sticky top-0 z-50 w-full bg-neutral-w-900 dark:bg-dark-bg-secondary border-b border-neutral-w-400 dark:border-dark-border shadow-sm">
+    <nav className="sticky top-0 z-50 w-ful shadow-sm">
       <div className="flex items-center justify-between h-12 px-3 sm:h-14 sm:px-4 md:h-16 md:px-6 transition-all duration-300">
         {isSearchOpen ? (
           /* Mobile Search Mode */

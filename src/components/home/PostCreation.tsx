@@ -1,0 +1,317 @@
+import { useState, useRef, useEffect } from 'react';
+import { Image, Send, X } from 'lucide-react';
+import { useSelector, useDispatch } from 'react-redux';
+import { selectCurrentUser } from '../../store/slices/auth/auth';
+import { useCreatePostMutation } from '../../store/slices/posts/postsApi';
+import { useLazyGetFeedQuery } from '../../store/slices/feed/feedApi';
+import { resetFeed } from '../../store/slices/feed/feed';
+import MediaCarousel from '../common/MediaCarousel';
+
+// File size limits
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10 MB
+const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50 MB
+
+interface MediaFile {
+    id: string;
+    file: File;
+    preview: string; // Object URL for better memory management
+    type: 'image' | 'video';
+}
+
+const PostCreation = () => {
+    const [postContent, setPostContent] = useState('');
+    const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([]);
+    const [limitMessage, setLimitMessage] = useState<string>('');
+    const [errorMessage, setErrorMessage] = useState<string>('');
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const user = useSelector(selectCurrentUser);
+    const dispatch = useDispatch();
+    const [createPost, { isLoading }] = useCreatePostMutation();
+    const [triggerFeed] = useLazyGetFeedQuery();
+
+    const imageCount = mediaFiles.filter(m => m.type === 'image').length;
+    const videoCount = mediaFiles.filter(m => m.type === 'video').length;
+    const isLimitReached = imageCount >= 5 && videoCount >= 3;
+
+    const handlePost = async () => {
+        if (postContent.trim() || mediaFiles.length > 0) {
+            setErrorMessage('');
+            
+            try {
+                // Create FormData for multipart/form-data request
+                const formData = new FormData();
+                
+                // Add post content
+                formData.append('content', postContent.trim());
+                formData.append('privacy', 'PUBLIC');
+                formData.append('authorId', user?.id || '');
+                
+                // Add media files
+                const images = mediaFiles.filter(m => m.type === 'image').map(m => m.file);
+                const videos = mediaFiles.filter(m => m.type === 'video').map(m => m.file);
+                
+                images.forEach((image) => {
+                    formData.append(`images`, image);
+                });
+                
+                videos.forEach((video) => {
+                    formData.append(`videos`, video);
+                });
+                
+                // Create post via API
+                await createPost(formData).unwrap();
+                
+                // Reset feed state and refetch to show new post at top
+                dispatch(resetFeed());
+                triggerFeed({ page: 1, limit: 20 });
+                
+                // Reset form on success
+                setPostContent('');
+                setMediaFiles([]);
+                setLimitMessage('');
+                
+            } catch (error: any) {
+                console.error('Error creating post:', error);
+                setErrorMessage(error.data?.message || 'Failed to create post. Please try again.');
+            }
+        }
+    };
+
+    const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handlePost();
+        }
+    };
+
+    const handleMediaClick = () => {
+        if (!isLimitReached) {
+            fileInputRef.current?.click();
+        }
+    };
+
+    const handleMediaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files || []);
+        setLimitMessage('');
+
+        // Track running counts for this batch of files
+        let runningImageCount = mediaFiles.filter(m => m.type === 'image').length;
+        let runningVideoCount = mediaFiles.filter(m => m.type === 'video').length;
+        const newMediaFiles: MediaFile[] = [];
+
+        for (const file of files) {
+            const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+            const validVideoTypes = ['video/mp4', 'video/webm', 'video/ogg'];
+
+            const isImage = validImageTypes.includes(file.type);
+            const isVideo = validVideoTypes.includes(file.type);
+
+            if (!isImage && !isVideo) {
+                setLimitMessage('Please select valid image (JPEG, PNG, GIF, WebP) or video (MP4, WebM, OGG) files.');
+                continue;
+            }
+
+            // Check file size limits
+            if (isImage && file.size > MAX_IMAGE_SIZE) {
+                setLimitMessage(`Image "${file.name}" is too large. Maximum size is 10 MB.`);
+                continue;
+            }
+            if (isVideo && file.size > MAX_VIDEO_SIZE) {
+                setLimitMessage(`Video "${file.name}" is too large. Maximum size is 50 MB.`);
+                continue;
+            }
+
+            // Check limits with running count (includes files being added in this batch)
+            if (isImage && runningImageCount >= 5) {
+                setLimitMessage('Maximum of 5 photos reached. Remove a photo to add more.');
+                continue;
+            }
+            if (isVideo && runningVideoCount >= 3) {
+                setLimitMessage('Maximum of 3 videos reached. Remove a video to add more.');
+                continue;
+            }
+
+            // Check for duplicates
+            const isDuplicate = mediaFiles.some(media =>
+                media.file.name === file.name &&
+                media.file.size === file.size &&
+                media.file.lastModified === file.lastModified
+            );
+
+            if (isDuplicate) {
+                continue;
+            }
+
+            try {
+                // Use object URL instead of data URL for better memory management
+                const preview = URL.createObjectURL(file);
+                const uniqueId = crypto.randomUUID();
+
+                newMediaFiles.push({
+                    id: uniqueId,
+                    file,
+                    preview,
+                    type: isImage ? 'image' : 'video'
+                });
+
+                // Update running counts
+                if (isImage) {
+                    runningImageCount++;
+                } else {
+                    runningVideoCount++;
+                }
+            } catch (error) {
+                console.error('Error processing file:', error);
+                setLimitMessage(`Failed to load "${file.name}". Please try again.`);
+            }
+        }
+
+        // Add all new media files at once
+        if (newMediaFiles.length > 0) {
+            setMediaFiles(prev => [...prev, ...newMediaFiles]);
+        }
+
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    };
+
+    const handleRemoveMedia = (index: number) => {
+        // Revoke object URL to free memory
+        const mediaToRemove = mediaFiles[index];
+        if (mediaToRemove?.preview) {
+            URL.revokeObjectURL(mediaToRemove.preview);
+        }
+        setMediaFiles(prev => prev.filter((_, i) => i !== index));
+        setLimitMessage('');
+    };
+
+    // Cleanup object URLs on unmount
+    useEffect(() => {
+        const currentMediaFiles = mediaFiles;
+        return () => {
+            // Cleanup all object URLs when component unmounts
+            currentMediaFiles.forEach(media => {
+                if (media.preview) {
+                    URL.revokeObjectURL(media.preview);
+                }
+            });
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    return (
+        <div className="bg-white dark:bg-dark-bg-secondary rounded-lg shadow-sm p-3 mb-3 sm:rounded-xl sm:p-4 md:p-5">
+            {/* Header with Avatar and Textarea */}
+            <div className="flex gap-2 pb-3 items-start sm:gap-3">
+                {/* User Avatar */}
+                <div className="w-8 h-8 rounded-full bg-primary-600 dark:bg-primary-500 flex items-center justify-center shrink-0 sm:w-10 sm:h-10">
+                    <span className="text-white font-semibold text-xs sm:text-sm">
+                        {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                    </span>
+                </div>
+
+                {/* Input Area with underline */}
+                <div className="flex-1 min-w-0">
+                    <textarea
+                        value={postContent}
+                        onChange={(e) => setPostContent(e.target.value)}
+                        onKeyPress={handleKeyPress}
+                        placeholder="What's on your mind?"
+                        maxLength={500}
+                        className="w-full resize-none border-none outline-none bg-transparent text-neutral-b-900 dark:text-dark-text-primary placeholder:text-neutral-b-400 dark:placeholder:text-dark-text-muted text-xs pt-2 sm:text-sm"
+                        rows={1}
+                        style={{ minHeight: '20px', maxHeight: '80px' }}
+                        onInput={(e) => {
+                            const target = e.target as HTMLTextAreaElement;
+                            target.style.height = 'auto';
+                            target.style.height = Math.min(target.scrollHeight, 80) + 'px';
+                        }}
+                    />
+                    <div className="border-b border-neutral-w-400 dark:border-dark-border"></div>
+                </div>
+            </div>
+
+            {/* Error Message */}
+            {errorMessage && (
+                <div className="mb-2 px-3 py-2 bg-semantic-r-700/10 dark:bg-semantic-r-900/20 border border-semantic-r-700/30 dark:border-semantic-r-900/40 rounded-lg flex items-start justify-between gap-2">
+                    <p className="text-xs text-semantic-r-900 dark:text-semantic-r-700 flex-1">{errorMessage}</p>
+                    <button
+                        onClick={() => setErrorMessage('')}
+                        className="text-semantic-r-900 dark:text-semantic-r-700 hover:text-semantic-r-800 dark:hover:text-semantic-r-600 transition-colors shrink-0 cursor-pointer"
+                        aria-label="Close error message"
+                    >
+                        <X className="w-4 h-4" />
+                    </button>
+                </div>
+            )}
+
+            {/* Limit Message */}
+            {limitMessage && (
+                <div className="mb-2 px-3 py-2 bg-semantic-y-700/10 dark:bg-semantic-y-900/20 border border-semantic-y-700/30 dark:border-semantic-y-900/40 rounded-lg flex items-start justify-between gap-2">
+                    <p className="text-xs text-semantic-y-900 dark:text-semantic-y-700 flex-1">{limitMessage}</p>
+                    <button
+                        onClick={() => setLimitMessage('')}
+                        className="text-semantic-y-900 dark:text-semantic-y-700 hover:text-semantic-y-800 dark:hover:text-semantic-y-600 transition-colors shrink-0 cursor-pointer"
+                        aria-label="Close message"
+                    >
+                        <X className="w-4 h-4" />
+                    </button>
+                </div>
+            )}
+
+            {/* Media Carousel - Show when media files exist */}
+            {mediaFiles.length > 0 && (
+                <MediaCarousel
+                    mediaFiles={mediaFiles}
+                    onRemove={handleRemoveMedia}
+                />
+            )}
+
+            {/* Hidden file input */}
+            <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,video/mp4,video/webm,video/ogg"
+                onChange={handleMediaChange}
+                multiple
+                className="hidden"
+            />
+
+            {/* Actions */}
+            <div className="flex items-center justify-between gap-2 mt-2 sm:mt-3">
+                <button
+                    onClick={handleMediaClick}
+                    disabled={isLimitReached}
+                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-colors border sm:gap-2 sm:px-3 sm:py-2 shrink-0 ${isLimitReached
+                        ? 'bg-neutral-w-300 dark:bg-dark-bg-tertiary text-neutral-b-400 dark:text-dark-text-muted border-neutral-w-400 dark:border-dark-border cursor-not-allowed'
+                        : 'bg-white dark:bg-dark-bg-secondary text-neutral-b-700 dark:text-dark-text-secondary border-neutral-w-400 dark:border-dark-border hover:bg-neutral-w-200 dark:hover:bg-dark-bg-tertiary cursor-pointer'
+                        }`}
+                    title="Images: max 10MB, Videos: max 50MB"
+                >
+                    <Image className={`w-4 h-4 sm:w-5 sm:h-5 ${isLimitReached ? 'text-neutral-b-400 dark:text-dark-text-muted' : 'text-primary-600 dark:text-primary-400'}`} />
+                    <span className={`text-xs font-medium sm:text-sm ${isLimitReached ? 'text-neutral-b-400 dark:text-dark-text-muted' : 'text-neutral-b-700 dark:text-dark-text-secondary'}`}>
+                        Add Media {mediaFiles.length > 0 && `(${mediaFiles.length})`}
+                    </span>
+                </button>
+
+                <button
+                    onClick={handlePost}
+                    disabled={!postContent.trim() && mediaFiles.length === 0}
+                    className={`flex items-center justify-center gap-1.5 px-3 py-1.5 bg-primary-600 dark:bg-primary-500 text-white rounded-lg hover:bg-primary-700 dark:hover:bg-primary-600 transition-colors sm:gap-2 sm:px-4 sm:py-2 shrink-0 ${
+                        (!postContent.trim() && mediaFiles.length === 0) || isLoading 
+                            ? 'opacity-50 cursor-not-allowed' 
+                            : 'cursor-pointer'
+                    }`}
+                >
+                    <span className="text-xs font-semibold sm:text-sm">
+                        {isLoading ? 'Posting...' : 'Post'}
+                    </span>
+                    {!isLoading && <Send className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
+                </button>
+            </div>
+        </div>
+    );
+};
+
+export default PostCreation;
