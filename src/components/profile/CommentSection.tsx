@@ -13,14 +13,14 @@ interface CommentSectionProps {
 
 const CommentSection: React.FC<CommentSectionProps> = ({ postId }) => {
     const { user } = useSelector((state: RootState) => state.auth);
-    
+
     const [newComment, setNewComment] = useState('');
     const [isSubmittingComment, setIsSubmittingComment] = useState(false);
     const [createComment, { isLoading: isCreating }] = useCreateCommentMutation();
     const { data: commentsData, isLoading: isLoadingComments } = useGetPostCommentsQuery({ postId });
-    
+
     // Get current post comments from API data
-    const currentComments = Array.isArray(commentsData?.data.data) ? commentsData.data.data : [];
+    const currentComments = Array.isArray(commentsData?.data) ? commentsData.data : [];
 
     const handleSubmitComment = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -31,7 +31,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({ postId }) => {
                     postId,
                     data: { content: newComment.trim() },
                 }).unwrap();
-                
+
                 setNewComment('');
             } catch (error) {
                 console.error('Failed to create comment:', error);
@@ -102,17 +102,17 @@ const CommentSection: React.FC<CommentSectionProps> = ({ postId }) => {
                     <>
                         {/* Show skeleton when submitting a new comment */}
                         {isSubmittingComment && <CommentSkeleton />}
-                        
+
                         {/* Render existing comments */}
                         {currentComments.map((comment: Comment, index: number) => {
                             if (!comment) {
                                 console.warn('Null comment found at index:', index);
                                 return null; // Skip null comments
                             }
-                            
+
                             // Use comment.id as the primary key, fallback to index only if needed
                             const commentKey = comment.id || `comment-${index}`;
-                            
+
                             return (
                                 <CommentItem
                                     key={commentKey}
@@ -121,7 +121,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({ postId }) => {
                                 />
                             );
                         })}
-                        
+
                         {/* Show empty state when no comments but not submitting */}
                         {currentComments.length === 0 && !isSubmittingComment && (
                             <div className="text-center py-4">
