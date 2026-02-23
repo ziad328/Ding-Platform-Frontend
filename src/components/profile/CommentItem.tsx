@@ -20,7 +20,7 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, postId, level = 0 })
     const [deleteCommentMutation] = useDeleteCommentMutation();
     const [likeComment] = useLikeCommentMutation();
     const [unlikeComment] = useUnlikeCommentMutation();
-    
+
     const [isLiked, setIsLiked] = useState(comment.liked || false);
     const [likeCount, setLikeCount] = useState(comment.likeCount || 0);
     const [showReplies, setShowReplies] = useState(false);
@@ -31,13 +31,13 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, postId, level = 0 })
     const [showDropdown, setShowDropdown] = useState(false);
 
     // Only fetch replies when they are shown
-    const { data: repliesData, isLoading: isLoadingReplies } = useGetCommentRepliesQuery({ 
+    const { data: repliesData, isLoading: isLoadingReplies } = useGetCommentRepliesQuery({
         commentId: comment.id
     });
 
     const handleLike = async () => {
         if (!user) return;
-        
+
         try {
             if (isLiked) {
                 const result = await unlikeComment({ commentId: comment.id }).unwrap();
@@ -61,18 +61,12 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, postId, level = 0 })
 
     const handleReply = async () => {
         setShowReplyField(!showReplyField);
-        
-        // Determine the parent comment ID and mention
-        let parentCommentId = comment.id;
-        let mention = `@${comment.author?.name || 'user'} `;
-        
-        // If this comment is already a reply, use the same parent ID and mention the original user
-        if (comment.parentCommentId) {
-            parentCommentId = comment.parentCommentId;
-        }
-        
+
+        // Determine the mention
+        const mention = `@${comment.author?.name || 'user'} `;
+
         setReplyContent(mention);
-        
+
         // Set cursor position after the mention
         setTimeout(() => {
             const textarea = document.querySelector(`[data-reply-textarea="${comment.id}"]`) as HTMLTextAreaElement;
@@ -92,7 +86,7 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, postId, level = 0 })
                 if (comment.parentCommentId) {
                     parentCommentId = comment.parentCommentId;
                 }
-                
+
                 await createComment({
                     postId,
                     data: {
@@ -100,7 +94,7 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, postId, level = 0 })
                         parentCommentId: parentCommentId,
                     },
                 }).unwrap();
-                
+
                 // RTK Query will automatically invalidate and refetch replies
                 // The reply will appear with its complete data from the server
                 setReplyContent('');
@@ -130,7 +124,7 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, postId, level = 0 })
                     commentId: comment.id,
                     data: { content: editContent.trim() },
                 }).unwrap();
-                
+
                 dispatch(updateComment({ commentId: comment.id, content: editContent.trim() }));
                 setIsEditing(false);
             } catch (error) {
@@ -168,7 +162,7 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, postId, level = 0 })
 
     // Get current replies from API data only
     const currentReplies = Array.isArray((repliesData?.data as any)?.data) ? (repliesData?.data as any).data : [];
-    
+
     const hasReplies = comment.replyCount > 0;
 
     const formatTime = (dateString: string) => {
@@ -192,19 +186,19 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, postId, level = 0 })
         <div className={`relative ${level > 0 && level < 2 ? 'ml-8' : ''}`}>
             {/* Connector line for nested comments - only show if they have replies and replies are visible and level < 2 */}
             {level > 0 && level < 2 && hasReplies && showReplies && (
-                <div 
+                <div
                     className="absolute left-0 top-0 bottom-0 w-8 flex cursor-pointer hover:bg-primary-50 dark:hover:bg-primary-900 transition-colors"
                     onClick={() => setShowReplies(!showReplies)}
                 >
                     <div className="w-0.5 bg-gray-300 dark:bg-gray-600 ml-4 hover:bg-primary-500 transition-colors group"></div>
                 </div>
             )}
-            
+
             {/* Vertical line for main comments that have replies */}
             {level === 0 && hasReplies && (
-                <div 
-                    className="absolute left-4 top-10 w-0.5 bg-gray-300 dark:bg-gray-600 cursor-pointer hover:bg-primary-50 dark:hover:bg-primary-900 hover:bg-primary-500 transition-colors group" 
-                    style={{ 
+                <div
+                    className="absolute left-4 top-10 w-0.5 bg-gray-300 dark:bg-gray-600 cursor-pointer hover:bg-primary-50 dark:hover:bg-primary-900 hover:bg-primary-500 transition-colors group"
+                    style={{
                         height: `calc(100% - 40px)`,
                         zIndex: 0
                     }}
@@ -212,13 +206,13 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, postId, level = 0 })
                 >
                 </div>
             )}
-            
+
             <div className="flex gap-3">
                 {/* User Avatar */}
                 <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-neutral-w-300 dark:bg-dark-bg-tertiary flex items-center justify-center shrink-0 relative z-10">
                     {comment.author?.image ? (
-                        <img 
-                            src={comment.author.image} 
+                        <img
+                            src={comment.author.image}
                             alt={comment.author.name || 'User'}
                             className="w-full h-full rounded-full object-cover"
                         />
@@ -231,73 +225,73 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, postId, level = 0 })
                 <div className="flex-1 min-w-0">
                     {/* Comment Header */}
                     <div className="bg-neutral-w-100 dark:bg-dark-bg-secondary rounded-lg p-2 border border-neutral-w-300 dark:border-dark-border inline-block max-w-full">
-                    <div className="flex items-center gap-2 justify-between">
-                        <div className="flex items-center gap-2">
-                        <h4 className="text-sm font-semibold text-neutral-b-900 dark:text-dark-text-primary">
-                            {comment.author?.name || 'Anonymous'}
-                        </h4>
-                        <span className="text-xs text-neutral-b-500 dark:text-dark-text-muted">
-                            {formatTime(comment.createdAt)}
-                        </span>
-                        </div>
-                        {/* More Options */}
-                        <div className="relative">
-                            <button 
-                                onClick={toggleDropdown}
-                                className="text-neutral-b-500 dark:text-dark-text-muted hover:text-neutral-b-700 dark:hover:text-dark-text-secondary p-1 transition-colors"
-                            >
-                                <MoreHorizontal className="w-4 h-4" />
-                            </button>
-                            {isAuthor && showDropdown && (
-                                <div className="absolute left-9 top-0 bg-white dark:bg-dark-bg-secondary border border-neutral-w-300 dark:border-dark-border rounded-lg shadow-lg py-1 z-10">
-                                    <button
-                                        onClick={handleEdit}
-                                        className="block w-full text-left px-3 py-1 text-sm text-neutral-b-700 dark:text-dark-text-secondary hover:bg-neutral-w-100 dark:hover:bg-dark-bg-tertiary transition-colors"
-                                    >
-                                        Edit
-                                    </button>
-                                    <button
-                                        onClick={handleDelete}
-                                        className="block w-full text-left px-3 py-1 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                                    >
-                                        Delete
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Comment Text */}
-                    {isEditing ? (
-                        <div className="mb-2">
-                            <textarea
-                                value={editContent}
-                                onChange={(e) => setEditContent(e.target.value)}
-                                className="w-full px-3 py-2 text-sm border border-neutral-w-400 dark:border-dark-border rounded-lg bg-white dark:bg-dark-bg-secondary text-neutral-b-900 dark:text-dark-text-primary placeholder-neutral-b-400 dark:placeholder-dark-text-muted resize-none focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
-                                rows={3}
-                                autoFocus
-                            />
-                            <div className="flex gap-2">
+                        <div className="flex items-center gap-2 justify-between">
+                            <div className="flex items-center gap-2">
+                                <h4 className="text-sm font-semibold text-neutral-b-900 dark:text-dark-text-primary">
+                                    {comment.author?.name || 'Anonymous'}
+                                </h4>
+                                <span className="text-xs text-neutral-b-500 dark:text-dark-text-muted">
+                                    {formatTime(comment.createdAt)}
+                                </span>
+                            </div>
+                            {/* More Options */}
+                            <div className="relative">
                                 <button
-                                    onClick={handleSaveEdit}
-                                    disabled={!editContent.trim() || isCreating}
-                                    className="px-3 py-1 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 disabled:bg-neutral-w-400 dark:disabled:bg-dark-border rounded-full transition-colors"
+                                    onClick={toggleDropdown}
+                                    className="text-neutral-b-500 dark:text-dark-text-muted hover:text-neutral-b-700 dark:hover:text-dark-text-secondary p-1 transition-colors"
                                 >
-                                    Save
+                                    <MoreHorizontal className="w-4 h-4" />
                                 </button>
-                                <button
-                                    onClick={cancelEdit}
-                                    className="px-3 py-1 text-sm font-medium text-neutral-b-600 dark:text-dark-text-muted hover:text-neutral-b-800 dark:hover:text-dark-text-secondary transition-colors"
-                                >
-                                    Cancel
-                                </button>
+                                {isAuthor && showDropdown && (
+                                    <div className="absolute left-9 top-0 bg-white dark:bg-dark-bg-secondary border border-neutral-w-300 dark:border-dark-border rounded-lg shadow-lg py-1 z-10">
+                                        <button
+                                            onClick={handleEdit}
+                                            className="block w-full text-left px-3 py-1 text-sm text-neutral-b-700 dark:text-dark-text-secondary hover:bg-neutral-w-100 dark:hover:bg-dark-bg-tertiary transition-colors"
+                                        >
+                                            Edit
+                                        </button>
+                                        <button
+                                            onClick={handleDelete}
+                                            className="block w-full text-left px-3 py-1 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                        >
+                                            Delete
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         </div>
-                    ) : (
-                        <p className="text-sm text-neutral-b-800 dark:text-dark-text-secondary leading-relaxed max-w-full break-words">
-                            {comment.content}
-                        </p>
-                    )}
+
+                        {/* Comment Text */}
+                        {isEditing ? (
+                            <div className="mb-2">
+                                <textarea
+                                    value={editContent}
+                                    onChange={(e) => setEditContent(e.target.value)}
+                                    className="w-full px-3 py-2 text-sm border border-neutral-w-400 dark:border-dark-border rounded-lg bg-white dark:bg-dark-bg-secondary text-neutral-b-900 dark:text-dark-text-primary placeholder-neutral-b-400 dark:placeholder-dark-text-muted resize-none focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                                    rows={3}
+                                    autoFocus
+                                />
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={handleSaveEdit}
+                                        disabled={!editContent.trim() || isCreating}
+                                        className="px-3 py-1 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 disabled:bg-neutral-w-400 dark:disabled:bg-dark-border rounded-full transition-colors"
+                                    >
+                                        Save
+                                    </button>
+                                    <button
+                                        onClick={cancelEdit}
+                                        className="px-3 py-1 text-sm font-medium text-neutral-b-600 dark:text-dark-text-muted hover:text-neutral-b-800 dark:hover:text-dark-text-secondary transition-colors"
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            <p className="text-sm text-neutral-b-800 dark:text-dark-text-secondary leading-relaxed max-w-full wrap-break-word">
+                                {comment.content}
+                            </p>
+                        )}
                     </div>
                     {/* Comment Actions */}
                     <div className="flex items-center gap-8">
@@ -305,16 +299,15 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, postId, level = 0 })
                         <div className="flex items-center">
                             <button
                                 onClick={handleLike}
-                                className={`flex items-center gap-1 p-1 rounded transition-colors ${
-                                    isLiked
+                                className={`flex items-center gap-1 p-1 rounded transition-colors ${isLiked
                                         ? 'text-primary-600 dark:text-primary-400'
                                         : 'text-neutral-b-500 dark:text-dark-text-muted hover:text-neutral-b-700 dark:hover:text-dark-text-secondary'
-                                }`}
+                                    }`}
                             >
                                 <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
-                            <span className={`text-sm ${isLiked ? 'text-primary-600 dark:text-primary-400 font-medium' : 'text-neutral-b-600 dark:text-dark-text-muted'}`}>
-                                {likeCount}
-                            </span>
+                                <span className={`text-sm ${isLiked ? 'text-primary-600 dark:text-primary-400 font-medium' : 'text-neutral-b-600 dark:text-dark-text-muted'}`}>
+                                    {likeCount}
+                                </span>
                             </button>
                         </div>
 
@@ -327,7 +320,7 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, postId, level = 0 })
                             Reply
                         </button>
 
-                        
+
                     </div>
 
                     {/* Reply Field */}
@@ -385,7 +378,7 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, postId, level = 0 })
                             >
                                 {showReplies ? 'Hide' : 'Show'} {comment.replyCount} {comment.replyCount === 1 ? 'reply' : 'replies'}
                             </button>
-                            
+
                             {showReplies && (
                                 <div className="space-y-4">
                                     {isLoadingReplies ? (
