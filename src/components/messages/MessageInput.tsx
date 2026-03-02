@@ -3,8 +3,8 @@ import { Send, Smile, Paperclip, Mic, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import EmojiPicker, { Theme } from 'emoji-picker-react';
 import { toast } from 'sonner';
-import { useDispatch } from 'react-redux';
-import { useSendMessageMutation, addMessage } from '../../store/slices/chat';
+import { useSendMessageMutation } from '../../store/slices/chat';
+import { useDarkMode } from '../../hook/useDarkMode';
 
 // Message input with emoji picker, file attachments, and send functionality
 
@@ -24,7 +24,7 @@ const MAX_PHOTOS = 5;
 const MAX_VIDEOS = 2;
 
 const MessageInput: React.FC<MessageInputProps> = ({ roomId, onSendMessage }) => {
-    const dispatch = useDispatch();
+    const { isDarkMode } = useDarkMode();
     const [message, setMessage] = useState('');
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
@@ -63,8 +63,7 @@ const MessageInput: React.FC<MessageInputProps> = ({ roomId, onSendMessage }) =>
 
             const sentMessage = await sendMessageMutation({ roomId, formData }).unwrap();
 
-            const messageWithRoom = { ...sentMessage, roomId: sentMessage.roomId || roomId };
-            dispatch(addMessage(messageWithRoom));
+            void sentMessage;
 
             setMessage('');
             attachedFiles.forEach(f => URL.revokeObjectURL(f.preview));
@@ -167,7 +166,6 @@ const MessageInput: React.FC<MessageInputProps> = ({ roomId, onSendMessage }) =>
     };
 
     const canSend = (message.trim().length > 0 || attachedFiles.length > 0) && !isSending;
-    const isDarkMode = document.documentElement.classList.contains('dark');
 
     return (
         <div className="px-3 sm:px-4 md:px-6 py-2 sm:py-3">

@@ -7,6 +7,7 @@ import {
     joinRoom,
     leaveRoom,
     onNewMessage,
+    onSocketConnect,
     isSocketConnected,
 } from '../services/socketService';
 import { addMessage, setCurrentRoom } from '../store/slices/chat';
@@ -20,17 +21,32 @@ export const useSocket = () => {
     const currentRoomId = useSelector((state: RootState) => state.chat.currentRoomId);
     const previousRoomId = useRef<string | null>(null);
     const isInitialized = useRef(false);
+    const currentRoomIdRef = useRef<string | null>(currentRoomId);
 
     const handleNewMessage = useCallback((message: ChatMessage) => {
         dispatch(addMessage(message));
     }, [dispatch]);
+
+    // Always update the ref so the connect callback is never stale
+    useEffect(() => {
+        currentRoomIdRef.current = currentRoomId;
+    });
+
+    onNewMessage(handleNewMessage);
 
     useEffect(() => {
         if (!token || isInitialized.current) return;
 
         initializeSocket(token);
         isInitialized.current = true;
-        onNewMessage(handleNewMessage);
+
+        onSocketConnect(() => {
+            const roomId = currentRoomIdRef.current;
+            if (roomId) {
+                console.log('🔄 Socket reconnected — re-joining room:', roomId);
+                joinRoom(roomId);
+            }
+        });
 
         return () => {
             if (previousRoomId.current) {
@@ -39,7 +55,7 @@ export const useSocket = () => {
             disconnectSocket();
             isInitialized.current = false;
         };
-    }, [token, handleNewMessage]);
+    }, [token]);
 
     useEffect(() => {
         if (!isSocketConnected()) return;

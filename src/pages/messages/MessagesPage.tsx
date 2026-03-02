@@ -32,7 +32,7 @@ const transformRoomToConversation = (room: ChatRoom, currentUserId: string) => {
         lastMessage: lastMessage?.content || '',
         timestamp: lastMessage ? formatTimestamp(lastMessage.createdAt) : '',
         lastActive: '',
-        isOnline: false, // Would need real-time presence data
+        isOnline: false, 
         type: room.type,
         members: room.members,
     };
@@ -75,42 +75,32 @@ const MessagesPage = () => {
     const [isMobileView, setIsMobileView] = useState(false);
     const [isNewMessageModalOpen, setIsNewMessageModalOpen] = useState(false);
 
-    // Get current user ID from auth state
     const currentUserId = useSelector((state: RootState) => state.auth.user?.id || '');
 
-    // Initialize socket connection
     const { currentRoomId, selectRoom } = useSocket();
 
-    // Fetch rooms from API
     const { data: rooms = [], isLoading: roomsLoading } = useGetRoomsQuery();
 
-    // Get messages from Redux store (populated by socket or API)
     const storedMessages = useSelector((state: RootState) => state.chat.messages);
 
-    // Fetch messages for current room
     const { data: fetchedMessages } = useGetMessagesQuery(
         { roomId: currentRoomId! },
         { skip: !currentRoomId }
     );
 
-    // Update store when messages are fetched
     useEffect(() => {
         if (currentRoomId && fetchedMessages) {
             dispatch(setMessages({ roomId: currentRoomId, messages: fetchedMessages }));
         }
     }, [currentRoomId, fetchedMessages, dispatch]);
 
-    // Transform rooms to conversations for UI
     const conversations = rooms.map(room => transformRoomToConversation(room, currentUserId));
 
-    // Get selected conversation and messages
     const selectedConversation = conversations.find(c => c.id === currentRoomId);
     const currentRoom = rooms.find(r => r.id === currentRoomId);
 
-    // Get messages for current room
     const rawMessages = currentRoomId ? storedMessages[currentRoomId] || [] : [];
 
-    // Get sender avatar for received messages
     const getOtherUserAvatar = () => {
         if (!currentRoom) return undefined;
         const otherMember = currentRoom.members.find(m => m.userId !== currentUserId);

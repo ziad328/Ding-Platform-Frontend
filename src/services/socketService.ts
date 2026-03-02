@@ -14,10 +14,17 @@ let userJoinedCallback: UserEventCallback | null = null;
 let userLeftCallback: UserEventCallback | null = null;
 let typingCallback: TypingCallback | null = null;
 let errorCallback: ErrorCallback | null = null;
+let connectCallback: (() => void) | null = null;
 
 const getSocketUrl = (): string => {
     const baseUrl = import.meta.env.VITE_BASE_BACK_URL as string;
-    return baseUrl.replace(/^http/, 'ws').replace(/\/api\/v1$/, '');
+    // In development the base URL is relative (e.g. /api/v1) so resolve it
+    // against the current origin so Socket.IO gets a full WebSocket URL that
+    // routes through the Vite proxy.
+    const absolute = baseUrl.startsWith('/')
+        ? `${window.location.origin}${baseUrl}`
+        : baseUrl;
+    return absolute.replace(/^http/, 'ws').replace(/\/api\/v1$/, '');
 };
 
 export const initializeSocket = (token: string): Socket => {
@@ -45,6 +52,7 @@ export const initializeSocket = (token: string): Socket => {
 
     socket.on('connect', () => {
         console.log('✅ Connected to chat server, socket ID:', socket?.id);
+        if (connectCallback) connectCallback();
     });
 
     socket.on('disconnect', (reason) => {
@@ -117,6 +125,15 @@ export const emitTyping = (roomId: string, isTyping: boolean): void => {
     socket.emit('typing', { roomId, isTyping });
 };
 
+export const onSocketConnect = (callback: () => void): void => {
+    connectCallback = callback;
+};
+
+export const reinitializeSocket = (newToken: string): void => {
+    disconnectSocket();
+    initializeSocket(newToken);
+};
+
 export const onNewMessage = (callback: MessageCallback): void => {
     console.log('📝 Registering message callback');
     messageCallback = callback;
@@ -149,4 +166,5 @@ export const disconnectSocket = (): void => {
     userLeftCallback = null;
     typingCallback = null;
     errorCallback = null;
+    connectCallback = null;
 };
