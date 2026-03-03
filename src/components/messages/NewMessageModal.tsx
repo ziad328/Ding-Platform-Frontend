@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { X, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSelector } from 'react-redux';
@@ -27,16 +27,18 @@ const NewMessageModal: React.FC<NewMessageModalProps> = ({ isOpen, onClose, onSe
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-    const friends = useSelector((state: RootState) => {
-        const friendsData = state.friends?.list || [];
-        return friendsData.map((friend) => ({
+    const friendsList = useSelector((state: RootState) => state.friends?.list);
+
+    const friends = useMemo(() =>
+        (friendsList || []).map((friend) => ({
             id: friend.userId,
             name: friend.user?.name || 'Unknown',
             username: undefined,
             avatar: friend.user?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(friend.user?.name || 'U')}&background=random`,
             email: undefined,
-        }));
-    });
+        })),
+        [friendsList]
+    );
 
     const [createRoom, { isLoading }] = useCreateRoomMutation();
 

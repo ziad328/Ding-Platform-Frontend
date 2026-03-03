@@ -59,7 +59,6 @@ export interface AddMemberRequest {
 export interface ChatState {
   rooms: ChatRoom[];
   currentRoomId: string | null;
-  messages: Record<string, ChatMessage[]>;
   typingUsers: Record<string, string[]>;
   loading: boolean;
   error: string | null;

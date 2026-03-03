@@ -73,12 +73,28 @@ export const initializeSocket = (token: string): Socket => {
     });
 
     socket.on('newMessage', (message: ChatMessage) => {
-        console.log('📨 New message received:', message);
+        console.log('📨 newMessage received:', message);
         if (messageCallback) {
             messageCallback(message);
         } else {
-            console.warn('No message callback registered');
+            console.warn('⚠️ No message callback registered');
         }
+    });
+
+    // Backend also emits 'message' from the WebSocket direct-send path — handle both.
+    // Deduplication by ID in handleNewMessage prevents double-display.
+    socket.on('message', (message: ChatMessage) => {
+        console.log('📨 message received:', message);
+        if (messageCallback) {
+            messageCallback(message);
+        } else {
+            console.warn('⚠️ No message callback registered');
+        }
+    });
+
+    // DEBUG: catch ALL events the backend emits
+    socket.onAny((event, ...args) => {
+        console.log('🔔 Socket event:', event, args);
     });
 
     socket.on('userJoined', (data: { userId: string; userName: string }) => {
@@ -112,7 +128,14 @@ export const joinRoom = (roomId: string): void => {
         return;
     }
     console.log('📍 Joining room:', roomId);
-    socket.emit('joinRoom', { roomId });
+    // Backend uses acknowledgment callback ({success, roomId}), not a joinedRoom event
+    socket.emit('joinRoom', { roomId }, (ack: { success: boolean; roomId: string }) => {
+        if (ack?.success) {
+            console.log('✅ Server confirmed room join:', ack.roomId);
+        } else {
+            console.warn('⚠️ Room join failed:', ack);
+        }
+    });
 };
 
 export const leaveRoom = (roomId: string): void => {
@@ -130,7 +153,14 @@ export const onSocketConnect = (callback: () => void): void => {
 };
 
 export const reinitializeSocket = (newToken: string): void => {
+    // Preserve callbacks across the disconnect → reconnect cycle.
+    // disconnectSocket() clears all callbacks, but useSocket's isInitialized
+    // guard prevents re-registration when the token changes.
+    const savedMessageCallback = messageCallback;
+    const savedConnectCallback = connectCallback;
     disconnectSocket();
+    messageCallback = savedMessageCallback;
+    connectCallback = savedConnectCallback;
     initializeSocket(newToken);
 };
 

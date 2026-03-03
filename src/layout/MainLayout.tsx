@@ -4,6 +4,7 @@ import Sidebar from "../components/sidebar/Sidebar";
 import { useSelector } from "react-redux";
 import { selectCurrentToken, selectCurrentUser } from "../store/slices/auth/auth";
 import { useDarkMode } from "../hook/useDarkMode";
+import { useSocket } from "../hook/useSocket";
 
 function MainLayout() {
   const token = useSelector(selectCurrentToken);
@@ -12,6 +13,9 @@ function MainLayout() {
 
   // Initialize dark mode
   useDarkMode();
+
+  // Initialize WebSocket globally so real-time messages work on all pages
+  useSocket();
 
   // Check if we're on the messages page - no padding needed there
   const isMessagesPage = location.pathname === '/messages';

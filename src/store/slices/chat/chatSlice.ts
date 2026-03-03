@@ -1,12 +1,12 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import type { ChatState, ChatRoom, ChatMessage } from './types';
 
-// Redux slice for managing chat rooms, messages, and real-time state
+// Redux slice — only owns rooms, currentRoomId, and typingUsers.
+// Messages are owned exclusively by the RTK Query cache (useGetMessagesQuery).
 
 const initialState: ChatState = {
     rooms: [],
     currentRoomId: null,
-    messages: {},
     typingUsers: {},
     loading: false,
     error: null,
@@ -32,40 +32,18 @@ const chatSlice = createSlice({
             state.currentRoomId = action.payload;
         },
 
-        setMessages: (state, action: PayloadAction<{ roomId: string; messages: ChatMessage[] }>) => {
-            state.messages[action.payload.roomId] = action.payload.messages;
-        },
-
-        addMessage: (state, action: PayloadAction<ChatMessage>) => {
-            const message = action.payload;
-            const roomId = message.roomId;
-
-            if (!state.messages[roomId]) {
-                state.messages[roomId] = [];
-            }
-
-            const exists = state.messages[roomId].some(m => m.id === message.id);
-            if (!exists) {
-                state.messages[roomId].push(message);
-            }
-
+        // Called when a socket message arrives — updates the room's last-message
+        // preview and re-sorts the room list. The message itself lives in the RTK cache.
+        updateRoomLastMessage: (state, action: PayloadAction<ChatMessage>) => {
+            const { roomId } = action.payload;
             const roomIndex = state.rooms.findIndex(r => r.id === roomId);
             if (roomIndex !== -1) {
-                state.rooms[roomIndex].messages = [message];
-                state.rooms[roomIndex].updatedAt = message.createdAt;
-
+                state.rooms[roomIndex].messages = [action.payload];
+                state.rooms[roomIndex].updatedAt = action.payload.createdAt;
                 state.rooms.sort((a, b) =>
                     new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
                 );
             }
-        },
-
-        prependMessages: (state, action: PayloadAction<{ roomId: string; messages: ChatMessage[] }>) => {
-            const { roomId, messages } = action.payload;
-            if (!state.messages[roomId]) {
-                state.messages[roomId] = [];
-            }
-            state.messages[roomId] = [...messages, ...state.messages[roomId]];
         },
 
         setTypingUser: (state, action: PayloadAction<{ roomId: string; userId: string; isTyping: boolean }>) => {
@@ -92,7 +70,6 @@ const chatSlice = createSlice({
         clearChatData: (state) => {
             state.rooms = [];
             state.currentRoomId = null;
-            state.messages = {};
             state.typingUsers = {};
             state.loading = false;
             state.error = null;
@@ -104,9 +81,7 @@ export const {
     setRooms,
     addRoom,
     setCurrentRoom,
-    setMessages,
-    addMessage,
-    prependMessages,
+    updateRoomLastMessage,
     setTypingUser,
     setLoading,
     setError,

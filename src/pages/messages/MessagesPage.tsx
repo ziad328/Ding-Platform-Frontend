@@ -1,18 +1,17 @@
-import { useEffect } from 'react';
+import { useCallback, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import ConversationList from '../../components/messages/ConversationList';
 import ChatView from '../../components/messages/ChatView';
 import EmptyMessageState from '../../components/messages/EmptyMessageState';
 import NewMessageModal from '../../components/messages/NewMessageModal';
-import { useSocket } from '../../hook/useSocket';
 import { useGetRoomsQuery, useGetMessagesQuery } from '../../store/slices/chat';
-import { setMessages, addRoom } from '../../store/slices/chat';
+import { addRoom, setCurrentRoom } from '../../store/slices/chat';
 import type { RootState, AppDispatch } from '../../store/store';
 import type { ChatRoom, ChatMessage } from '../../store/slices/chat/types';
-import { useState } from 'react';
 
 // Main messaging page with conversation list and chat view
+
 const transformRoomToConversation = (room: ChatRoom, currentUserId: string) => {
     const otherMember = room.type === 'DIRECT'
         ? room.members.find(m => m.userId !== currentUserId)
@@ -32,7 +31,7 @@ const transformRoomToConversation = (room: ChatRoom, currentUserId: string) => {
         lastMessage: lastMessage?.content || '',
         timestamp: lastMessage ? formatTimestamp(lastMessage.createdAt) : '',
         lastActive: '',
-        isOnline: false, 
+        isOnline: false,
         type: room.type,
         members: room.members,
     };
@@ -50,7 +49,6 @@ const transformMessage = (msg: ChatMessage, currentUserId: string, senderAvatar?
     createdAt: msg.createdAt,
 });
 
-// Format timestamp for conversation list
 const formatTimestamp = (dateStr: string): string => {
     const date = new Date(dateStr);
     const now = new Date();
@@ -64,7 +62,6 @@ const formatTimestamp = (dateStr: string): string => {
     return date.toLocaleDateString();
 };
 
-// Format time for message bubbles
 const formatTime = (dateStr: string): string => {
     const date = new Date(dateStr);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -76,30 +73,31 @@ const MessagesPage = () => {
     const [isNewMessageModalOpen, setIsNewMessageModalOpen] = useState(false);
 
     const currentUserId = useSelector((state: RootState) => state.auth.user?.id || '');
+    const currentRoomId = useSelector((state: RootState) => state.chat.currentRoomId);
 
-    const { currentRoomId, selectRoom } = useSocket();
+    const selectRoom = useCallback((roomId: string | null) => {
+        dispatch(setCurrentRoom(roomId));
+    }, [dispatch]);
 
     const { data: rooms = [], isLoading: roomsLoading } = useGetRoomsQuery();
 
-    const storedMessages = useSelector((state: RootState) => state.chat.messages);
-
-    const { data: fetchedMessages } = useGetMessagesQuery(
+    // Single source of truth: RTK Query cache.
+    // Socket messages and sent messages are injected into this cache directly,
+    // so this data is always live without any extra Redux state.
+    const { data: rawMessages = [] } = useGetMessagesQuery(
         { roomId: currentRoomId! },
-        { skip: !currentRoomId }
+        {
+            skip: !currentRoomId,
+            refetchOnMountOrArgChange: true, // re-fetch when switching rooms
+            refetchOnFocus: false,
+            refetchOnReconnect: false,
+            pollingInterval: 4000, // fallback: re-fetch every 4s until socket broadcast is fixed
+        }
     );
 
-    useEffect(() => {
-        if (currentRoomId && fetchedMessages) {
-            dispatch(setMessages({ roomId: currentRoomId, messages: fetchedMessages }));
-        }
-    }, [currentRoomId, fetchedMessages, dispatch]);
-
     const conversations = rooms.map(room => transformRoomToConversation(room, currentUserId));
-
     const selectedConversation = conversations.find(c => c.id === currentRoomId);
     const currentRoom = rooms.find(r => r.id === currentRoomId);
-
-    const rawMessages = currentRoomId ? storedMessages[currentRoomId] || [] : [];
 
     const getOtherUserAvatar = () => {
         if (!currentRoom) return undefined;
@@ -107,7 +105,7 @@ const MessagesPage = () => {
         return otherMember?.user.image || undefined;
     };
 
-    const messages = rawMessages.map(msg =>
+    const messages = rawMessages.map((msg: ChatMessage) =>
         transformMessage(msg, currentUserId, getOtherUserAvatar())
     );
 
