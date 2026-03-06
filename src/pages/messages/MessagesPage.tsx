@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useCallback, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import ConversationList from '../../components/messages/ConversationList';
@@ -6,12 +6,12 @@ import ChatView from '../../components/messages/ChatView';
 import EmptyMessageState from '../../components/messages/EmptyMessageState';
 import NewMessageModal from '../../components/messages/NewMessageModal';
 import { useGetRoomsQuery, useGetMessagesQuery } from '../../store/slices/chat';
-import { setMessages, addRoom, setRooms, setCurrentRoom } from '../../store/slices/chat';
+import { addRoom, setCurrentRoom } from '../../store/slices/chat';
 import type { RootState, AppDispatch } from '../../store/store';
 import type { ChatRoom, ChatMessage } from '../../store/slices/chat/types';
-import { useState } from 'react';
 
 // Main messaging page with conversation list and chat view
+
 const transformRoomToConversation = (room: ChatRoom, currentUserId: string) => {
     const otherMember = room.type === 'DIRECT'
         ? room.members.find(m => m.userId !== currentUserId)
@@ -31,7 +31,7 @@ const transformRoomToConversation = (room: ChatRoom, currentUserId: string) => {
         lastMessage: lastMessage?.content || '',
         timestamp: lastMessage ? formatTimestamp(lastMessage.createdAt) : '',
         lastActive: '',
-        isOnline: false, // Would need real-time presence data
+        isOnline: false,
         type: room.type,
         members: room.members,
     };
@@ -49,7 +49,6 @@ const transformMessage = (msg: ChatMessage, currentUserId: string, senderAvatar?
     createdAt: msg.createdAt,
 });
 
-// Format timestamp for conversation list
 const formatTimestamp = (dateStr: string): string => {
     const date = new Date(dateStr);
     const now = new Date();
@@ -63,7 +62,6 @@ const formatTimestamp = (dateStr: string): string => {
     return date.toLocaleDateString();
 };
 
-// Format time for message bubbles
 const formatTime = (dateStr: string): string => {
     const date = new Date(dateStr);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -74,64 +72,40 @@ const MessagesPage = () => {
     const [isMobileView, setIsMobileView] = useState(false);
     const [isNewMessageModalOpen, setIsNewMessageModalOpen] = useState(false);
 
-    // Get current user ID from auth state
     const currentUserId = useSelector((state: RootState) => state.auth.user?.id || '');
-
-    // Current selected room is managed in Redux; socket is bootstrapped globally in `MainLayout`.
     const currentRoomId = useSelector((state: RootState) => state.chat.currentRoomId);
 
-    // Fetch rooms from API
-    const { data: roomsData, isLoading: roomsLoading, isSuccess: roomsSuccess } = useGetRoomsQuery(undefined, {
-        pollingInterval: 5000,
-        refetchOnMountOrArgChange: true,
-        refetchOnFocus: true,
-        refetchOnReconnect: true,
-    });
+    const selectRoom = useCallback((roomId: string | null) => {
+        dispatch(setCurrentRoom(roomId));
+    }, [dispatch]);
 
-    // Use Redux store for rooms so `addRoom()` is reflected immediately.
-    const rooms = useSelector((state: RootState) => state.chat.rooms);
+    const { data: rooms = [], isLoading: roomsLoading } = useGetRoomsQuery();
 
-    // Keep store rooms in sync with latest API response.
-    useEffect(() => {
-        if (roomsSuccess && roomsData) {
-            dispatch(setRooms(roomsData));
-        }
-    }, [roomsSuccess, roomsData, dispatch]);
-
-    // Get messages from Redux store (populated by socket or API)
-    const storedMessages = useSelector((state: RootState) => state.chat.messages);
-
-    // Fetch messages for current room
-    const { data: fetchedMessages } = useGetMessagesQuery(
+    // Single source of truth: RTK Query cache.
+    // Socket messages and sent messages are injected into this cache directly,
+    // so this data is always live without any extra Redux state.
+    const { data: rawMessages = [] } = useGetMessagesQuery(
         { roomId: currentRoomId! },
-        { skip: !currentRoomId, refetchOnMountOrArgChange: true }
+        {
+            skip: !currentRoomId,
+            refetchOnMountOrArgChange: true, // re-fetch when switching rooms
+            refetchOnFocus: false,
+            refetchOnReconnect: false,
+            pollingInterval: 4000, // fallback: re-fetch every 4s until socket broadcast is fixed
+        }
     );
 
-    // Update store when messages are fetched
-    useEffect(() => {
-        if (currentRoomId && fetchedMessages) {
-            dispatch(setMessages({ roomId: currentRoomId, messages: fetchedMessages }));
-        }
-    }, [currentRoomId, fetchedMessages, dispatch]);
-
-    // Transform rooms to conversations for UI
     const conversations = rooms.map(room => transformRoomToConversation(room, currentUserId));
-
-    // Get selected conversation and messages
     const selectedConversation = conversations.find(c => c.id === currentRoomId);
     const currentRoom = rooms.find(r => r.id === currentRoomId);
 
-    // Get messages for current room
-    const rawMessages = currentRoomId ? storedMessages[currentRoomId] || [] : [];
-
-    // Get sender avatar for received messages
     const getOtherUserAvatar = () => {
         if (!currentRoom) return undefined;
         const otherMember = currentRoom.members.find(m => m.userId !== currentUserId);
         return otherMember?.user.image || undefined;
     };
 
-    const messages = rawMessages.map(msg =>
+    const messages = rawMessages.map((msg: ChatMessage) =>
         transformMessage(msg, currentUserId, getOtherUserAvatar())
     );
 

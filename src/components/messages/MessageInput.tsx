@@ -3,8 +3,8 @@ import { Send, Smile, Paperclip, Mic, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import EmojiPicker, { Theme } from 'emoji-picker-react';
 import { toast } from 'sonner';
-import { useDispatch } from 'react-redux';
-import { useSendMessageMutation, useSendMessageWithMediaMutation, addMessage } from '../../store/slices/chat';
+import { useSendMessageMutation } from '../../store/slices/chat';
+import { useDarkMode } from '../../hook/useDarkMode';
 
 // Message input with emoji picker, file attachments, and send functionality
 
@@ -24,7 +24,7 @@ const MAX_PHOTOS = 5;
 const MAX_VIDEOS = 2;
 
 const MessageInput: React.FC<MessageInputProps> = ({ roomId, onSendMessage }) => {
-    const dispatch = useDispatch();
+    const { isDarkMode } = useDarkMode();
     const [message, setMessage] = useState('');
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
@@ -54,31 +54,18 @@ const MessageInput: React.FC<MessageInputProps> = ({ roomId, onSendMessage }) =>
         if (isSending || (!message.trim() && attachedFiles.length === 0)) return;
 
         try {
-            const trimmed = message.trim();
+            const formData = new FormData();
+            formData.append('content', message.trim() || 'Shared media');
 
-            // Backend enforces MaxLength(4096) on `content`
-            if (trimmed.length > 4096) {
-                showToast('Message is too long (max 4096 characters)');
-                return;
-            }
+            const images = attachedFiles.filter(f => f.type === 'image');
+            images.forEach(img => formData.append('images', img.file));
 
-            let sentMessage;
-            if (attachedFiles.length > 0) {
-                // Use the backend media endpoint: POST /chat/rooms/:roomId/messages/media
-                const formData = new FormData();
-                formData.append('content', trimmed || 'Shared media');
-                // Backend expects uploaded files under `files` (see FileFieldsInterceptor)
-                attachedFiles.forEach((f) => formData.append('files', f.file));
+            const videos = attachedFiles.filter(f => f.type === 'video');
+            videos.forEach(vid => formData.append('videos', vid.file));
 
-                sentMessage = await sendMessageWithMediaMutation({ roomId, formData }).unwrap();
-            } else {
-                // Use JSON endpoint: POST /chat/rooms/:roomId/messages
-                // Backend currently validates that `roomId` exists in the body too.
-                sentMessage = await sendMessageMutation({ roomId, content: trimmed }).unwrap();
-            }
+            const sentMessage = await sendMessageMutation({ roomId, formData }).unwrap();
 
-            const messageWithRoom = { ...sentMessage, roomId: sentMessage.roomId || roomId };
-            dispatch(addMessage(messageWithRoom));
+            void sentMessage;
 
             setMessage('');
             attachedFiles.forEach(f => URL.revokeObjectURL(f.preview));
@@ -181,7 +168,6 @@ const MessageInput: React.FC<MessageInputProps> = ({ roomId, onSendMessage }) =>
     };
 
     const canSend = (message.trim().length > 0 || attachedFiles.length > 0) && !isSending;
-    const isDarkMode = document.documentElement.classList.contains('dark');
 
     return (
         <div className="px-3 sm:px-4 md:px-6 py-2 sm:py-3">
