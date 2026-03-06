@@ -86,13 +86,13 @@ const MessagesPage = () => {
     // so this data is always live without any extra Redux state.
     const { data: rawMessages = [] } = useGetMessagesQuery(
         { roomId: currentRoomId! },
-        {
-            skip: !currentRoomId,
-            refetchOnMountOrArgChange: true, // re-fetch when switching rooms
-            refetchOnFocus: false,
-            refetchOnReconnect: false,
-            pollingInterval: 4000, // fallback: re-fetch every 4s until socket broadcast is fixed
-        }
+        // {
+        //     skip: !currentRoomId,
+        //     refetchOnMountOrArgChange: true, // re-fetch when switching rooms
+        //     refetchOnFocus: false,
+        //     refetchOnReconnect: false,
+        //     pollingInterval: 4000, // fallback: re-fetch every 4s until socket broadcast is fixed
+        // }
     );
 
     const conversations = rooms.map(room => transformRoomToConversation(room, currentUserId));

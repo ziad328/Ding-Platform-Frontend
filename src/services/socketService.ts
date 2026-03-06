@@ -16,6 +16,12 @@ let userLeftCallback: UserEventCallback | null = null;
 let typingCallback: TypingCallback | null = null;
 let errorCallback: ErrorCallback | null = null;
 let connectCallback: (() => void) | null = null;
+let roomCreatedCallback: RoomCreatedCallback | null = null;
+
+const normalizeIncomingMessage = (message: ChatMessage): ChatMessage => {
+    const id = (message as any)?.id ?? (message as any)?._id;
+    return id ? ({ ...message, id } as ChatMessage) : message;
+};
 
 const getSocketUrl = (): string => {
     const baseUrl = import.meta.env.VITE_BASE_BACK_URL as string;
@@ -73,10 +79,15 @@ export const initializeSocket = (token: string): Socket => {
         console.log(`👋 Left room: ${roomId}`);
     });
 
+    socket.on('roomCreated', (room: ChatRoom) => {
+        roomCreatedCallback?.(room);
+    });
+
     socket.on('newMessage', (message: ChatMessage) => {
         console.log('📨 newMessage received:', message);
+        const normalized = normalizeIncomingMessage(message);
         if (messageCallback) {
-            messageCallback(message);
+            messageCallback(normalized);
         } else {
             console.warn('⚠️ No message callback registered');
         }
@@ -86,6 +97,7 @@ export const initializeSocket = (token: string): Socket => {
     // Deduplication by ID in handleNewMessage prevents double-display.
     socket.on('message', (message: ChatMessage) => {
         console.log('📨 message received:', message);
+        const normalized = normalizeIncomingMessage(message);
         if (messageCallback) {
             messageCallback(normalized);
         } else {
@@ -202,4 +214,5 @@ export const disconnectSocket = (): void => {
     typingCallback = null;
     errorCallback = null;
     connectCallback = null;
+    roomCreatedCallback = null;
 };

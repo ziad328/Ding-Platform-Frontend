@@ -3,7 +3,7 @@ import { Send, Smile, Paperclip, Mic, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import EmojiPicker, { Theme } from 'emoji-picker-react';
 import { toast } from 'sonner';
-import { useSendMessageMutation } from '../../store/slices/chat';
+import { useSendMessageMutation, useSendMessageWithMediaMutation } from '../../store/slices/chat';
 import { useDarkMode } from '../../hook/useDarkMode';
 
 // Message input with emoji picker, file attachments, and send functionality
@@ -54,16 +54,23 @@ const MessageInput: React.FC<MessageInputProps> = ({ roomId, onSendMessage }) =>
         if (isSending || (!message.trim() && attachedFiles.length === 0)) return;
 
         try {
-            const formData = new FormData();
-            formData.append('content', message.trim() || 'Shared media');
+            const trimmedMessage = message.trim();
 
-            const images = attachedFiles.filter(f => f.type === 'image');
-            images.forEach(img => formData.append('images', img.file));
+            const sentMessage =
+                attachedFiles.length > 0
+                    ? await (async () => {
+                          const formData = new FormData();
+                          formData.append('content', trimmedMessage || 'Shared media');
 
-            const videos = attachedFiles.filter(f => f.type === 'video');
-            videos.forEach(vid => formData.append('videos', vid.file));
+                          const images = attachedFiles.filter((f) => f.type === 'image');
+                          images.forEach((img) => formData.append('images', img.file));
 
-            const sentMessage = await sendMessageMutation({ roomId, formData }).unwrap();
+                          const videos = attachedFiles.filter((f) => f.type === 'video');
+                          videos.forEach((vid) => formData.append('videos', vid.file));
+
+                          return await sendMessageWithMediaMutation({ roomId, formData }).unwrap();
+                      })()
+                    : await sendMessageMutation({ roomId, content: trimmedMessage }).unwrap();
 
             void sentMessage;
 

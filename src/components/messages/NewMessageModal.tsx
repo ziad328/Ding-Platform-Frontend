@@ -9,8 +9,6 @@ import { useGetFriendsQuery } from '../../store/slices/social/friends/friendsApi
 
 // Modal for creating new conversations with friends
 
-const EMPTY_FRIENDS_LIST: NonNullable<RootState['friends']>['list'] = [];
-
 interface Friend {
     id: string;
     name: string;
@@ -29,6 +27,8 @@ interface NewMessageModalProps {
 const NewMessageModal: React.FC<NewMessageModalProps> = ({ isOpen, onClose, onSelectPerson, onRoomCreated }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+    const { isLoading: isFriendsLoading } = useGetFriendsQuery(undefined, { skip: !isOpen });
 
     const friendsList = useSelector((state: RootState) => state.friends?.list);
 
