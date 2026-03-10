@@ -25,8 +25,6 @@ function MainLayout() {
 
   return (
     <div className="h-screen bg-neutral-w-200 dark:bg-dark-bg-primary overflow-hidden flex flex-col">
-      <ScrollToTop />
-      <ChatSocketBootstrap />
       <Navbar />
 
       <div className="flex flex-1 overflow-hidden w-full">

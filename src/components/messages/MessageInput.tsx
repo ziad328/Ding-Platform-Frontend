@@ -3,8 +3,8 @@ import { Send, Smile, Paperclip, Mic, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import EmojiPicker, { Theme } from 'emoji-picker-react';
 import { toast } from 'sonner';
-import { useDispatch } from 'react-redux';
-import { useSendMessageMutation, useSendMessageWithMediaMutation, addMessage } from '../../store/slices/chat';
+import { useSendMessageMutation, useSendMessageWithMediaMutation } from '../../store/slices/chat';
+import { useDarkMode } from '../../hook/useDarkMode';
 
 // Message input with emoji picker, file attachments, and send functionality
 

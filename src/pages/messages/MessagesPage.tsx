@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import ConversationList from '../../components/messages/ConversationList';
@@ -80,16 +80,7 @@ const MessagesPage = () => {
     // Current selected room is managed in Redux; socket is bootstrapped globally in `MainLayout`.
     const currentRoomId = useSelector((state: RootState) => state.chat.currentRoomId);
 
-    // Fetch rooms from API
-    const { data: roomsData, isLoading: roomsLoading, isSuccess: roomsSuccess } = useGetRoomsQuery(undefined, {
-        pollingInterval: 5000,
-        refetchOnMountOrArgChange: true,
-        refetchOnFocus: true,
-        refetchOnReconnect: true,
-    });
-
-    // Use Redux store for rooms so `addRoom()` is reflected immediately.
-    const rooms = useSelector((state: RootState) => state.chat.rooms);
+    const { data: rooms = [], isLoading: roomsLoading } = useGetRoomsQuery();
 
     // Keep store rooms in sync with latest API response.
     useEffect(() => {
