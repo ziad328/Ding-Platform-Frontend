@@ -1,5 +1,6 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { setCredentials, logOut, selectCurrentToken } from './slices/auth/auth';
+import { reinitializeSocket } from '../services/socketService';
 
 const baseQuery = fetchBaseQuery({
   baseUrl: import.meta.env.VITE_BASE_BACK_URL,
@@ -31,15 +32,19 @@ const baseQueryWithReAuth = async (
       const refreshData = refreshResult.data as any;
 
       if (refreshData.data && refreshData.data.accessToken) {
+        const newToken: string = refreshData.data.accessToken;
         api.dispatch(setCredentials({
-          accessToken: refreshData.data.accessToken,
+          accessToken: newToken,
           user: refreshData.data.user || user
         }));
+        reinitializeSocket(newToken);
       } else if (refreshData.accessToken) {
+        const newToken: string = refreshData.accessToken;
         api.dispatch(setCredentials({
-          accessToken: refreshData.accessToken,
+          accessToken: newToken,
           user: refreshData.user || user
         }));
+        reinitializeSocket(newToken);
       } else {
         api.dispatch(logOut());
         return result;
