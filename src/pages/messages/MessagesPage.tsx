@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import ConversationList from '../../components/messages/ConversationList';
@@ -74,10 +74,6 @@ const MessagesPage = () => {
 
     const currentUserId = useSelector((state: RootState) => state.auth.user?.id || '');
     const currentRoomId = useSelector((state: RootState) => state.chat.currentRoomId);
-
-    const selectRoom = useCallback((roomId: string | null) => {
-        dispatch(setCurrentRoom(roomId));
-    }, [dispatch]);
 
     const { data: rooms = [], isLoading: roomsLoading } = useGetRoomsQuery();
 

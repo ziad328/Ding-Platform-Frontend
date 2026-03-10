@@ -16,6 +16,7 @@ let userLeftCallback: UserEventCallback | null = null;
 let typingCallback: TypingCallback | null = null;
 let errorCallback: ErrorCallback | null = null;
 let connectCallback: (() => void) | null = null;
+let roomCreatedCallback: RoomCreatedCallback | null = null;
 
 const getSocketUrl = (): string => {
     const baseUrl = import.meta.env.VITE_BASE_BACK_URL as string;
@@ -26,6 +27,30 @@ const getSocketUrl = (): string => {
         ? `${window.location.origin}${baseUrl}`
         : baseUrl;
     return absolute.replace(/^http/, 'ws').replace(/\/api\/v1$/, '');
+};
+
+/** Normalize a raw socket message — handle _id vs id field from backend */
+const normalizeSocketMessage = (raw: any): ChatMessage => {
+    const id = raw?.id ?? raw?._id ?? raw?.messageId;
+    return { ...raw, id } as ChatMessage;
+};
+
+/** Normalize a raw socket room — handle _id vs id field from backend */
+const normalizeSocketRoom = (raw: any): ChatRoom => {
+    const id = raw?.id ?? raw?._id;
+    const members = Array.isArray(raw?.members) ? raw.members : [];
+    return { ...raw, id, members } as ChatRoom;
+};
+
+/** Single handler used for both 'newMessage' and 'message' events */
+const handleIncomingMessage = (raw: unknown) => {
+    const message = normalizeSocketMessage(raw);
+    console.log('📨 Socket message received:', message);
+    if (messageCallback) {
+        messageCallback(message);
+    } else {
+        console.warn('⚠️ No message callback registered');
+    }
 };
 
 export const initializeSocket = (token: string): Socket => {
@@ -43,12 +68,15 @@ export const initializeSocket = (token: string): Socket => {
     console.log('🔌 Connecting to socket:', `${socketUrl}/chat`);
 
     socket = io(`${socketUrl}/chat`, {
-        transports: ['websocket'],
+        // Try WebSocket first, fall back to polling automatically if server/proxy
+        // does not support WebSocket upgrades (slow hosting environments).
+        transports: ['websocket', 'polling'],
         auth: { token },
         reconnection: true,
-        reconnectionAttempts: 5,
+        reconnectionAttempts: 10,
         reconnectionDelay: 1000,
         reconnectionDelayMax: 5000,
+        timeout: 10000,
     });
 
     socket.on('connect', () => {
@@ -73,39 +101,17 @@ export const initializeSocket = (token: string): Socket => {
         console.log(`👋 Left room: ${roomId}`);
     });
 
-    socket.on('newMessage', (message: ChatMessage) => {
-        console.log('📨 newMessage received:', message);
-        if (messageCallback) {
-            messageCallback(normalized);
-        } else {
-            console.warn('⚠️ No message callback registered');
-        }
-    };
-
-    // Support both event names for compatibility (backend emits both).
+    // Backend emits 'newMessage' from the gateway broadcast path
     socket.on('newMessage', handleIncomingMessage);
-    socket.on('message', handleIncomingMessage);
-
-    socket.on('roomCreated', (room: ChatRoom) => {
-        const normalized = normalizeSocketRoom(room);
-        console.log('💬 Room created:', normalized);
-        roomCreatedCallback?.(normalized);
-    });
 
     // Backend also emits 'message' from the WebSocket direct-send path — handle both.
     // Deduplication by ID in handleNewMessage prevents double-display.
-    socket.on('message', (message: ChatMessage) => {
-        console.log('📨 message received:', message);
-        if (messageCallback) {
-            messageCallback(message);
-        } else {
-            console.warn('⚠️ No message callback registered');
-        }
-    });
+    socket.on('message', handleIncomingMessage);
 
-    // DEBUG: catch ALL events the backend emits
-    socket.onAny((event, ...args) => {
-        console.log('🔔 Socket event:', event, args);
+    socket.on('roomCreated', (raw: unknown) => {
+        const room = normalizeSocketRoom(raw);
+        console.log('💬 Room created:', room);
+        roomCreatedCallback?.(room);
     });
 
     socket.on('userJoined', (data: { userId: string; userName: string }) => {
@@ -125,6 +131,11 @@ export const initializeSocket = (token: string): Socket => {
     socket.on('error', (error: string) => {
         console.error('Socket error:', error);
         errorCallback?.(error);
+    });
+
+    // DEBUG: catch ALL events the backend emits (remove in production if noisy)
+    socket.onAny((event, ...args) => {
+        console.log('🔔 Socket event:', event, args);
     });
 
     return socket;
@@ -165,13 +176,13 @@ export const onSocketConnect = (callback: () => void): void => {
 
 export const reinitializeSocket = (newToken: string): void => {
     // Preserve callbacks across the disconnect → reconnect cycle.
-    // disconnectSocket() clears all callbacks, but useSocket's isInitialized
-    // guard prevents re-registration when the token changes.
     const savedMessageCallback = messageCallback;
     const savedConnectCallback = connectCallback;
+    const savedRoomCreatedCallback = roomCreatedCallback;
     disconnectSocket();
     messageCallback = savedMessageCallback;
     connectCallback = savedConnectCallback;
+    roomCreatedCallback = savedRoomCreatedCallback;
     initializeSocket(newToken);
 };
 
@@ -212,4 +223,5 @@ export const disconnectSocket = (): void => {
     typingCallback = null;
     errorCallback = null;
     connectCallback = null;
+    roomCreatedCallback = null;
 };
