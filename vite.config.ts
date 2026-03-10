@@ -8,22 +8,7 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 5173,
-    strictPort: true,
-    proxy: {
-      // HTTP API calls: /api/v1/* → https://ding-platform-backend.onrender.com/api/v1/*
-      '/api/v1': {
-        target: 'https://ding-platform-backend.onrender.com',
-        changeOrigin: true,
-        secure: false,
-      },
-      // WebSocket: /socket.io/* → backend (for dev socket connections)
-      '/socket.io': {
-        target: 'https://ding-platform-backend.onrender.com',
-        changeOrigin: true,
-        secure: false,
-        ws: true,
-      },
-    },
+    strictPort: true
   },
   build: {
     rollupOptions: {

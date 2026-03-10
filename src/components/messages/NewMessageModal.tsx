@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { X, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSelector } from 'react-redux';
@@ -30,17 +30,26 @@ const NewMessageModal: React.FC<NewMessageModalProps> = ({ isOpen, onClose, onSe
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-    const friendsList = useSelector((state: RootState) => state.friends?.list);
+    // Ensure friends are loaded when opening the modal.
+    // This updates both RTK Query cache and the `friends` slice (via matchers).
+    const { isLoading: isFriendsLoading } = useGetFriendsQuery(
+        { limit: 100, offset: 0 },
+        { skip: !isOpen }
+    );
 
-    const friends = useMemo(() =>
-        (friendsList || []).map((friend) => ({
-            id: friend.userId,
-            name: friend.user?.name || 'Unknown',
-            username: undefined,
-            avatar: friend.user?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(friend.user?.name || 'U')}&background=random`,
-            email: undefined,
-        })),
-        [friendsList]
+    const friendsData = useSelector((state: RootState) => state.friends?.list ?? EMPTY_FRIENDS_LIST);
+    const friends = useMemo(
+        () =>
+            friendsData.map((friend) => ({
+                id: friend.userId,
+                name: friend.user?.name || 'Unknown',
+                username: undefined,
+                avatar:
+                    friend.user?.image ||
+                    `https://ui-avatars.com/api/?name=${encodeURIComponent(friend.user?.name || 'U')}&background=random`,
+                email: undefined,
+            })),
+        [friendsData]
     );
 
     const [createRoom, { isLoading }] = useCreateRoomMutation();
