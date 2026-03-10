@@ -7,13 +7,11 @@ import {
     joinRoom,
     leaveRoom,
     onNewMessage,
-    onSocketConnect,
+    onRoomCreated,
     isSocketConnected,
 } from '../services/socketService';
-import { setCurrentRoom, updateRoomLastMessage } from '../store/slices/chat';
-import { chatApi } from '../store/slices/chat/chatApi';
-import { apiSlice } from '../store/ApiSlice';
-import type { ChatMessage } from '../store/slices/chat/types';
+import { addMessage, addRoom, setCurrentRoom } from '../store/slices/chat';
+import type { ChatMessage, ChatRoom } from '../store/slices/chat/types';
 
 // Hook for managing WebSocket connection lifecycle and room subscriptions.
 // Socket messages are injected directly into the RTK Query cache via updateQueryData
@@ -72,13 +70,12 @@ export const useSocket = () => {
         initializeSocket(token);
         isInitialized.current = true;
 
-        onSocketConnect(() => {
-            const roomId = currentRoomIdRef.current;
-            if (roomId) {
-                console.log('🔄 Socket reconnected — re-joining room:', roomId);
-                joinRoom(roomId);
-            }
-        });
+        if (!isInitialized.current) {
+            initializeSocket(token);
+            isInitialized.current = true;
+            onNewMessage(handleNewMessage);
+            onRoomCreated(handleRoomCreated);
+        }
 
         return () => {
             mountCount.current -= 1;
@@ -107,7 +104,6 @@ export const useSocket = () => {
         onNewMessage(handleNewMessage);
     }, [token, handleNewMessage]);
 
-    // Join / leave rooms as currentRoomId changes
     useEffect(() => {
         if (!isSocketConnected()) return;
 

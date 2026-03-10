@@ -20,13 +20,7 @@ let roomCreatedCallback: RoomCreatedCallback | null = null;
 
 const getSocketUrl = (): string => {
     const baseUrl = import.meta.env.VITE_BASE_BACK_URL as string;
-    // In development the base URL is relative (e.g. /api/v1) so resolve it
-    // against the current origin so Socket.IO gets a full WebSocket URL that
-    // routes through the Vite proxy.
-    const absolute = baseUrl.startsWith('/')
-        ? `${window.location.origin}${baseUrl}`
-        : baseUrl;
-    return absolute.replace(/^http/, 'ws').replace(/\/api\/v1$/, '');
+    return baseUrl.replace(/^http/, 'ws').replace(/\/api\/v1$/, '');
 };
 
 /** Normalize a raw socket message — handle _id vs id field from backend */
@@ -81,7 +75,6 @@ export const initializeSocket = (token: string): Socket => {
 
     socket.on('connect', () => {
         console.log('✅ Connected to chat server, socket ID:', socket?.id);
-        if (connectCallback) connectCallback();
     });
 
     socket.on('disconnect', (reason) => {
@@ -150,14 +143,7 @@ export const joinRoom = (roomId: string): void => {
         return;
     }
     console.log('📍 Joining room:', roomId);
-    // Backend uses acknowledgment callback ({success, roomId}), not a joinedRoom event
-    socket.emit('joinRoom', { roomId }, (ack: { success: boolean; roomId: string }) => {
-        if (ack?.success) {
-            console.log('✅ Server confirmed room join:', ack.roomId);
-        } else {
-            console.warn('⚠️ Room join failed:', ack);
-        }
-    });
+    socket.emit('joinRoom', { roomId });
 };
 
 export const leaveRoom = (roomId: string): void => {
