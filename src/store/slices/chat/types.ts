@@ -47,13 +47,19 @@ export interface ChatRoom {
 }
 
 export interface CreateRoomRequest {
-  userIds: string[];
+  memberIds: string[];
   type: 'DIRECT' | 'GROUP';
   name?: string;
 }
 
 export interface AddMemberRequest {
   userId: string;
+}
+
+export interface SendMessageRequest {
+  roomId: string;
+  content: string;
+  replyToId?: string;
 }
 
 export interface ChatState {

@@ -32,7 +32,9 @@ const MessageInput: React.FC<MessageInputProps> = ({ roomId, onSendMessage }) =>
     const emojiPickerRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-    const [sendMessageMutation, { isLoading: isSending }] = useSendMessageMutation();
+    const [sendMessageMutation, { isLoading: isSendingText }] = useSendMessageMutation();
+    const [sendMessageWithMediaMutation, { isLoading: isSendingMedia }] = useSendMessageWithMediaMutation();
+    const isSending = isSendingText || isSendingMedia;
 
     const showToast = (message: string) => {
         toast.error(message, { id: message, duration: 4000, dismissible: true });
@@ -52,16 +54,28 @@ const MessageInput: React.FC<MessageInputProps> = ({ roomId, onSendMessage }) =>
         if (isSending || (!message.trim() && attachedFiles.length === 0)) return;
 
         try {
-            const formData = new FormData();
-            formData.append('content', message.trim() || 'Shared media');
+            const trimmed = message.trim();
 
-            const images = attachedFiles.filter(f => f.type === 'image');
-            images.forEach(img => formData.append('images', img.file));
+            // Backend enforces MaxLength(4096) on `content`
+            if (trimmed.length > 4096) {
+                showToast('Message is too long (max 4096 characters)');
+                return;
+            }
 
-            const videos = attachedFiles.filter(f => f.type === 'video');
-            videos.forEach(vid => formData.append('videos', vid.file));
+            let sentMessage;
+            if (attachedFiles.length > 0) {
+                // Use the backend media endpoint: POST /chat/rooms/:roomId/messages/media
+                const formData = new FormData();
+                formData.append('content', trimmed || 'Shared media');
+                // Backend expects uploaded files under `files` (see FileFieldsInterceptor)
+                attachedFiles.forEach((f) => formData.append('files', f.file));
 
-            const sentMessage = await sendMessageMutation({ roomId, formData }).unwrap();
+                sentMessage = await sendMessageWithMediaMutation({ roomId, formData }).unwrap();
+            } else {
+                // Use JSON endpoint: POST /chat/rooms/:roomId/messages
+                // Backend currently validates that `roomId` exists in the body too.
+                sentMessage = await sendMessageMutation({ roomId, content: trimmed }).unwrap();
+            }
 
             void sentMessage;
 

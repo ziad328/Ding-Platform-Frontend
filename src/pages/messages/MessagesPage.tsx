@@ -110,14 +110,14 @@ const MessagesPage = () => {
     );
 
     const handleSelectConversation = (id: string) => {
-        selectRoom(id);
+        dispatch(setCurrentRoom(id));
         setIsMobileView(true);
     };
 
     const handleBackToList = () => {
         setIsMobileView(false);
         setTimeout(() => {
-            selectRoom(null);
+            dispatch(setCurrentRoom(null));
         }, 50);
     };
 
@@ -126,14 +126,14 @@ const MessagesPage = () => {
     };
 
     const handleSelectPerson = (id: string) => {
-        selectRoom(id);
+        dispatch(setCurrentRoom(id));
         setIsMobileView(true);
         setIsNewMessageModalOpen(false);
     };
 
     const handleRoomCreated = (room: ChatRoom) => {
         dispatch(addRoom(room));
-        selectRoom(room.id);
+        dispatch(setCurrentRoom(room.id));
         setIsMobileView(true);
         setIsNewMessageModalOpen(false);
     };

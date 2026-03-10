@@ -69,7 +69,7 @@ function App() {
   return (
     <Suspense fallback={
       <div className="flex flex-col justify-center items-center h-screen gap-4 bg-white dark:bg-neutral-b-900">
-        <Logo />
+        <Logo disableLink />
       </div>
     }>
       <Toaster

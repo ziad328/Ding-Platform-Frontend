@@ -5,8 +5,11 @@ import { useSelector } from 'react-redux';
 import type { RootState } from '../../store/store';
 import { useCreateRoomMutation } from '../../store/slices/chat';
 import type { ChatRoom } from '../../store/slices/chat/types';
+import { useGetFriendsQuery } from '../../store/slices/social/friends/friendsApi';
 
 // Modal for creating new conversations with friends
+
+const EMPTY_FRIENDS_LIST: NonNullable<RootState['friends']>['list'] = [];
 
 interface Friend {
     id: string;
@@ -57,7 +60,7 @@ const NewMessageModal: React.FC<NewMessageModalProps> = ({ isOpen, onClose, onSe
         try {
             const roomType = selectedIds.length === 1 ? 'DIRECT' : 'GROUP';
             const response = await createRoom({
-                userIds: selectedIds,
+                memberIds: selectedIds,
                 type: roomType,
                 name: roomType === 'GROUP' ? 'New Group' : undefined,
             }).unwrap();
@@ -101,7 +104,9 @@ const NewMessageModal: React.FC<NewMessageModalProps> = ({ isOpen, onClose, onSe
                         </div>
 
                         <div className="px-4 py-3 shrink-0">
-                            <span className="text-sm font-semibold text-neutral-b-700 dark:text-dark-text-secondary">{friends.length > 0 ? 'Suggested' : 'No friends yet'}</span>
+                            <span className="text-sm font-semibold text-neutral-b-700 dark:text-dark-text-secondary">
+                                {isFriendsLoading ? 'Loading friends...' : friends.length > 0 ? 'Suggested' : 'No friends yet'}
+                            </span>
                         </div>
 
                         <div className="flex-1 overflow-y-auto thin-scrollbar">

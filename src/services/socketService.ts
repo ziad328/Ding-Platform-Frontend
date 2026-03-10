@@ -1,5 +1,5 @@
 import { io, Socket } from 'socket.io-client';
-import type { ChatMessage } from '../store/slices/chat/types';
+import type { ChatMessage, ChatRoom } from '../store/slices/chat/types';
 
 // WebSocket service singleton for real-time chat with Socket.io
 
@@ -7,6 +7,7 @@ type MessageCallback = (message: ChatMessage) => void;
 type UserEventCallback = (data: { userId: string; userName: string }) => void;
 type TypingCallback = (data: { userId: string; isTyping: boolean }) => void;
 type ErrorCallback = (error: string) => void;
+type RoomCreatedCallback = (room: ChatRoom) => void;
 
 let socket: Socket | null = null;
 let messageCallback: MessageCallback | null = null;
@@ -75,10 +76,20 @@ export const initializeSocket = (token: string): Socket => {
     socket.on('newMessage', (message: ChatMessage) => {
         console.log('📨 newMessage received:', message);
         if (messageCallback) {
-            messageCallback(message);
+            messageCallback(normalized);
         } else {
             console.warn('⚠️ No message callback registered');
         }
+    };
+
+    // Support both event names for compatibility (backend emits both).
+    socket.on('newMessage', handleIncomingMessage);
+    socket.on('message', handleIncomingMessage);
+
+    socket.on('roomCreated', (room: ChatRoom) => {
+        const normalized = normalizeSocketRoom(room);
+        console.log('💬 Room created:', normalized);
+        roomCreatedCallback?.(normalized);
     });
 
     // Backend also emits 'message' from the WebSocket direct-send path — handle both.
@@ -183,6 +194,10 @@ export const onTyping = (callback: TypingCallback): void => {
 
 export const onError = (callback: ErrorCallback): void => {
     errorCallback = callback;
+};
+
+export const onRoomCreated = (callback: RoomCreatedCallback): void => {
+    roomCreatedCallback = callback;
 };
 
 export const disconnectSocket = (): void => {

@@ -1,5 +1,7 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import type { RootState, AppDispatch } from '../store/store';
 import {
     initializeSocket,
@@ -23,6 +25,9 @@ export const useSocket = () => {
     const dispatch = useDispatch<AppDispatch>();
     const token = useSelector((state: RootState) => state.auth.token);
     const currentRoomId = useSelector((state: RootState) => state.chat.currentRoomId);
+    const currentUserId = useSelector((state: RootState) => state.auth.user?.id);
+    const location = useLocation();
+    const navigate = useNavigate();
     const previousRoomId = useRef<string | null>(null);
     const isInitialized = useRef(false);
     const currentRoomIdRef = useRef<string | null>(currentRoomId);
@@ -54,7 +59,8 @@ export const useSocket = () => {
     }, [dispatch]);
 
     useEffect(() => {
-        if (!token || isInitialized.current) return;
+        if (!token) return;
+        mountCount.current += 1;
 
         initializeSocket(token);
         isInitialized.current = true;
@@ -68,11 +74,21 @@ export const useSocket = () => {
         });
 
         return () => {
-            if (previousRoomId.current) {
-                leaveRoom(previousRoomId.current);
+            mountCount.current -= 1;
+
+            // In React StrictMode (dev), effects mount/unmount quickly; delay disconnect to avoid
+            // spurious "WebSocket is closed before the connection is established" noise.
+            if (mountCount.current === 0) {
+                disconnectTimer.current = window.setTimeout(() => {
+                    if (mountCount.current !== 0) return;
+                    if (previousRoomId.current) {
+                        leaveRoom(previousRoomId.current);
+                    }
+                    disconnectSocket();
+                    isInitialized.current = false;
+                    disconnectTimer.current = null;
+                }, 150);
             }
-            disconnectSocket();
-            isInitialized.current = false;
         };
     }, [token]);
 

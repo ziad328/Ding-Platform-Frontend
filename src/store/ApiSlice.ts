@@ -68,6 +68,9 @@ const tagTypes = [
   'FriendRequests',
   'SocialStats',
   'Profile',
+  'Posts',
+  'Comments',
+  'Likes',
   'Rooms',
   'Messages',
 ] as const;
@@ -75,5 +78,22 @@ const tagTypes = [
 export const apiSlice = createApi({
   baseQuery: baseQueryWithReAuth,
   tagTypes,
-  endpoints: () => ({}),
+  endpoints: (builder) => ({
+    likePost: builder.mutation({
+      query: (postId: string) => ({
+        url: `likes/posts/${postId}`,
+        method: 'POST',
+      }),
+      invalidatesTags: ['Posts', 'Likes'],
+    }),
+    unlikePost: builder.mutation({
+      query: (postId: string) => ({
+        url: `likes/posts/${postId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Posts', 'Likes'],
+    }),
+  }),
 });
+
+export const { useLikePostMutation, useUnlikePostMutation } = apiSlice;

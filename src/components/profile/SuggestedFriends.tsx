@@ -64,7 +64,7 @@ const SuggestedFriends = () => {
             const mutuals = friend.mutualFriends ?? 0;
 
             return (
-              <div key={friend.userId} className="flex items-center justify-between gap-2 min-w-0">
+              <div key={`${friend.userId}-${index}`} className="flex items-center justify-between gap-2 min-w-0">
                 <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                   <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-neutral-w-300 dark:bg-dark-bg-tertiary flex items-center justify-center shrink-0 overflow-hidden">
                     {friend.user?.image ? (
