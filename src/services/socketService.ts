@@ -15,22 +15,42 @@ let userJoinedCallback: UserEventCallback | null = null;
 let userLeftCallback: UserEventCallback | null = null;
 let typingCallback: TypingCallback | null = null;
 let errorCallback: ErrorCallback | null = null;
+let connectCallback: (() => void) | null = null;
 let roomCreatedCallback: RoomCreatedCallback | null = null;
 
-// Prevent duplicate processing if server emits both `message` and `newMessage`.
-const processedMessageIds = new Map<string, number>();
-const MESSAGE_DEDUPE_WINDOW_MS = 5000;
-
-const normalizeSocketMessage = (message: any): ChatMessage => {
-    const id = message?.id ?? message?._id;
-    return { ...message, id };
+const getSocketUrl = (): string => {
+    const baseUrl = import.meta.env.VITE_BASE_BACK_URL as string;
+    // In development the base URL is relative (e.g. /api/v1) so resolve it
+    // against the current origin so Socket.IO gets a full WebSocket URL that
+    // routes through the Vite proxy.
+    const absolute = baseUrl.startsWith('/')
+        ? `${window.location.origin}${baseUrl}`
+        : baseUrl;
+    return absolute.replace(/^http/, 'ws').replace(/\/api\/v1$/, '');
 };
 
-const normalizeSocketRoom = (room: any): ChatRoom => {
-    const id = room?.id ?? room?._id;
-    return { ...room, id };
+/** Normalize a raw socket message — handle _id vs id field from backend */
+const normalizeSocketMessage = (raw: any): ChatMessage => {
+    const id = raw?.id ?? raw?._id ?? raw?.messageId;
+    return { ...raw, id } as ChatMessage;
 };
 
+/** Normalize a raw socket room — handle _id vs id field from backend */
+const normalizeSocketRoom = (raw: any): ChatRoom => {
+    const id = raw?.id ?? raw?._id;
+    const members = Array.isArray(raw?.members) ? raw.members : [];
+    return { ...raw, id, members } as ChatRoom;
+};
+
+/** Single handler used for both 'newMessage' and 'message' events */
+const handleIncomingMessage = (raw: unknown) => {
+    const message = normalizeSocketMessage(raw);
+    console.log('📨 Socket message received:', message);
+    if (messageCallback) {
+        messageCallback(message);
+    } else {
+        console.warn('⚠️ No message callback registered');
+    }
 const getSocketUrl = (): string => {
     const baseUrl =
       (import.meta.env.VITE_BASE_BACK_URL as string | undefined) ||
@@ -64,16 +84,20 @@ export const initializeSocket = (token: string): Socket => {
     console.log('🔌 Connecting to socket:', `${socketUrl}/chat`);
 
     socket = io(`${socketUrl}/chat`, {
-        transports: ['websocket'],
+        // Try WebSocket first, fall back to polling automatically if server/proxy
+        // does not support WebSocket upgrades (slow hosting environments).
+        transports: ['websocket', 'polling'],
         auth: { token },
         reconnection: true,
-        reconnectionAttempts: 5,
+        reconnectionAttempts: 10,
         reconnectionDelay: 1000,
         reconnectionDelayMax: 5000,
+        timeout: 10000,
     });
 
     socket.on('connect', () => {
         console.log('✅ Connected to chat server, socket ID:', socket?.id);
+        if (connectCallback) connectCallback();
     });
 
     socket.on('disconnect', (reason) => {
@@ -93,38 +117,17 @@ export const initializeSocket = (token: string): Socket => {
         console.log(`👋 Left room: ${roomId}`);
     });
 
-    const handleIncomingMessage = (message: ChatMessage) => {
-        const normalized = normalizeSocketMessage(message);
-
-        if (normalized?.id) {
-            const now = Date.now();
-            const lastSeen = processedMessageIds.get(normalized.id);
-            if (lastSeen && now - lastSeen < MESSAGE_DEDUPE_WINDOW_MS) {
-                return;
-            }
-            processedMessageIds.set(normalized.id, now);
-            // Lightweight cleanup
-            for (const [id, ts] of processedMessageIds) {
-                if (now - ts > MESSAGE_DEDUPE_WINDOW_MS) processedMessageIds.delete(id);
-            }
-        }
-
-        console.log('📨 New message received:', normalized);
-        if (messageCallback) {
-            messageCallback(normalized);
-        } else {
-            console.warn('No message callback registered');
-        }
-    };
-
-    // Support both event names for compatibility (backend emits both).
+    // Backend emits 'newMessage' from the gateway broadcast path
     socket.on('newMessage', handleIncomingMessage);
+
+    // Backend also emits 'message' from the WebSocket direct-send path — handle both.
+    // Deduplication by ID in handleNewMessage prevents double-display.
     socket.on('message', handleIncomingMessage);
 
-    socket.on('roomCreated', (room: ChatRoom) => {
-        const normalized = normalizeSocketRoom(room);
-        console.log('💬 Room created:', normalized);
-        roomCreatedCallback?.(normalized);
+    socket.on('roomCreated', (raw: unknown) => {
+        const room = normalizeSocketRoom(raw);
+        console.log('💬 Room created:', room);
+        roomCreatedCallback?.(room);
     });
 
     socket.on('userJoined', (data: { userId: string; userName: string }) => {
@@ -146,6 +149,11 @@ export const initializeSocket = (token: string): Socket => {
         errorCallback?.(error);
     });
 
+    // DEBUG: catch ALL events the backend emits (remove in production if noisy)
+    socket.onAny((event, ...args) => {
+        console.log('🔔 Socket event:', event, args);
+    });
+
     return socket;
 };
 
@@ -158,7 +166,14 @@ export const joinRoom = (roomId: string): void => {
         return;
     }
     console.log('📍 Joining room:', roomId);
-    socket.emit('joinRoom', { roomId });
+    // Backend uses acknowledgment callback ({success, roomId}), not a joinedRoom event
+    socket.emit('joinRoom', { roomId }, (ack: { success: boolean; roomId: string }) => {
+        if (ack?.success) {
+            console.log('✅ Server confirmed room join:', ack.roomId);
+        } else {
+            console.warn('⚠️ Room join failed:', ack);
+        }
+    });
 };
 
 export const leaveRoom = (roomId: string): void => {
@@ -169,6 +184,22 @@ export const leaveRoom = (roomId: string): void => {
 export const emitTyping = (roomId: string, isTyping: boolean): void => {
     if (!socket?.connected) return;
     socket.emit('typing', { roomId, isTyping });
+};
+
+export const onSocketConnect = (callback: () => void): void => {
+    connectCallback = callback;
+};
+
+export const reinitializeSocket = (newToken: string): void => {
+    // Preserve callbacks across the disconnect → reconnect cycle.
+    const savedMessageCallback = messageCallback;
+    const savedConnectCallback = connectCallback;
+    const savedRoomCreatedCallback = roomCreatedCallback;
+    disconnectSocket();
+    messageCallback = savedMessageCallback;
+    connectCallback = savedConnectCallback;
+    roomCreatedCallback = savedRoomCreatedCallback;
+    initializeSocket(newToken);
 };
 
 export const onNewMessage = (callback: MessageCallback): void => {
@@ -207,5 +238,6 @@ export const disconnectSocket = (): void => {
     userLeftCallback = null;
     typingCallback = null;
     errorCallback = null;
+    connectCallback = null;
     roomCreatedCallback = null;
 };

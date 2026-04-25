@@ -9,7 +9,6 @@ import { useGetFriendsQuery } from '../../store/slices/social/friends/friendsApi
 
 // Modal for creating new conversations with friends
 
-const EMPTY_FRIENDS_LIST: NonNullable<RootState['friends']>['list'] = [];
 
 interface Friend {
     id: string;
@@ -30,26 +29,18 @@ const NewMessageModal: React.FC<NewMessageModalProps> = ({ isOpen, onClose, onSe
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-    // Ensure friends are loaded when opening the modal.
-    // This updates both RTK Query cache and the `friends` slice (via matchers).
-    const { isLoading: isFriendsLoading } = useGetFriendsQuery(
-        { limit: 100, offset: 0 },
-        { skip: !isOpen }
-    );
+    const { isLoading: isFriendsLoading } = useGetFriendsQuery();
+    const friendsList = useSelector((state: RootState) => state.friends?.list);
 
-    const friendsData = useSelector((state: RootState) => state.friends?.list ?? EMPTY_FRIENDS_LIST);
-    const friends = useMemo(
-        () =>
-            friendsData.map((friend) => ({
-                id: friend.userId,
-                name: friend.user?.name || 'Unknown',
-                username: undefined,
-                avatar:
-                    friend.user?.image ||
-                    `https://ui-avatars.com/api/?name=${encodeURIComponent(friend.user?.name || 'U')}&background=random`,
-                email: undefined,
-            })),
-        [friendsData]
+    const friends = useMemo(() =>
+        (friendsList || []).map((friend) => ({
+            id: friend.userId,
+            name: friend.user?.name || 'Unknown',
+            username: undefined,
+            avatar: friend.user?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(friend.user?.name || 'U')}&background=random`,
+            email: undefined,
+        })),
+        [friendsList]
     );
 
     const [createRoom, { isLoading }] = useCreateRoomMutation();

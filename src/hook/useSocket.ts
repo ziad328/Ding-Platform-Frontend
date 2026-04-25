@@ -1,7 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
 import type { RootState, AppDispatch } from '../store/store';
 import {
     initializeSocket,
@@ -9,72 +7,78 @@ import {
     joinRoom,
     leaveRoom,
     onNewMessage,
-    onRoomCreated,
+    onSocketConnect,
     isSocketConnected,
 } from '../services/socketService';
-import { addMessage, addRoom, setCurrentRoom } from '../store/slices/chat';
-import type { ChatMessage, ChatRoom } from '../store/slices/chat/types';
+import { setCurrentRoom, addMessage } from '../store/slices/chat';
+import { chatApi } from '../store/slices/chat/chatApi';
+import { apiSlice } from '../store/ApiSlice';
+import type { ChatMessage } from '../store/slices/chat/types';
 
-// Hook for managing WebSocket connection lifecycle and room subscriptions
+// Hook for managing WebSocket connection lifecycle and room subscriptions.
+// Socket messages are injected directly into the RTK Query cache via updateQueryData
+// so there is a single source of truth for message data.
+// A 4-second polling fallback in MessagesPage keeps messages flowing even when
+// the socket is degraded on slow hosting environments.
 
 export const useSocket = () => {
     const dispatch = useDispatch<AppDispatch>();
     const token = useSelector((state: RootState) => state.auth.token);
     const currentRoomId = useSelector((state: RootState) => state.chat.currentRoomId);
-    const currentUserId = useSelector((state: RootState) => state.auth.user?.id);
-    const location = useLocation();
-    const navigate = useNavigate();
     const previousRoomId = useRef<string | null>(null);
     const isInitialized = useRef(false);
+    const currentRoomIdRef = useRef<string | null>(currentRoomId);
+
+    // Track mount count to avoid spurious disconnects in React StrictMode (dev)
     const mountCount = useRef(0);
     const disconnectTimer = useRef<number | null>(null);
 
+    // Keep the ref current on every render so reconnect callback is never stale
+    useEffect(() => {
+        currentRoomIdRef.current = currentRoomId;
+    });
+
     const handleNewMessage = useCallback((message: ChatMessage) => {
+        // Optimistic: patch the RTK cache immediately so the message appears instantly
+        dispatch(
+            chatApi.util.updateQueryData('getMessages', { roomId: message.roomId }, (draft) => {
+                if (!Array.isArray(draft)) return; // no cache entry yet — polling will pick it up
+                const alreadyExists = draft.some(m => m.id === message.id);
+                if (!alreadyExists) {
+                    draft.push(message);
+                }
+            })
+        );
+
+        // Guaranteed fallback: invalidate the Messages tag so RTK re-fetches if the
+        // optimistic patch was on a cache key that doesn't exist yet.
+        dispatch(apiSlice.util.invalidateTags([{ type: 'Messages', id: message.roomId }]));
+
+        // Update the sidebar last-message preview and room sort order
         dispatch(addMessage(message));
-
-        // Show toast when user is not on the Messages tab.
-        if (location.pathname !== '/messages') {
-            // Avoid toasting for messages we sent ourselves.
-            if (currentUserId && message.userId === currentUserId) return;
-
-            const senderName =
-                message.user?.name ||
-                // fallback to email prefix if present
-                (message.user as any)?.email?.split?.('@')?.[0] ||
-                'Someone';
-
-            toast(`New message from ${senderName}`, {
-                description: message.content,
-                action: {
-                    label: 'Open',
-                    onClick: () => {
-                        dispatch(setCurrentRoom(message.roomId));
-                        navigate('/messages');
-                    },
-                },
-            });
-        }
     }, [dispatch]);
 
-    const handleRoomCreated = useCallback((room: ChatRoom) => {
-        dispatch(addRoom(room));
-    }, [dispatch]);
-
+    // Initialize / destroy the socket connection
     useEffect(() => {
         if (!token) return;
         mountCount.current += 1;
 
-        if (disconnectTimer.current) {
-            window.clearTimeout(disconnectTimer.current);
+        // Cancel any pending disconnect from a previous unmount
+        if (disconnectTimer.current !== null) {
+            clearTimeout(disconnectTimer.current);
             disconnectTimer.current = null;
         }
 
-        if (!isInitialized.current) {
-            initializeSocket(token);
-            isInitialized.current = true;
-            onNewMessage(handleNewMessage);
-            onRoomCreated(handleRoomCreated);
-        }
+        initializeSocket(token);
+        isInitialized.current = true;
+
+        onSocketConnect(() => {
+            const roomId = currentRoomIdRef.current;
+            if (roomId) {
+                console.log('🔄 Socket reconnected — re-joining room:', roomId);
+                joinRoom(roomId);
+            }
+        });
 
         return () => {
             mountCount.current -= 1;
@@ -93,8 +97,17 @@ export const useSocket = () => {
                 }, 150);
             }
         };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [token]);
+
+    // Always keep the message callback registered.
+    // Re-registers after token refresh or handleNewMessage reference change.
+    useEffect(() => {
+        if (!token) return;
+        onNewMessage(handleNewMessage);
     }, [token, handleNewMessage]);
 
+    // Join / leave rooms as currentRoomId changes
     useEffect(() => {
         if (!isSocketConnected()) return;
 
