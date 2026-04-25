@@ -1,0 +1,48 @@
+# Build and publish static frontend on push to production (uses backend deploy-frontend.sh).
+#
+# Secrets (repository):   SSH_PRIVATE_KEY, SSH_HOST, SSH_USER
+# Secrets (repository): FRONTEND_DEPLOY_PATH — absolute path to this repo clone on the VPS
+# Secrets (repository): BACKEND_DEPLOY_PATH — absolute path to backend repo (for scripts/deploy-frontend.sh)
+# Optional secret:       PRODUCTION_BRANCH — branch to checkout on server (defaults to production)
+# Optional: add under `with:` for non-default SSH port, e.g. port: "2222"
+
+name: Deploy production (frontend)
+
+on:
+  push:
+    branches:
+      - production
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production-frontend
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy static site over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          timeout: 60s
+          command_timeout: 30m
+          script_stop: true
+          script: |
+            set -euo pipefail
+            FRONTEND_PATH="${{ secrets.FRONTEND_DEPLOY_PATH }}"
+            BACKEND_PATH="${{ secrets.BACKEND_DEPLOY_PATH }}"
+            if [ -z "$FRONTEND_PATH" ] || [ -z "$BACKEND_PATH" ]; then
+              echo "Set GitHub secrets FRONTEND_DEPLOY_PATH and BACKEND_DEPLOY_PATH (absolute paths on the server)."
+              exit 1
+            fi
+            BRANCH="${{ secrets.PRODUCTION_BRANCH }}"
+            BRANCH="${BRANCH:-production}"
+            cd "$FRONTEND_PATH"
+            git fetch origin
+            git checkout "$BRANCH"
+            git pull origin "$BRANCH"
+            FRONTEND_DIR="$FRONTEND_PATH" "$BACKEND_PATH/scripts/deploy-frontend.sh"
