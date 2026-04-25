@@ -51,22 +51,6 @@ const handleIncomingMessage = (raw: unknown) => {
     } else {
         console.warn('⚠️ No message callback registered');
     }
-const getSocketUrl = (): string => {
-    const baseUrl =
-      (import.meta.env.VITE_BASE_BACK_URL as string | undefined) ||
-      (import.meta.env.DEV ? 'http://localhost:3000/api/v1' : '/api/v1');
-
-    if (baseUrl.startsWith('http://') || baseUrl.startsWith('https://')) {
-      return baseUrl.replace(/^http/, 'ws').replace(/\/api\/v1\/?$/, '');
-    }
-
-    // Same-origin relative API path (e.g. /api/v1) — use current host for Socket.io
-    if (typeof window !== 'undefined') {
-      const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      return `${proto}//${window.location.host}`;
-    }
-
-    return '';
 };
 
 export const initializeSocket = (token: string): Socket => {
