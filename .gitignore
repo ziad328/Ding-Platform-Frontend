@@ -15,6 +15,7 @@ dist-ssr
 .env
 .env.development
 .env.production
+Ding Platform Backend - Full API.postman_collection.json
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
