@@ -13,6 +13,7 @@ dist-ssr
 *.local
 .pnpm-store/
 .env
+.env.example
 Ding Platform Backend - Full API.postman_collection.json
 # Editor directories and files
 .vscode/*
