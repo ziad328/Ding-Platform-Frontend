@@ -41,31 +41,47 @@ const fileSchema = (label: string) =>
     );
 
 const stepSchemas = [
-  // Step 1
+  // Step 1 — Personal Info
   Yup.object({
-    fullName: Yup.string().min(3, 'Minimum 3 characters').required('Required'),
+    fullName: Yup.string()
+      .min(3, 'Minimum 3 characters')
+      .max(100, 'Maximum 100 characters')
+      .required('Required'),
     phoneNumber: Yup.string()
-      .matches(/^\+?[0-9]{7,15}$/, 'Invalid phone number')
+      .matches(/^\+?[\d\s\-()]{7,20}$/, 'Invalid phone number (7–20 digits, spaces, dashes and parentheses allowed)')
       .required('Required'),
     email: Yup.string().email('Invalid email').required('Required'),
-    address: Yup.string().required('Required'),
-    city: Yup.string().required('Required'),
-    country: Yup.string().required('Required'),
+    address: Yup.string()
+      .max(300, 'Maximum 300 characters')
+      .required('Required'),
+    city: Yup.string()
+      .max(100, 'Maximum 100 characters')
+      .required('Required'),
+    country: Yup.string()
+      .max(100, 'Maximum 100 characters')
+      .required('Required'),
   }),
-  // Step 2
+  // Step 2 — Identity & Financial
   Yup.object({
-    idCardNumber: Yup.string().required('Required'),
-    commercialRegNumber: Yup.string().required('Required'),
+    idCardNumber: Yup.string()
+      .min(6, 'Minimum 6 characters')
+      .max(30, 'Maximum 30 characters')
+      .required('Required'),
+    commercialRegNumber: Yup.string()
+      .matches(/^\d{7,10}$/, 'Must be 7–10 digits')
+      .required('Required'),
     bankAccountNumber: Yup.string()
-      .matches(/^\d{8,}$/, 'Must be at least 8 digits')
+      .matches(/^\d{10,34}$/, 'Must be 10–34 digits (IBAN or account number)')
       .required('Required'),
     bankCardNumber: Yup.string()
-      .matches(/^\d{16}$/, 'Must be exactly 16 digits')
+      .matches(/^\d{13,19}$/, 'Must be 13–19 digits')
       .required('Required'),
     bankCardExpiry: Yup.string()
       .matches(/^(0[1-9]|1[0-2])\/\d{2}$/, 'Must be MM/YY format')
       .required('Required'),
-    bankCardHolderName: Yup.string().required('Required'),
+    bankCardHolderName: Yup.string()
+      .max(100, 'Maximum 100 characters')
+      .required('Required'),
   }),
   // Step 3
   Yup.object({ idCardFrontImage: fileSchema('ID card front image') }),
