@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Formik, Form, Field, ErrorMessage, type FormikHelpers } from 'formik';
 import * as Yup from 'yup';
 import { toast } from 'sonner';
+import { useApplySellerMutation } from '../../../store/slices/marketplace/marketplaceApi';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -351,38 +352,29 @@ const initialValues: FormValues = {
 function ApplySellerPage() {
   const [step, setStep] = useState(0);
   const navigate = useNavigate();
+  const [applySellerMutation] = useApplySellerMutation();
 
   const handleSubmit = async (values: FormValues, helpers: FormikHelpers<FormValues>) => {
-    // Only submit on the last step
     if (step < STEPS.length - 1) return;
 
     helpers.setSubmitting(true);
     try {
       const fd = new FormData();
-      // Text fields
       (Object.keys(values) as (keyof FormValues)[]).forEach((key) => {
         const v = values[key];
         if (typeof v === 'string') fd.append(key, v);
       });
-      // File fields
       if (values.idCardFrontImage) fd.append('idCardFrontImage', values.idCardFrontImage);
       if (values.idCardBackImage)  fd.append('idCardBackImage',  values.idCardBackImage);
       if (values.sellerFaceImage)  fd.append('sellerFaceImage',  values.sellerFaceImage);
 
-      const res = await fetch('/api/seller/apply', { method: 'POST', body: fd });
-      if (!res.ok) {
-        let message = 'Submission failed. Please try again.';
-        try {
-          const text = await res.text();
-          if (text) message = (JSON.parse(text).message) ?? message;
-        } catch { /* ignore parse errors */ }
-        throw new Error(message);
-      }
-
+      await applySellerMutation(fd).unwrap();
       toast.success("Application submitted! We'll review it shortly.");
       navigate('/marketplace/seller', { replace: true });
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Submission failed. Please try again.';
+      const msg =
+        (err as any)?.data?.message ??
+        (err instanceof Error ? err.message : 'Submission failed. Please try again.');
       toast.error(msg);
     } finally {
       helpers.setSubmitting(false);
