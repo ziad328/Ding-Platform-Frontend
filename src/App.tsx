@@ -1,6 +1,6 @@
 import './App.css'
 import { lazy, Suspense } from 'react'
-import { createBrowserRouter, createRoutesFromElements, Route, RouterProvider } from 'react-router-dom'
+import { createBrowserRouter, createRoutesFromElements, Route, RouterProvider, Navigate } from 'react-router-dom'
 import MainLayout from './layout/MainLayout';
 import AuthLayout from './layout/AuthLayout';
 import PublicLayout from './layout/PublicLayout';
@@ -79,6 +79,7 @@ const router = createBrowserRouter(
         <Route path='marketplace/seller/deals' element={<SellerDealsPage />} />
         {/* Marketplace — Admin (ADMIN role only) */}
         <Route element={<AdminGuard />}>
+          <Route path='marketplace/admin' element={<Navigate to='/marketplace/admin/applications' replace />} />
           <Route path='marketplace/admin/applications' element={<AdminApplicationsPage />} />
           <Route path='marketplace/admin/sellers' element={<AdminSellersPage />} />
           <Route path='marketplace/admin/logs' element={<AdminAuditLogsPage />} />
