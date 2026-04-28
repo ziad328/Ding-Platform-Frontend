@@ -76,7 +76,7 @@ function ProductFormModal({ initial, onClose }: ProductFormProps) {
     'border border-neutral-b-200 dark:border-neutral-b-600 ' +
     'text-neutral-b-900 dark:text-dark-text-primary ' +
     'placeholder-neutral-b-400 ' +
-    'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ' +
+    'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent ' +
     'transition-all';
 
   const isBusy = isCreating || isUpdating;
@@ -164,7 +164,7 @@ function ProductFormModal({ initial, onClose }: ProductFormProps) {
             <button
               type="submit"
               disabled={isBusy}
-              className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {isBusy ? 'Saving…' : isEdit ? 'Save Changes' : 'Create'}
             </button>
@@ -222,7 +222,7 @@ function SellerProductsPage() {
           </h2>
           <button
             onClick={() => { setEditing(null); setShowModal(true); }}
-            className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors"
+            className="px-4 py-2 text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600 rounded-xl transition-colors"
           >
             + New Product
           </button>

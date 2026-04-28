@@ -145,7 +145,7 @@ function SellerDetailDrawer({ sellerUserId, onClose }: SellerDrawerProps) {
                   </>
                 )}
                 {seller.status === 'SUSPENDED' && (
-                  <button onClick={handleUnsuspend} disabled={isUnsuspending} className="w-full py-2.5 rounded-xl text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 transition-colors">
+                  <button onClick={handleUnsuspend} disabled={isUnsuspending} className="w-full py-2.5 rounded-xl text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600 disabled:opacity-50 transition-colors">
                     {isUnsuspending ? 'Unsuspending…' : 'Unsuspend'}
                   </button>
                 )}

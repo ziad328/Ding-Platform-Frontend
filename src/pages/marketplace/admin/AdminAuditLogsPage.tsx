@@ -8,7 +8,7 @@ function LogRow({ log }: { log: AdminLog }) {
   return (
     <div className="flex items-start gap-3 bg-white dark:bg-neutral-b-800 border border-neutral-b-200 dark:border-neutral-b-700 rounded-2xl p-4 shadow-sm">
       <div className="shrink-0 mt-0.5">
-        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-sm">
+        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 text-sm">
           📋
         </span>
       </div>

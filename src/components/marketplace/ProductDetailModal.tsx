@@ -86,7 +86,7 @@ function ProductDetailModal({ product, onClose }: ProductDetailModalProps) {
                     onClick={() => setActiveImage(i)}
                     className={`shrink-0 w-14 h-14 rounded-lg overflow-hidden border-2 transition-all
                       ${i === activeImage
-                        ? 'border-blue-500'
+                        ? 'border-primary-500'
                         : 'border-transparent opacity-60 hover:opacity-100'}`}
                   >
                     <img src={img} alt="" className="w-full h-full object-cover" />
@@ -107,7 +107,7 @@ function ProductDetailModal({ product, onClose }: ProductDetailModalProps) {
               </p>
 
               <div className="flex items-center gap-3 mb-4">
-                <span className="text-2xl font-extrabold text-blue-600 dark:text-blue-400">
+                <span className="text-2xl font-extrabold text-primary-600 dark:text-primary-400">
                   {product.currency} {product.price.toFixed(2)}
                 </span>
               </div>
@@ -127,7 +127,7 @@ function ProductDetailModal({ product, onClose }: ProductDetailModalProps) {
               onClick={handleBuy}
               disabled={isBuying || product.quantity === 0}
               className="w-full py-3 px-6 rounded-xl font-semibold text-white
-                bg-blue-600 hover:bg-blue-700 active:bg-blue-800
+                bg-primary-600 hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600 active:bg-primary-800
                 disabled:opacity-50 disabled:cursor-not-allowed
                 transition-colors duration-150"
             >

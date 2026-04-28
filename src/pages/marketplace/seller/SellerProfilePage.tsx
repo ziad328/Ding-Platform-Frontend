@@ -50,7 +50,7 @@ function SellerProfilePage() {
     'border border-neutral-b-200 dark:border-neutral-b-600 ' +
     'text-neutral-b-900 dark:text-dark-text-primary ' +
     'placeholder-neutral-b-400 dark:placeholder-neutral-b-500 ' +
-    'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ' +
+    'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent ' +
     'transition-all';
 
   return (
@@ -135,7 +135,7 @@ function SellerProfilePage() {
                 type="submit"
                 disabled={isSaving}
                 className="w-full py-3 px-6 rounded-xl font-semibold text-white
-                  bg-blue-600 hover:bg-blue-700 active:bg-blue-800
+                  bg-primary-600 hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600 active:bg-primary-800
                   disabled:opacity-50 disabled:cursor-not-allowed
                   transition-colors duration-150"
               >

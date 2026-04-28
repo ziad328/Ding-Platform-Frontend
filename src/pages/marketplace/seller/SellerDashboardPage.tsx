@@ -49,7 +49,7 @@ function SellerDashboardPage() {
                     <StatusBadge status={profile.status} />
                     <button
                       onClick={() => navigate('/marketplace/seller/profile')}
-                      className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                      className="text-xs text-primary-600 dark:text-primary-400 hover:underline"
                     >
                       Edit Profile →
                     </button>
@@ -70,7 +70,7 @@ function SellerDashboardPage() {
                 <p className="text-3xl font-extrabold text-neutral-b-900 dark:text-dark-text-primary">
                   {productsData?.total ?? '—'}
                 </p>
-                <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">Manage →</p>
+                <p className="text-xs text-primary-600 dark:text-primary-400 mt-1">Manage</p>
               </div>
 
               <div
@@ -83,7 +83,7 @@ function SellerDashboardPage() {
                 <p className="text-3xl font-extrabold text-neutral-b-900 dark:text-dark-text-primary">
                   {dealsData?.total ?? '—'}
                 </p>
-                <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">View →</p>
+                <p className="text-xs text-primary-600 dark:text-primary-400 mt-1">View</p>
               </div>
             </div>
           </>

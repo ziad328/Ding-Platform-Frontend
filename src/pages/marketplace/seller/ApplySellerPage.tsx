@@ -109,7 +109,7 @@ function StepIndicator({ current, total }: { current: number; total: number }) {
               </div>
               <span
                 className={`text-[10px] mt-1 font-medium whitespace-nowrap
-                  ${active ? 'text-blue-600 dark:text-blue-400' : done ? 'text-neutral-b-600 dark:text-dark-text-secondary' : 'text-neutral-b-400 dark:text-dark-text-muted'}`}
+                  ${active ? 'text-primary-600 dark:text-primary-400' : done ? 'text-neutral-b-600 dark:text-dark-text-secondary' : 'text-neutral-b-400 dark:text-dark-text-muted'}`}
               >
                 {step.label}
               </span>

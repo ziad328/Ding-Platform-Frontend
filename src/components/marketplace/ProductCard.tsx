@@ -16,7 +16,7 @@ function ProductCard({ product, onClick }: ProductCardProps) {
         border border-neutral-b-200 dark:border-neutral-b-700
         shadow-sm hover:shadow-md
         transition-all duration-200 hover:-translate-y-0.5 focus:outline-none
-        focus-visible:ring-2 focus-visible:ring-blue-500"
+        focus-visible:ring-2 focus-visible:ring-primary-500"
     >
       {/* Image */}
       <div className="relative w-full aspect-square bg-neutral-b-100 dark:bg-neutral-b-700 overflow-hidden">
@@ -64,7 +64,7 @@ function ProductCard({ product, onClick }: ProductCardProps) {
           {product.description}
         </p>
         <div className="flex items-center justify-between">
-          <span className="text-base font-bold text-blue-600 dark:text-blue-400">
+          <span className="text-base font-bold text-primary-600 dark:text-primary-400">
             {product.currency} {product.price.toFixed(2)}
           </span>
           <span className="text-xs text-neutral-b-400 dark:text-dark-text-muted">

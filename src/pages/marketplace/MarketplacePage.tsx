@@ -44,7 +44,7 @@ function MarketplacePage() {
             <button
               onClick={() => navigate('/marketplace/seller')}
               className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium
-                bg-blue-600 hover:bg-blue-700 text-white
+                bg-primary-600 hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600 text-white
                 transition-colors duration-150"
             >
               <span>🛍️</span>
