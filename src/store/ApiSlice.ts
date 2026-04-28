@@ -72,6 +72,13 @@ const tagTypes = [
   'Likes',
   'Rooms',
   'Messages',
+  // Marketplace
+  'Products',
+  'SellerProfile',
+  'Applications',
+  'Deals',
+  'Sellers',
+  'AdminLogs',
 ] as const;
 
 export const apiSlice = createApi({
