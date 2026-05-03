@@ -46,12 +46,16 @@ export interface SellerProfile {
   businessName: string;
   phoneNumber: string;
   city: string;
+  country?: string;
+  rating?: number;
+  totalSales?: number;
   status: SellerStatus;
-  createdAt: string;
-  updatedAt: string;
+  registeredAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
-export type SellerStatus = 'ACTIVE' | 'BANNED' | 'SUSPENDED';
+export type SellerStatus = 'active' | 'banned' | 'suspended' | 'ACTIVE' | 'BANNED' | 'SUSPENDED';
 
 export interface UpdateSellerProfilePayload {
   businessName?: string;
@@ -64,18 +68,40 @@ export interface UpdateSellerProfilePayload {
 export interface SellerApplication {
   id: string;
   userId: string;
+  /** Full name of the applicant (returned as `fullName` by the API) */
+  fullName?: string;
+  /** Alias kept for backwards compatibility */
   userName?: string;
+  /** Email of the applicant (returned as `email` by the API) */
+  email?: string;
+  /** Alias kept for backwards compatibility */
   userEmail?: string;
   status: ApplicationStatus;
-  businessName: string;
-  phoneNumber: string;
-  city: string;
+  businessName?: string;
+  phoneNumber?: string;
+  city?: string;
+  country?: string;
+  /** Submission timestamp (returned as `submittedAt` by the API) */
+  submittedAt?: string;
+  /** Alias kept for backwards compatibility */
+  createdAt?: string;
+  updatedAt?: string;
+  reviewedAt?: string | null;
+  rejectionReason?: string | null;
   declineReason?: string;
-  createdAt: string;
-  updatedAt: string;
+  // KYC fields from detail endpoint
+  address?: string;
+  idCardNumber?: string;
+  commercialRegNumber?: string;
+  bankAccountNumber?: string;
+  bankCardHolderName?: string;
+  bankCardExpiry?: string;
+  idCardFrontImageUrl?: string;
+  idCardBackImageUrl?: string;
+  sellerFaceImageUrl?: string;
 }
 
-export type ApplicationStatus = 'PENDING' | 'APPROVED' | 'DECLINED';
+export type ApplicationStatus = 'pending' | 'approved' | 'declined' | 'PENDING' | 'APPROVED' | 'DECLINED';
 
 // ─── Deal / Transaction ────────────────────────────────────────────────────
 
