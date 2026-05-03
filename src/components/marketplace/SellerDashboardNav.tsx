@@ -1,16 +1,16 @@
 import { NavLink } from 'react-router-dom';
 
 const NAV_ITEMS = [
-  { to: '/marketplace/seller',          label: 'Dashboard',  icon: '🏠' },
-  { to: '/marketplace/seller/profile',  label: 'Profile',    icon: '👤' },
-  { to: '/marketplace/seller/products', label: 'Products',   icon: '📦' },
-  { to: '/marketplace/seller/deals',    label: 'Deals',      icon: '🤝' },
+  { to: '/marketplace/seller',          label: 'Dashboard' },
+  { to: '/marketplace/seller/profile',  label: 'Profile' },
+  { to: '/marketplace/seller/products', label: 'Products' },
+  { to: '/marketplace/seller/deals',    label: 'Deals' },
 ];
 
 function SellerDashboardNav() {
   return (
     <nav className="flex gap-1 p-1 rounded-xl bg-neutral-b-100 dark:bg-neutral-b-800 mb-6 flex-wrap">
-      {NAV_ITEMS.map(({ to, label, icon }) => (
+      {NAV_ITEMS.map(({ to, label }) => (
         <NavLink
           key={to}
           to={to}
@@ -24,7 +24,6 @@ function SellerDashboardNav() {
              }`
           }
         >
-          <span>{icon}</span>
           {label}
         </NavLink>
       ))}

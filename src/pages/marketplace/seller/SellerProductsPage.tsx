@@ -95,7 +95,7 @@ function ProductFormModal({ initial, onClose }: ProductFormProps) {
             {isEdit ? 'Edit Product' : 'New Product'}
           </h3>
           <button onClick={onClose} className="text-neutral-b-500 hover:text-neutral-b-800 dark:text-dark-text-muted dark:hover:text-dark-text-primary transition-colors">
-            ✕
+            Close
           </button>
         </div>
 
@@ -255,7 +255,7 @@ function SellerProductsPage() {
                   {product.images?.[0] ? (
                     <img src={product.images[0]} alt={product.title} className="w-full h-full object-cover" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-neutral-b-400 text-xl">📦</div>
+                    <div className="w-full h-full flex items-center justify-center text-neutral-b-400 text-xs">No img</div>
                   )}
                 </div>
 

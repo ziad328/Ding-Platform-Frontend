@@ -47,7 +47,6 @@ function MarketplacePage() {
                 bg-primary-600 hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600 text-white
                 transition-colors duration-150"
             >
-              <span>🛍️</span>
               <span className="hidden sm:inline">Become a Seller</span>
               <span className="sm:hidden">Sell</span>
             </button>
@@ -62,7 +61,6 @@ function MarketplacePage() {
                   hover:bg-neutral-b-50 dark:hover:bg-neutral-b-700
                   transition-colors duration-150"
               >
-                <span>⚙️</span>
                 <span className="hidden sm:inline">Admin</span>
               </button>
             )}
@@ -75,7 +73,6 @@ function MarketplacePage() {
             bg-amber-50 dark:bg-amber-900/20
             border border-amber-200 dark:border-amber-700/40
             text-amber-700 dark:text-amber-400 text-xs font-medium">
-            <span>🧪</span>
             Showing demo products — live listings will appear here once sellers add products.
           </div>
         )}

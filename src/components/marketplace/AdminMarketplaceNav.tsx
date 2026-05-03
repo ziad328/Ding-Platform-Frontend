@@ -1,15 +1,15 @@
 import { NavLink } from 'react-router-dom';
 
 const ADMIN_NAV_ITEMS = [
-  { to: '/marketplace/admin/applications', label: 'Applications', icon: '📋' },
-  { to: '/marketplace/admin/sellers',      label: 'Sellers',      icon: '🏪' },
-  { to: '/marketplace/admin/logs',         label: 'Audit Logs',   icon: '🗒️' },
+  { to: '/marketplace/admin/applications', label: 'Applications' },
+  { to: '/marketplace/admin/sellers',      label: 'Sellers' },
+  { to: '/marketplace/admin/logs',         label: 'Audit Logs' },
 ];
 
 function AdminMarketplaceNav() {
   return (
     <nav className="flex gap-1 p-1 rounded-xl bg-neutral-b-100 dark:bg-neutral-b-800 mb-6 flex-wrap">
-      {ADMIN_NAV_ITEMS.map(({ to, label, icon }) => (
+      {ADMIN_NAV_ITEMS.map(({ to, label }) => (
         <NavLink
           key={to}
           to={to}
@@ -22,7 +22,6 @@ function AdminMarketplaceNav() {
              }`
           }
         >
-          <span>{icon}</span>
           {label}
         </NavLink>
       ))}
