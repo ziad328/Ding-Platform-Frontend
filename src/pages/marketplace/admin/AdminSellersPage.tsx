@@ -124,7 +124,7 @@ function SellerDetailDrawer({ sellerUserId, onClose }: SellerDrawerProps) {
         >
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-bold text-neutral-b-900 dark:text-dark-text-primary">Seller Detail</h3>
-            <button onClick={onClose} className="text-neutral-b-400 hover:text-neutral-b-700 dark:hover:text-dark-text-secondary">✕</button>
+            <button onClick={onClose} className="text-neutral-b-400 hover:text-neutral-b-700 dark:hover:text-dark-text-secondary">Close</button>
           </div>
 
           {isLoading && <div className="animate-pulse space-y-3"><div className="h-6 bg-neutral-b-100 dark:bg-neutral-b-700 rounded" /><div className="h-40 bg-neutral-b-100 dark:bg-neutral-b-700 rounded" /></div>}
@@ -135,21 +135,21 @@ function SellerDetailDrawer({ sellerUserId, onClose }: SellerDrawerProps) {
               <div><p className="text-xs uppercase font-medium text-neutral-b-400 mb-0.5">Business</p><p className="text-sm text-neutral-b-900 dark:text-dark-text-primary">{seller.businessName}</p></div>
               <div><p className="text-xs uppercase font-medium text-neutral-b-400 mb-0.5">Phone</p><p className="text-sm text-neutral-b-900 dark:text-dark-text-primary">{seller.phoneNumber}</p></div>
               <div><p className="text-xs uppercase font-medium text-neutral-b-400 mb-0.5">City</p><p className="text-sm text-neutral-b-900 dark:text-dark-text-primary">{seller.city}</p></div>
-              <div><p className="text-xs uppercase font-medium text-neutral-b-400 mb-0.5">Member Since</p><p className="text-sm text-neutral-b-900 dark:text-dark-text-primary">{new Date(seller.createdAt).toLocaleDateString()}</p></div>
+              <div><p className="text-xs uppercase font-medium text-neutral-b-400 mb-0.5">Member Since</p><p className="text-sm text-neutral-b-900 dark:text-dark-text-primary">{new Date(seller.registeredAt ?? seller.createdAt ?? Date.now()).toLocaleDateString()}</p></div>
 
               <div className="pt-4 space-y-2">
-                {seller.status === 'ACTIVE' && (
+                {(seller.status === 'ACTIVE' || seller.status === 'active') && (
                   <>
                     <button onClick={() => setActionModal('suspend')} className="w-full py-2.5 rounded-xl text-sm font-semibold text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-900 hover:bg-orange-50 dark:hover:bg-orange-950 transition-colors">Suspend</button>
                     <button onClick={() => setActionModal('ban')} className="w-full py-2.5 rounded-xl text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors">Ban</button>
                   </>
                 )}
-                {seller.status === 'SUSPENDED' && (
+                {(seller.status === 'SUSPENDED' || seller.status === 'suspended') && (
                   <button onClick={handleUnsuspend} disabled={isUnsuspending} className="w-full py-2.5 rounded-xl text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600 disabled:opacity-50 transition-colors">
                     {isUnsuspending ? 'Unsuspending…' : 'Unsuspend'}
                   </button>
                 )}
-                {seller.status === 'BANNED' && (
+                {(seller.status === 'BANNED' || seller.status === 'banned') && (
                   <button onClick={handleUnban} disabled={isUnbanning} className="w-full py-2.5 rounded-xl text-sm font-semibold text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 transition-colors">
                     {isUnbanning ? 'Unbanning…' : 'Unban'}
                   </button>

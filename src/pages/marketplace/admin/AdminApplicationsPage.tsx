@@ -59,7 +59,7 @@ function ApplicationDetailDrawer({ applicationId, onClose }: DetailDrawerProps) 
       >
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-lg font-bold text-neutral-b-900 dark:text-dark-text-primary">Application Detail</h3>
-          <button onClick={onClose} className="text-neutral-b-400 hover:text-neutral-b-700 dark:hover:text-dark-text-secondary transition-colors">✕</button>
+          <button onClick={onClose} className="text-neutral-b-400 hover:text-neutral-b-700 dark:hover:text-dark-text-secondary transition-colors">Close</button>
         </div>
 
         {isLoading && <div className="animate-pulse space-y-3"><div className="h-6 bg-neutral-b-100 dark:bg-neutral-b-700 rounded" /><div className="h-24 bg-neutral-b-100 dark:bg-neutral-b-700 rounded" /></div>}
@@ -70,21 +70,21 @@ function ApplicationDetailDrawer({ applicationId, onClose }: DetailDrawerProps) 
               <p className="text-xs uppercase font-medium text-neutral-b-400 dark:text-dark-text-muted mb-1">Status</p>
               <StatusBadge status={application.status} />
             </div>
-            <Field label="Applicant" value={application.userName ?? application.userId} />
-            <Field label="Email" value={application.userEmail ?? '—'} />
-            <Field label="Business Name" value={application.businessName} />
-            <Field label="Phone" value={application.phoneNumber} />
-            <Field label="City" value={application.city} />
-            <Field label="Applied" value={new Date(application.createdAt).toLocaleDateString()} />
+            <Field label="Applicant" value={application.fullName ?? application.userName ?? application.userId} />
+            <Field label="Email" value={application.email ?? application.userEmail ?? '—'} />
+            <Field label="Business Name" value={application.businessName ?? '—'} />
+            <Field label="Phone" value={application.phoneNumber ?? '—'} />
+            <Field label="City" value={application.city ?? '—'} />
+            <Field label="Applied" value={new Date(application.submittedAt ?? application.createdAt ?? Date.now()).toLocaleDateString()} />
 
-            {application.status === 'PENDING' && (
+            {(application.status === 'PENDING' || application.status === 'pending') && (
               <div className="pt-4 space-y-3">
                 <button
                   onClick={handleApprove}
                   disabled={isApproving}
                   className="w-full py-2.5 rounded-xl text-sm font-semibold text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 transition-colors"
                 >
-                  {isApproving ? 'Approving…' : '✓ Approve'}
+                  {isApproving ? 'Approving...' : 'Approve'}
                 </button>
 
                 {!showDeclineInput ? (
@@ -92,7 +92,7 @@ function ApplicationDetailDrawer({ applicationId, onClose }: DetailDrawerProps) 
                     onClick={() => setShowDeclineInput(true)}
                     className="w-full py-2.5 rounded-xl text-sm font-semibold text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900 hover:bg-red-50 dark:hover:bg-red-950 transition-colors"
                   >
-                    ✕ Decline
+                    Decline
                   </button>
                 ) : (
                   <div className="space-y-2">
@@ -112,7 +112,7 @@ function ApplicationDetailDrawer({ applicationId, onClose }: DetailDrawerProps) 
                       disabled={isDeclining}
                       className="w-full py-2.5 rounded-xl text-sm font-semibold text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 transition-colors"
                     >
-                      {isDeclining ? 'Declining…' : 'Confirm Decline'}
+                      {isDeclining ? 'Declining...' : 'Confirm Decline'}
                     </button>
                   </div>
                 )}
@@ -196,10 +196,10 @@ function AdminApplicationsPage() {
                     {app.businessName}
                   </p>
                   <p className="text-xs text-neutral-b-500 dark:text-dark-text-muted">
-                    {app.userName ?? app.userId} · {app.city}
+                  {app.fullName ?? app.userName ?? app.userId} · {app.city}
                   </p>
                   <p className="text-xs text-neutral-b-400 dark:text-dark-text-muted">
-                    {new Date(app.createdAt).toLocaleDateString()}
+                  {new Date(app.submittedAt ?? app.createdAt ?? Date.now()).toLocaleDateString()}
                   </p>
                 </div>
                 <StatusBadge status={app.status} />

@@ -3,7 +3,7 @@ import { useGetApplicationStatusQuery } from '../../../store/slices/marketplace/
 import StatusBadge from '../../../components/marketplace/StatusBadge';
 
 /**
- * SellerGatePage — entry point for /marketplace/seller.
+ * SellerGatePage - entry point for /marketplace/seller.
  * Checks application status and renders the appropriate state.
  */
 function SellerGatePage() {
@@ -12,8 +12,8 @@ function SellerGatePage() {
 
   const application = data?.data;
 
-  // APPROVED → redirect to dashboard immediately
-  if (!isLoading && application?.status === 'APPROVED') {
+  // APPROVED -> redirect to dashboard immediately
+  if (!isLoading && (application?.status === 'APPROVED' || application?.status === 'approved')) {
     navigate('/marketplace/seller/dashboard', { replace: true });
     return null;
   }
@@ -64,7 +64,7 @@ function SellerGatePage() {
         )}
 
         {/* PENDING */}
-        {!isLoading && application?.status === 'PENDING' && (
+        {!isLoading && (application?.status === 'PENDING' || application?.status === 'pending') && (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <div className="max-w-sm">
               <div className="text-5xl mb-4">⏳</div>
@@ -82,7 +82,7 @@ function SellerGatePage() {
         )}
 
         {/* DECLINED */}
-        {!isLoading && application?.status === 'DECLINED' && (
+        {!isLoading && (application?.status === 'DECLINED' || application?.status === 'declined') && (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <div className="max-w-sm">
               <div className="text-5xl mb-4">❌</div>
@@ -113,4 +113,3 @@ function SellerGatePage() {
 }
 
 export default SellerGatePage;
-
