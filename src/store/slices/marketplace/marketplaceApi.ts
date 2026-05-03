@@ -138,6 +138,21 @@ export const marketplaceApi = apiSlice.injectEndpoints({
 
     getPendingApplications: builder.query<PaginatedResponse<SellerApplication>, PaginationParams | void>({
       query: (params) => `marketplace/admin/applications?${buildPaginationParams(params ?? {})}`,
+      transformResponse: (raw: any): PaginatedResponse<SellerApplication> => {
+        // API shape: { data: { data: [...applications], total, page, limit } }
+        const inner = raw?.data ?? raw;
+        const items: SellerApplication[] = Array.isArray(inner?.data) ? inner.data : [];
+        const total = inner?.total ?? items.length;
+        const page = inner?.page ?? 1;
+        const limit = inner?.limit ?? 20;
+        return {
+          data: items,
+          total,
+          page,
+          limit,
+          totalPages: (inner?.totalPages ?? Math.ceil(total / limit)) || 1,
+        };
+      },
       providesTags: [{ type: 'Applications', id: 'LIST' }],
     }),
 
@@ -168,6 +183,21 @@ export const marketplaceApi = apiSlice.injectEndpoints({
 
     getSellers: builder.query<PaginatedResponse<SellerProfile>, PaginationParams | void>({
       query: (params) => `marketplace/admin/sellers?${buildPaginationParams(params ?? {})}`,
+      transformResponse: (raw: any): PaginatedResponse<SellerProfile> => {
+        // API shape: { data: { data: [...sellers], total, page, limit } }
+        const inner = raw?.data ?? raw;
+        const items: SellerProfile[] = Array.isArray(inner?.data) ? inner.data : [];
+        const total = inner?.total ?? items.length;
+        const page = inner?.page ?? 1;
+        const limit = inner?.limit ?? 20;
+        return {
+          data: items,
+          total,
+          page,
+          limit,
+          totalPages: (inner?.totalPages ?? Math.ceil(total / limit)) || 1,
+        };
+      },
       providesTags: [{ type: 'Sellers', id: 'LIST' }],
     }),
 
