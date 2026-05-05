@@ -4,7 +4,7 @@ import { InputField } from '../../components/atoms/InputField';
 import { Logo } from '../../components/atoms/Logo';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useResetPasswordMutation } from '../../store/slices/auth/authApi';
-import { enqueueSnackbar } from 'notistack';
+import { toast } from 'sonner';
 
 // Types
 interface ResetPasswordFormValues {
@@ -35,9 +35,7 @@ export default function ResetPasswordPage() {
 
   const handleFormSubmit = async (values: ResetPasswordFormValues) => {
     if (!email) {
-      enqueueSnackbar('Email not found. Please try the forgot password process again.', {
-        variant: 'error',
-      });
+      toast.error('Email not found. Please try the forgot password process again.');
       navigate('/auth/forgot-password');
       return;
     }
@@ -48,15 +46,11 @@ export default function ResetPasswordPage() {
         newPassword: values.newPassword
       }).unwrap();
 
-      enqueueSnackbar('Password reset successfully!', {
-        variant: 'success'
-      });
+      toast.success('Password reset successfully!');
 
       navigate('/auth/signin');
     } catch (error) {
-      enqueueSnackbar((error as any)?.data?.message || 'Failed to reset password', {
-        variant: 'error',
-      });
+      toast.error((error as any)?.data?.message || 'Failed to reset password');
     }
   };
 
