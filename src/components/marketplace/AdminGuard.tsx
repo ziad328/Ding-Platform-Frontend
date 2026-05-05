@@ -1,4 +1,4 @@
-import { Outlet } from 'react-router-dom';
+import { Outlet, Navigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { selectCurrentUser } from '../../store/slices/auth/auth';
 
@@ -9,10 +9,9 @@ import { selectCurrentUser } from '../../store/slices/auth/auth';
 function AdminGuard() {
   const _user = useSelector(selectCurrentUser);
 
-  // Uncomment to enforce ADMIN-only access:
-  // if (!_user || _user.role !== 'ADMIN') {
-  //   return <Navigate to="/marketplace" replace />;
-  // }
+  if (!_user || _user.role !== 'ADMIN') {
+    return <Navigate to="/marketplace" replace />;
+  }
 
   return <Outlet />;
 }
