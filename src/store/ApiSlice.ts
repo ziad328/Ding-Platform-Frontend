@@ -79,7 +79,9 @@ const tagTypes = [
   'Deals',
   'Sellers',
   'AdminLogs',
+  'Privacy',
 ] as const;
+
 
 export const apiSlice = createApi({
   baseQuery: baseQueryWithReAuth,
