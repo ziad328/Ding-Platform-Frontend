@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Eye, EyeOff, Lock, CheckCircle2 } from 'lucide-react';
+import { Eye, EyeOff, Lock } from 'lucide-react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import { toast } from 'sonner';
@@ -71,8 +71,6 @@ function PasswordField({ id, name, label, placeholder, visible, onToggle }: Pass
 
 function SecuritySection() {
   const [visibility, setVisibility] = useState({ old: false, new_: false, confirm: false });
-  const [success, setSuccess] = useState(false);
-
   const [updatePassword, { isLoading }] = useUpdatePasswordMutation();
 
   const toggle = (key: keyof typeof visibility) =>
@@ -93,30 +91,19 @@ function SecuritySection() {
         Update your password to keep your account secure.
       </p>
 
-      {success && (
-        <div
-          role="status"
-          className="flex items-center gap-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800
-            text-green-700 dark:text-green-400 rounded-xl px-4 py-3 text-sm mb-5"
-        >
-          <CheckCircle2 size={16} />
-          Password updated successfully!
-        </div>
-      )}
-
       <Formik
         initialValues={{ oldPassword: '', newPassword: '', confirmPassword: '' }}
         validationSchema={schema}
         onSubmit={async (values, { resetForm }) => {
-          setSuccess(false);
           try {
             await updatePassword({
               oldPassword: values.oldPassword,
               newPassword: values.newPassword,
             }).unwrap();
-            setSuccess(true);
             resetForm();
-            toast.success('Password updated successfully');
+            toast.success('Password updated — please refresh and sign in again.', {
+              duration: 6000,
+            });
           } catch (err: any) {
             const msg = err?.data?.message ?? 'Failed to update password. Please try again.';
             toast.error(msg);
