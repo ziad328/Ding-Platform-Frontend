@@ -1,11 +1,12 @@
 import './App.css'
 import { lazy, Suspense } from 'react'
-import { createBrowserRouter, createRoutesFromElements, Route, RouterProvider } from 'react-router-dom'
+import { createBrowserRouter, createRoutesFromElements, Route, RouterProvider, Navigate } from 'react-router-dom'
 import MainLayout from './layout/MainLayout';
 import AuthLayout from './layout/AuthLayout';
 import PublicLayout from './layout/PublicLayout';
 import { Toaster } from 'sonner';
 import { Logo } from './components/atoms/Logo';
+import AdminGuard from './components/marketplace/AdminGuard';
 
 // Lazy load all page components
 const HomePage = lazy(() => import('./pages/home/HomePage'))
@@ -27,6 +28,17 @@ const MessagesPage = lazy(() => import('./pages/messages/MessagesPage'))
 const ReelsPage = lazy(() => import('./pages/reels/ReelsPage'))
 const MarketplacePage = lazy(() => import('./pages/marketplace/MarketplacePage'))
 const SettingsPage = lazy(() => import('./pages/settings/SettingsPage'))
+// Marketplace — Seller
+const SellerGatePage = lazy(() => import('./pages/marketplace/seller/SellerGatePage'))
+const ApplySellerPage = lazy(() => import('./pages/marketplace/seller/ApplySellerPage'))
+const SellerDashboardPage = lazy(() => import('./pages/marketplace/seller/SellerDashboardPage'))
+const SellerProfilePage = lazy(() => import('./pages/marketplace/seller/SellerProfilePage'))
+const SellerProductsPage = lazy(() => import('./pages/marketplace/seller/SellerProductsPage'))
+const SellerDealsPage = lazy(() => import('./pages/marketplace/seller/SellerDealsPage'))
+// Marketplace — Admin
+const AdminApplicationsPage = lazy(() => import('./pages/marketplace/admin/AdminApplicationsPage'))
+const AdminSellersPage = lazy(() => import('./pages/marketplace/admin/AdminSellersPage'))
+const AdminAuditLogsPage = lazy(() => import('./pages/marketplace/admin/AdminAuditLogsPage'))
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -58,6 +70,20 @@ const router = createBrowserRouter(
         <Route path='messages' element={<MessagesPage />} />
         <Route path='reels' element={<ReelsPage />} />
         <Route path='marketplace' element={<MarketplacePage />} />
+        {/* Marketplace — Seller Portal */}
+        <Route path='marketplace/seller' element={<SellerGatePage />} />
+        <Route path='marketplace/seller/apply' element={<ApplySellerPage />} />
+        <Route path='marketplace/seller/dashboard' element={<SellerDashboardPage />} />
+        <Route path='marketplace/seller/profile' element={<SellerProfilePage />} />
+        <Route path='marketplace/seller/products' element={<SellerProductsPage />} />
+        <Route path='marketplace/seller/deals' element={<SellerDealsPage />} />
+        {/* Marketplace — Admin (ADMIN role only) */}
+        <Route element={<AdminGuard />}>
+          <Route path='marketplace/admin' element={<Navigate to='/marketplace/admin/applications' replace />} />
+          <Route path='marketplace/admin/applications' element={<AdminApplicationsPage />} />
+          <Route path='marketplace/admin/sellers' element={<AdminSellersPage />} />
+          <Route path='marketplace/admin/logs' element={<AdminAuditLogsPage />} />
+        </Route>
         <Route path='settings' element={<SettingsPage />} />
         <Route path='*' element={<NotFoundPage />} />
       </Route>
