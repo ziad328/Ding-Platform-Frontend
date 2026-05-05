@@ -1,10 +1,10 @@
 import { NavLink } from 'react-router-dom';
 
 const NAV_ITEMS = [
-  { to: '/marketplace/seller',          label: 'Dashboard' },
-  { to: '/marketplace/seller/profile',  label: 'Profile' },
-  { to: '/marketplace/seller/products', label: 'Products' },
-  { to: '/marketplace/seller/deals',    label: 'Deals' },
+  { to: '/marketplace/seller/dashboard', label: 'Dashboard' },
+  { to: '/marketplace/seller/profile',   label: 'Profile' },
+  { to: '/marketplace/seller/products',  label: 'Products' },
+  { to: '/marketplace/seller/deals',     label: 'Deals' },
 ];
 
 function SellerDashboardNav() {
@@ -14,7 +14,6 @@ function SellerDashboardNav() {
         <NavLink
           key={to}
           to={to}
-          end={to === '/marketplace/seller'}
           className={({ isActive }) =>
             `flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors
              ${
