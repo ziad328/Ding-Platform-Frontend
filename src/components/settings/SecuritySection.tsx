@@ -3,7 +3,7 @@ import { Eye, EyeOff, Lock } from 'lucide-react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import { toast } from 'sonner';
-import { useUpdatePasswordMutation } from '../../../store/slices/settings/settingsApi';
+import { useUpdatePasswordMutation } from '../../store/slices/settings/settingsApi';
 
 const schema = Yup.object({
   oldPassword: Yup.string().required('Current password is required'),

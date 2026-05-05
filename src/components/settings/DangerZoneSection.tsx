@@ -4,11 +4,11 @@ import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { selectCurrentUser, logOut } from '../../../store/slices/auth/auth';
+import { selectCurrentUser, logOut } from '../../store/slices/auth/auth';
 import {
   useToggleUserActivityMutation,
   useDeleteUserMutation,
-} from '../../../store/slices/settings/settingsApi';
+} from '../../store/slices/settings/settingsApi';
 import ConfirmationModal from './ConfirmationModal';
 
 // ─── Individual Action Card ────────────────────────────────────────────────
@@ -61,11 +61,10 @@ function DangerCard({
       <motion.div
         animate={{ opacity: hovered ? 1 : 0 }}
         transition={{ duration: 0.3 }}
-        className={`absolute inset-0 pointer-events-none ${
-          isWarning
+        className={`absolute inset-0 pointer-events-none ${isWarning
             ? 'bg-amber-400/5 dark:bg-amber-400/5'
             : 'bg-red-400/5 dark:bg-red-400/5'
-        }`}
+          }`}
       />
 
       {/* Icon */}

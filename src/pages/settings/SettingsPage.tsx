@@ -1,7 +1,7 @@
-import AppearanceSection from './components/AppearanceSection';
-import SecuritySection from './components/SecuritySection';
-import ProfilePrivacySection from './components/ProfilePrivacySection';
-import DangerZoneSection from './components/DangerZoneSection';
+import AppearanceSection from '../../components/settings/AppearanceSection';
+import SecuritySection from '../../components/settings/SecuritySection';
+import ProfilePrivacySection from '../../components/settings/ProfilePrivacySection';
+import DangerZoneSection from '../../components/settings/DangerZoneSection';
 
 function SettingsPage() {
   return (

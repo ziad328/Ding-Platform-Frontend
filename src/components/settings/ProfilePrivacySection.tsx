@@ -6,7 +6,7 @@ import {
   useUpdateProfilePrivacyMutation,
   type VisibilityLevel,
   type ProfilePrivacyData,
-} from '../../../store/slices/settings/settingsApi';
+} from '../../store/slices/settings/settingsApi';
 
 type VisibilityOption = { value: VisibilityLevel; label: string; description: string };
 

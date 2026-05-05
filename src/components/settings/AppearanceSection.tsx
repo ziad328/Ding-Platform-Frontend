@@ -1,6 +1,6 @@
 import { useDispatch, useSelector } from 'react-redux';
 import { Moon } from 'lucide-react';
-import { toggleTheme, selectIsDark } from '../../../store/slices/theme/themeSlice';
+import { toggleTheme, selectIsDark } from '../../store/slices/theme/themeSlice';
 import { useEffect } from 'react';
 
 function AppearanceSection() {
