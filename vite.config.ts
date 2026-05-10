@@ -37,7 +37,7 @@ export default defineConfig({
             return 'animation'
           if (['formik', 'yup'].includes(pkg))
             return 'forms'
-          if (['notistack', 'lucide-react'].includes(pkg))
+          if (['lucide-react'].includes(pkg))
             return 'ui'
         }
       }
