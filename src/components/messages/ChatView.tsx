@@ -41,7 +41,11 @@ const ChatView: React.FC<ChatViewProps> = ({ conversation, messages, roomId, onB
                 )}
 
                 {messages.map((message) => (
-                    <MessageBubble key={message.id} message={message} senderName={conversation.name} />
+                    <MessageBubble
+                        key={message.id ?? `${message.timestamp}-${message.content}`}
+                        message={message}
+                        senderName={conversation.name}
+                    />
                 ))}
 
                 <div ref={messagesEndRef} />
