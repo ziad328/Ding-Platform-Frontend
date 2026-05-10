@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { X, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSelector } from 'react-redux';
@@ -29,7 +29,6 @@ const NewMessageModal: React.FC<NewMessageModalProps> = ({ isOpen, onClose, onSe
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
     const { isLoading: isFriendsLoading } = useGetFriendsQuery(undefined, { skip: !isOpen });
-
     const friendsList = useSelector((state: RootState) => state.friends?.list);
 
     const friends = useMemo(() =>

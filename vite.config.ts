@@ -10,31 +10,35 @@ export default defineConfig({
     port: 5173,
     strictPort: true,
     proxy: {
-      // HTTP API calls: /api/v1/* → https://ding-platform-backend.onrender.com/api/v1/*
-      '/api/v1': {
-        target: 'https://ding-platform-backend.onrender.com',
+      '/api': {
+        target: 'http://localhost:3000',
         changeOrigin: true,
-        secure: false,
-      },
-      // WebSocket: /socket.io/* → backend (for dev socket connections)
-      '/socket.io': {
-        target: 'https://ding-platform-backend.onrender.com',
-        changeOrigin: true,
-        secure: false,
-        ws: true,
       },
     },
   },
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom', 'react/jsx-runtime'],
-          'router': ['react-router-dom'],
-          'animation': ['framer-motion', 'motion'],
-          'state': ['@reduxjs/toolkit', 'react-redux', 'redux-persist'],
-          'forms': ['formik', 'yup'],
-          'ui': ['notistack', 'lucide-react']
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return
+
+          // Extract exact package name (supports scoped packages like @reduxjs/toolkit)
+          const match = id.match(/node_modules[/\\]((@[^/\\]+[/\\])?[^/\\]+)/)
+          if (!match) return
+          const pkg = match[1].replace(/\\/g, '/')
+
+          if (['react', 'react-dom', 'scheduler'].includes(pkg))
+            return 'react-vendor'
+          if (['@reduxjs/toolkit', 'react-redux', 'redux', 'redux-persist', 'immer'].includes(pkg))
+            return 'state'
+          if (['react-router-dom', 'react-router', '@remix-run/router'].includes(pkg))
+            return 'router'
+          if (['framer-motion', 'motion'].includes(pkg))
+            return 'animation'
+          if (['formik', 'yup'].includes(pkg))
+            return 'forms'
+          if (['notistack', 'lucide-react'].includes(pkg))
+            return 'ui'
         }
       }
     },

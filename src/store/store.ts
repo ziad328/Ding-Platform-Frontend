@@ -12,6 +12,7 @@ import feedReducer from './slices/feed/feed';
 import commentReducer from './slices/comment/commentSlice';
 import likeReducer from './slices/like/likeSlice';
 import { chatReducer } from './slices/chat';
+import themeReducer from './slices/theme/themeSlice';
 import { apiSlice } from './ApiSlice';
 import storage from 'redux-persist/lib/storage';
 import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from 'redux-persist';
@@ -41,6 +42,7 @@ export const store = configureStore({
     like: likeReducer,
     chat: chatReducer,
     search: searchReducer,
+    theme: themeReducer,
     [apiSlice.reducerPath]: apiSlice.reducer,
   },
   middleware: (getDefaultMiddleware) =>

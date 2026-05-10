@@ -1,9 +1,12 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { setCredentials, logOut, selectCurrentToken } from './slices/auth/auth';
-import { reinitializeSocket } from '../services/socketService';
+
+const apiBaseUrl =
+  (import.meta.env.VITE_BASE_BACK_URL as string | undefined) ||
+  (import.meta.env.DEV ? 'http://localhost:3000/api/v1' : '/api/v1');
 
 const baseQuery = fetchBaseQuery({
-  baseUrl: import.meta.env.VITE_BASE_BACK_URL,
+  baseUrl: apiBaseUrl,
   credentials: 'include',
   prepareHeaders: (headers, { getState }) => {
     const token = selectCurrentToken(getState() as any);
@@ -32,19 +35,15 @@ const baseQueryWithReAuth = async (
       const refreshData = refreshResult.data as any;
 
       if (refreshData.data && refreshData.data.accessToken) {
-        const newToken: string = refreshData.data.accessToken;
         api.dispatch(setCredentials({
-          accessToken: newToken,
+          accessToken: refreshData.data.accessToken,
           user: refreshData.data.user || user
         }));
-        reinitializeSocket(newToken);
       } else if (refreshData.accessToken) {
-        const newToken: string = refreshData.accessToken;
         api.dispatch(setCredentials({
-          accessToken: newToken,
+          accessToken: refreshData.accessToken,
           user: refreshData.user || user
         }));
-        reinitializeSocket(newToken);
       } else {
         api.dispatch(logOut());
         return result;
@@ -74,7 +73,16 @@ const tagTypes = [
   'Rooms',
   'Messages',
   'Search',
+  // Marketplace
+  'Products',
+  'SellerProfile',
+  'Applications',
+  'Deals',
+  'Sellers',
+  'AdminLogs',
+  'Privacy',
 ] as const;
+
 
 export const apiSlice = createApi({
   baseQuery: baseQueryWithReAuth,

@@ -106,8 +106,9 @@ export const chatApi = apiSlice.injectEndpoints({
             // No invalidatesTags — we inject the message into the cache manually below.
             // This prevents a full re-fetch after every send, which was causing the
             // "message disappears" bug.
-            transformResponse: (response: ChatMessage | { data: ChatMessage }) => {
-                return 'data' in response ? response.data : response;
+            transformResponse: (response: unknown) => {
+                const rawMessage = unwrapResponseData(response as any);
+                return normalizeMessage(rawMessage);
             },
             async onQueryStarted({ roomId }, { dispatch, queryFulfilled }) {
                 try {

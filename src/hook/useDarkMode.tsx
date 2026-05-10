@@ -1,28 +1,26 @@
-import { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useEffect } from 'react';
+import { toggleTheme, selectIsDark } from '../store/slices/theme/themeSlice';
 
 export const useDarkMode = () => {
-    // Initialize state from localStorage
-    const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
-        const savedTheme = localStorage.getItem('theme');
-        return savedTheme === 'dark';
-    });
+  const dispatch = useDispatch();
+  const isDarkMode = useSelector(selectIsDark);
 
-    // Apply theme changes to DOM and localStorage
-    useEffect(() => {
-        const root = document.documentElement;
+  // Sync DOM class and localStorage whenever the Redux state changes
+  useEffect(() => {
+    const root = document.documentElement;
+    if (isDarkMode) {
+      root.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      root.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [isDarkMode]);
 
-        if (isDarkMode) {
-            root.classList.add('dark');
-            localStorage.setItem('theme', 'dark');
-        } else {
-            root.classList.remove('dark');
-            localStorage.setItem('theme', 'light');
-        }
-    }, [isDarkMode]);
+  const toggleDarkMode = () => {
+    dispatch(toggleTheme());
+  };
 
-    const toggleDarkMode = () => {
-        setIsDarkMode((prev) => !prev);
-    };
-
-    return { isDarkMode, toggleDarkMode };
+  return { isDarkMode, toggleDarkMode };
 };

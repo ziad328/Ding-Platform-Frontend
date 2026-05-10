@@ -1,7 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
 import type { RootState, AppDispatch } from '../store/store';
 import {
     initializeSocket,
@@ -12,7 +10,7 @@ import {
     onSocketConnect,
     isSocketConnected,
 } from '../services/socketService';
-import { setCurrentRoom, updateRoomLastMessage } from '../store/slices/chat';
+import { setCurrentRoom, addMessage } from '../store/slices/chat';
 import { chatApi } from '../store/slices/chat/chatApi';
 import { apiSlice } from '../store/ApiSlice';
 import type { ChatMessage } from '../store/slices/chat/types';
@@ -20,14 +18,13 @@ import type { ChatMessage } from '../store/slices/chat/types';
 // Hook for managing WebSocket connection lifecycle and room subscriptions.
 // Socket messages are injected directly into the RTK Query cache via updateQueryData
 // so there is a single source of truth for message data.
+// A 4-second polling fallback in MessagesPage keeps messages flowing even when
+// the socket is degraded on slow hosting environments.
 
 export const useSocket = () => {
     const dispatch = useDispatch<AppDispatch>();
     const token = useSelector((state: RootState) => state.auth.token);
     const currentRoomId = useSelector((state: RootState) => state.chat.currentRoomId);
-    const currentUserId = useSelector((state: RootState) => state.auth.user?.id);
-    const location = useLocation();
-    const navigate = useNavigate();
     const previousRoomId = useRef<string | null>(null);
     const isInitialized = useRef(false);
     const currentRoomIdRef = useRef<string | null>(currentRoomId);
@@ -41,7 +38,7 @@ export const useSocket = () => {
         // Optimistic: patch the RTK cache immediately so the message appears instantly
         dispatch(
             chatApi.util.updateQueryData('getMessages', { roomId: message.roomId }, (draft) => {
-                if (!Array.isArray(draft)) return; // no cache entry yet, skip
+                if (!Array.isArray(draft)) return; // no cache entry yet — polling will pick it up
                 const alreadyExists = draft.some(m => m.id === message.id);
                 if (!alreadyExists) {
                     draft.push(message);
@@ -49,15 +46,15 @@ export const useSocket = () => {
             })
         );
 
-        // Guaranteed fallback: invalidate the Messages tag so RTK re-fetches if needed.
-        // This also updates the sidebar last-message preview via a fresh rooms fetch is NOT
-        // triggered here — we handle the sidebar update manually below.
+        // Guaranteed fallback: invalidate the Messages tag so RTK re-fetches if the
+        // optimistic patch was on a cache key that doesn't exist yet.
         dispatch(apiSlice.util.invalidateTags([{ type: 'Messages', id: message.roomId }]));
 
         // Update the sidebar last-message preview and room sort order
-        dispatch(updateRoomLastMessage(message));
+        dispatch(addMessage(message));
     }, [dispatch]);
 
+    // Initialize / destroy the socket connection
     useEffect(() => {
         if (!token || isInitialized.current) return;
 
@@ -79,12 +76,11 @@ export const useSocket = () => {
             disconnectSocket();
             isInitialized.current = false;
         };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [token]);
 
     // Always keep the message callback registered.
-    // This runs on mount AND whenever the token changes (e.g. after a 401 token refresh
-    // that calls reinitializeSocket externally and resets the callback).
-    // The [token] dependency is the key — it re-runs after ApiSlice's reinitializeSocket.
+    // Re-registers after token refresh or handleNewMessage reference change.
     useEffect(() => {
         if (!token) return;
         onNewMessage(handleNewMessage);

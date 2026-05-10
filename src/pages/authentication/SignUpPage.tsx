@@ -6,7 +6,7 @@ import googleSvg from '../../assets/Google.svg';
 import email from '../../assets/Email.svg';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useRegisterUserMutation } from '../../store/slices/auth/authApi';
-import { enqueueSnackbar } from 'notistack';
+import { toast } from 'sonner';
 
 // Types
 interface SignUpFormValues {
@@ -53,20 +53,16 @@ export default function SignUpPage() {
       const response = await registerUser({ email, name, password }).unwrap();
       console.log("register response", response);
       if (response.code === 200 && response.data && response.data.accessToken) {
-        enqueueSnackbar('Registration successful!', { variant: 'success' });
+        toast.success('Registration successful!');
       }
       navigate('/auth/verfiy-otp', { state: { email: values.email } });
     } catch (error) {
       const errorData = error as any;
       if (errorData?.status === 409) {
         console.log("errorData", errorData);
-        enqueueSnackbar(errorData?.data?.message || 'this email is already exist', {
-          variant: 'error',
-        });
+        toast.error(errorData?.data?.message || 'this email is already exist');
       } else {
-        enqueueSnackbar(errorData?.data?.message || 'Registration failed', {
-          variant: 'error',
-        });
+        toast.error(errorData?.data?.message || 'Registration failed');
       }
     }
   };

@@ -11,10 +11,12 @@ node_modules
 dist
 dist-ssr
 *.local
-
+.pnpm-store/
 .env
-.env.development
-.env.production
+.env.example
+Ding Platform Backend - Full API.postman_collection.json
+quick_reference.md
+index.json
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

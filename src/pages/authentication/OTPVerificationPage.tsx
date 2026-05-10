@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
 import { Logo } from '../../components/atoms/Logo';
 import { useVerifyEmailOtpMutation, useResendEmailOtpMutation, useVerifyForgotPasswordOtpMutation, useResendForgotPasswordOtpMutation } from '../../store/slices/auth/authApi';
-import { enqueueSnackbar } from 'notistack';
+import { toast } from 'sonner';
 
 export default function OTPVerificationPage() {
   const navigate = useNavigate();
@@ -104,21 +104,19 @@ export default function OTPVerificationPage() {
         response = await verifyForgotPasswordOtp({ email, otp: otpCode }).unwrap();
         console.log(response);
         if (response.code === 200 && response.data) {
-          enqueueSnackbar(response.data.message || 'OTP verified successfully!', { variant: 'success' });
+          toast.success(response.data.message || 'OTP verified successfully!');
           navigate('/auth/reset-password', { state: { email } });
         }
       } else {
         response = await verifyEmailOtp({ email, otp: otpCode }).unwrap();
         if (response.code === 200 && response.data && response.data.accessToken) {
-          enqueueSnackbar('Email verified successfully!', { variant: 'success' });
+          toast.success('Email verified successfully!');
           navigate('/');
         }
       }
     } catch (error) {
       console.error('Verification error:', error);
-      enqueueSnackbar((error as any)?.data?.message || (error as any)?.data || 'Verification failed', {
-        variant: 'error',
-      });
+      toast.error((error as any)?.data?.message || (error as any)?.data || 'Verification failed');
     } finally {
       setIsSubmitting(false);
     }
@@ -137,12 +135,10 @@ export default function OTPVerificationPage() {
       setTimeLeft(59);
       setOtp(['', '', '', '', '', '']);
       inputRefs.current[0]?.focus();
-      enqueueSnackbar('Code sent successfully!', { variant: 'success' });
+      toast.success('Code sent successfully!');
     } catch (error) {
       console.error('Resend error:', error);
-      enqueueSnackbar((error as any)?.data.data?.message || (error as any)?.data.data, {
-        variant: 'error',
-      });
+      toast.error((error as any)?.data.data?.message || (error as any)?.data.data);
     } finally {
       setIsResending(false);
     }

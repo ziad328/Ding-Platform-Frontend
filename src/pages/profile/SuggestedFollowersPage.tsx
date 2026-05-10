@@ -30,7 +30,6 @@ const SuggestedFollowersPage = () => {
   const previewTimeoutRef = useRef<number | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
-  const previousSuggestionsLengthRef = useRef<number>(0);
   const [followStates, setFollowStates] = useState<Record<
     string,
     {
@@ -234,10 +233,6 @@ const SuggestedFollowersPage = () => {
     }
   }, []); // Only run on mount
 
-  // Track suggestions length to detect when new items are added via pagination
-  useEffect(() => {
-    previousSuggestionsLengthRef.current = suggestedFollowers.length;
-  }, [suggestedFollowers.length]);
 
   // Auto-scroll to show skeleton when it appears during pagination
   useEffect(() => {
@@ -285,11 +280,11 @@ const SuggestedFollowersPage = () => {
           <>
             <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
               <button
-                onClick={() => navigate('/profile')}
+                onClick={() => navigate(-1)}
                 className="inline-flex items-center gap-2 text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-500 transition-colors"
               >
                 <ArrowLeft className="w-4 h-4" />
-                Back to profile
+                Back
               </button>
               <h1 className="text-xl sm:text-2xl font-semibold text-neutral-b-900 dark:text-dark-text-primary">
                 Suggested Followers{suggestionsCount !== undefined ? ` (${suggestionsCount})` : ''}
