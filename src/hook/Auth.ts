@@ -27,7 +27,7 @@ export const NavigationHandler = () => {
   
       const user = userParam ? JSON.parse(userParam) : {};
       if (token) {
-        dispatch(setCredentials({ token: token, user }));
+        dispatch(setCredentials({ accessToken: token, user }));
         toast.success('Login successful!');
         navigate('/');
       }

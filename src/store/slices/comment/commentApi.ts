@@ -44,6 +44,13 @@ export interface GetCommentRepliesResponse {
   totalPages: number;
 }
 
+type SuccessResponse<T> = {
+  code: number;
+  success: boolean;
+  message: string;
+  data: T;
+};
+
 export const commentApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     // Create a comment on a post
@@ -53,6 +60,8 @@ export const commentApi = apiSlice.injectEndpoints({
         method: 'POST',
         body: data,
       }),
+      transformResponse: (raw: SuccessResponse<Comment> | Comment) =>
+        (raw as any)?.data ?? raw,
       invalidatesTags: ['Posts', 'Comments'],
     }),
 
@@ -66,6 +75,8 @@ export const commentApi = apiSlice.injectEndpoints({
         params: { page, limit, sort },
       }),
       providesTags: ['Comments'],
+      transformResponse: (raw: SuccessResponse<GetPostCommentsResponse> | GetPostCommentsResponse) =>
+        (raw as any)?.data ?? raw,
     }),
 
     // Get replies for a comment
@@ -78,6 +89,8 @@ export const commentApi = apiSlice.injectEndpoints({
         params: { page, limit },
       }),
       providesTags: ['Comments'],
+      transformResponse: (raw: SuccessResponse<GetCommentRepliesResponse> | GetCommentRepliesResponse) =>
+        (raw as any)?.data ?? raw,
     }),
 
     // Update a comment
@@ -87,6 +100,8 @@ export const commentApi = apiSlice.injectEndpoints({
         method: 'PATCH',
         body: data,
       }),
+      transformResponse: (raw: SuccessResponse<Comment> | Comment) =>
+        (raw as any)?.data ?? raw,
       invalidatesTags: ['Comments'],
     }),
 
@@ -96,6 +111,7 @@ export const commentApi = apiSlice.injectEndpoints({
         url: `comments/${commentId}`,
         method: 'DELETE',
       }),
+      transformResponse: (raw: SuccessResponse<void> | void) => (raw as any)?.data ?? raw,
       invalidatesTags: ['Comments'],
     }),
 
@@ -105,6 +121,11 @@ export const commentApi = apiSlice.injectEndpoints({
         url: `likes/comments/${commentId}`,
         method: 'POST',
       }),
+      transformResponse: (
+        raw:
+          | SuccessResponse<{ success: boolean; likesCount: number }>
+          | { success: boolean; likesCount: number },
+      ) => (raw as any)?.data ?? raw,
       invalidatesTags: ['Comments'],
     }),
 
@@ -114,6 +135,11 @@ export const commentApi = apiSlice.injectEndpoints({
         url: `likes/comments/${commentId}`,
         method: 'DELETE',
       }),
+      transformResponse: (
+        raw:
+          | SuccessResponse<{ success: boolean; likesCount: number }>
+          | { success: boolean; likesCount: number },
+      ) => (raw as any)?.data ?? raw,
       invalidatesTags: ['Comments'],
     }),
   }),

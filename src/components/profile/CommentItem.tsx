@@ -31,9 +31,10 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, postId, level = 0 })
     const [showDropdown, setShowDropdown] = useState(false);
 
     // Only fetch replies when they are shown
-    const { data: repliesData, isLoading: isLoadingReplies } = useGetCommentRepliesQuery({
-        commentId: comment.id
-    });
+    const { data: repliesData, isLoading: isLoadingReplies } = useGetCommentRepliesQuery(
+        { commentId: comment.id },
+        { skip: !showReplies }
+    );
 
     const handleLike = async () => {
         if (!user) return;
@@ -161,7 +162,7 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, postId, level = 0 })
     };
 
     // Get current replies from API data only
-    const currentReplies = Array.isArray((repliesData?.data as any)?.data) ? (repliesData?.data as any).data : [];
+    const currentReplies = Array.isArray(repliesData?.data) ? repliesData.data : [];
 
     const hasReplies = comment.replyCount > 0;
 
