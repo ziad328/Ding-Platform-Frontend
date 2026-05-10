@@ -54,28 +54,23 @@ const MessageInput: React.FC<MessageInputProps> = ({ roomId, onSendMessage }) =>
         if (isSending || (!message.trim() && attachedFiles.length === 0)) return;
 
         try {
-            const trimmed = message.trim();
+            const trimmedMessage = message.trim();
 
-            // Backend enforces MaxLength(4096) on `content`
-            if (trimmed.length > 4096) {
-                showToast('Message is too long (max 4096 characters)');
-                return;
-            }
+            const sentMessage =
+                attachedFiles.length > 0
+                    ? await (async () => {
+                          const formData = new FormData();
+                          formData.append('content', trimmedMessage || 'Shared media');
 
-            let sentMessage;
-            if (attachedFiles.length > 0) {
-                // Use the backend media endpoint: POST /chat/rooms/:roomId/messages/media
-                const formData = new FormData();
-                formData.append('content', trimmed || 'Shared media');
-                // Backend expects uploaded files under `files` (see FileFieldsInterceptor)
-                attachedFiles.forEach((f) => formData.append('files', f.file));
+                          const images = attachedFiles.filter((f) => f.type === 'image');
+                          images.forEach((img) => formData.append('images', img.file));
 
-                sentMessage = await sendMessageWithMediaMutation({ roomId, formData }).unwrap();
-            } else {
-                // Use JSON endpoint: POST /chat/rooms/:roomId/messages
-                // Backend currently validates that `roomId` exists in the body too.
-                sentMessage = await sendMessageMutation({ roomId, content: trimmed }).unwrap();
-            }
+                          const videos = attachedFiles.filter((f) => f.type === 'video');
+                          videos.forEach((vid) => formData.append('videos', vid.file));
+
+                          return await sendMessageWithMediaMutation({ roomId, formData }).unwrap();
+                      })()
+                    : await sendMessageMutation({ roomId, content: trimmedMessage }).unwrap();
 
             void sentMessage;
 

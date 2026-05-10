@@ -103,10 +103,30 @@ export const chatApi = apiSlice.injectEndpoints({
                 body: formData,
                 formData: true,
             }),
-            invalidatesTags: (_result, _error, { roomId }) => [{ type: 'Messages', id: roomId }],
+            // No invalidatesTags — we inject the message into the cache manually below.
+            // This prevents a full re-fetch after every send, which was causing the
+            // "message disappears" bug.
             transformResponse: (response: unknown) => {
                 const rawMessage = unwrapResponseData(response as any);
                 return normalizeMessage(rawMessage);
+            },
+            async onQueryStarted({ roomId }, { dispatch, queryFulfilled }) {
+                try {
+                    const { data: sentMessage } = await queryFulfilled;
+                    // Inject the sent message directly into the RTK Query cache.
+                    // The socket will also deliver it, but addMessage/updateQueryData
+                    // deduplicates by ID so it shows up exactly once.
+                    dispatch(
+                        chatApi.util.updateQueryData('getMessages', { roomId }, (draft) => {
+                            const alreadyExists = draft.some(m => m.id === sentMessage.id);
+                            if (!alreadyExists) {
+                                draft.push(sentMessage);
+                            }
+                        })
+                    );
+                } catch {
+                    // Send failed — the mutation's error state handles UI feedback
+                }
             },
         }),
 
