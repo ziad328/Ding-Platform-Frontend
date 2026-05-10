@@ -1,22 +1,127 @@
 import { Search, User, LogOut, X, Loader2, ChevronDown, Moon, Sun } from 'lucide-react';
 import { Logo } from '../atoms/Logo';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { selectCurrentUser } from '../../store/slices/auth/auth';
 import { useSendLogOutMutation } from '../../store/slices/auth/authApi';
 import { useNavigate } from 'react-router-dom';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useDarkMode } from '../../hook/useDarkMode';
+import { setQuery } from '../../store/slices/search/searchSlice';
+import { useSearchQuery } from '../../store/ApiSlice';
+import { debounce } from 'lodash';
 
 function Navbar() {
   const user = useSelector(selectCurrentUser);
   const [sendLogOut, { isLoading: isLoggingOut }] = useSendLogOutMutation();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchValue, setSearchValue] = useState('');
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
   const { isDarkMode, toggleDarkMode } = useDarkMode();
+
+  // Search query with API integration
+  const { data: searchResults } = useSearchQuery({
+    q: searchValue,
+    type: 'all',
+    sortBy: 'relevance',
+    limit: 10,
+  }, {
+    skip: !searchValue || searchValue.length < 1,
+  });
+
+  // Debounced search handler
+  const debouncedSearch = useCallback(
+    debounce((query: string) => {
+      dispatch(setQuery(query));
+    }, 300),
+    [dispatch]
+  );
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchValue(value);
+    setShowSearchDropdown(value.length >= 1);
+    debouncedSearch(value);
+  };
+
+  const handleResultClick = (type: 'user' | 'post', id: string) => {
+    setShowSearchDropdown(false);
+    setSearchValue('');
+    if (type === 'user') {
+      navigate(`/profile/${id}`);
+    } else {
+      navigate(`/post/${id}`);
+    }
+  };
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchValue.trim()) {
+      setShowSearchDropdown(false);
+      navigate(`/search?q=${encodeURIComponent(searchValue)}`);
+    }
+  };
+
+  const SearchResultsDropdown = () => {
+    if (!showSearchDropdown || !searchResults) return null;
+
+    const { users = [], posts = [] } = searchResults.data || {};
+    const hasResults = users.length > 0 || posts.length > 0;
+
+    if (!hasResults) {
+      return (
+        <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-dark-bg-secondary border border-neutral-w-400 dark:border-dark-border rounded-lg shadow-lg z-50 animate-fadeIn p-4">
+          <p className="text-sm text-neutral-b-600 dark:text-dark-text-secondary text-center">No results found</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-dark-bg-secondary border border-neutral-w-400 dark:border-dark-border rounded-lg shadow-lg z-50 animate-fadeIn max-h-96 overflow-y-auto">
+        {users.length > 0 && (
+          <div className="p-2 border-b border-neutral-w-200 dark:border-dark-border">
+            <p className="text-xs font-semibold text-neutral-b-500 dark:text-dark-text-muted mb-2 px-2">Users</p>
+            {users.slice(0, 5).map((user: any) => (
+              <button
+                key={user.id}
+                onClick={() => handleResultClick('user', user.id)}
+                className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-neutral-w-100 dark:hover:bg-dark-bg-tertiary transition-colors text-left"
+              >
+                <div className="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-800 flex items-center justify-center shrink-0">
+                  <User className="w-4 h-4 text-primary-700 dark:text-primary-300" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-neutral-b-700 dark:text-dark-text-primary truncate">{user.name}</p>
+                  <p className="text-xs text-neutral-b-500 dark:text-dark-text-muted truncate">@{user.username}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+        {posts.length > 0 && (
+          <div className="p-2">
+            <p className="text-xs font-semibold text-neutral-b-500 dark:text-dark-text-muted mb-2 px-2">Posts</p>
+            {posts.slice(0, 5).map((post: any) => (
+              <button
+                key={post.id}
+                onClick={() => handleResultClick('post', post.id)}
+                className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-neutral-w-100 dark:hover:bg-dark-bg-tertiary transition-colors text-left"
+              >
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-neutral-b-700 dark:text-dark-text-primary line-clamp-2">{post.content}</p>
+                  <p className="text-xs text-neutral-b-500 dark:text-dark-text-muted mt-1">by {post.authorName}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const handleLogout = () => {
     sendLogOut();
@@ -25,6 +130,8 @@ function Navbar() {
   const handleCloseSearch = () => {
     setIsSearchOpen(false);
     setSearchValue('');
+    setShowSearchDropdown(false);
+    dispatch(setQuery(''));
   };
 
   // Handle click outside to close search
@@ -34,16 +141,17 @@ function Navbar() {
         if (isSearchOpen) {
           setIsSearchOpen(false);
         }
+        setShowSearchDropdown(false);
       }
     };
 
-    if (isSearchOpen) {
+    if (isSearchOpen || showSearchDropdown) {
       document.addEventListener('mousedown', handleClickOutside);
     }
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isSearchOpen]);
+  }, [isSearchOpen, showSearchDropdown]);
 
   // Handle click outside to close profile dropdown
   useEffect(() => {
@@ -74,10 +182,9 @@ function Navbar() {
               type="text"
               placeholder="Search"
               value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
+              onChange={handleSearchChange}
               autoFocus
               className="w-full pl-8 pr-9 py-1.5 text-sm bg-neutral-w-200 dark:bg-dark-bg-primary border border-neutral-w-400 dark:border-dark-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent placeholder:text-neutral-b-400 dark:placeholder:text-dark-text-muted dark:text-dark-text-primary transition-all duration-200"
-            // NOTE: API Integration Point - Implement search functionality
             />
             <button
               onClick={handleCloseSearch}
@@ -85,6 +192,7 @@ function Navbar() {
             >
               <X className="w-3.5 h-3.5 text-neutral-b-600 dark:text-dark-text-secondary" />
             </button>
+            <SearchResultsDropdown />
           </div>
         ) : (
           <>
@@ -92,14 +200,18 @@ function Navbar() {
             <Logo />
 
             {/* Desktop Search Bar */}
-            <div className="hidden md:flex flex-1 max-w-xl mx-4 lg:mx-8 relative">
+            <div ref={searchRef} className="hidden md:flex flex-1 max-w-xl mx-4 lg:mx-8 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-b-400 dark:text-dark-text-muted w-4 h-4 transition-colors" />
-              <input
-                type="text"
-                placeholder="Search"
-                className="w-full pl-10 pr-4 py-2 text-sm bg-neutral-w-200 dark:bg-dark-bg-primary border border-neutral-w-400 dark:border-dark-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent placeholder:text-neutral-b-400 dark:placeholder:text-dark-text-muted dark:text-dark-text-primary transition-all duration-200 hover:border-neutral-b-300 dark:hover:border-dark-text-muted focus:bg-neutral-w-100 dark:focus:bg-dark-bg-tertiary"
-              // NOTE: API Integration Point - Implement search functionality
-              />
+              <form onSubmit={handleSearchSubmit} className="flex-1">
+                <input
+                  type="text"
+                  placeholder="Search"
+                  value={searchValue}
+                  onChange={handleSearchChange}
+                  className="w-full pl-10 pr-4 py-2 text-sm bg-neutral-w-200 dark:bg-dark-bg-primary border border-neutral-w-400 dark:border-dark-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent placeholder:text-neutral-b-400 dark:placeholder:text-dark-text-muted dark:text-dark-text-primary transition-all duration-200 hover:border-neutral-b-300 dark:hover:border-dark-text-muted focus:bg-neutral-w-100 dark:focus:bg-dark-bg-tertiary"
+                />
+              </form>
+              <SearchResultsDropdown />
             </div>
 
             {/* Right Actions */}

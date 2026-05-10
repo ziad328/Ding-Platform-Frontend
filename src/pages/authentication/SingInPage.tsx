@@ -6,7 +6,7 @@ import googleSvg from '../../assets/Google.svg';
 import email from '../../assets/Email.svg';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useLoginUserMutation } from '../../store/slices/auth/authApi';
-import { enqueueSnackbar } from 'notistack';
+import { toast } from 'sonner';
 
 // Types
 interface SignInFormValues {
@@ -32,13 +32,11 @@ export default function SignInPage() {
     try {
       const response = await loginUser(values).unwrap();
       if (response.code === 200 && response.data) {
-        enqueueSnackbar('Login successful!', { variant: 'success' });
+        toast.success('Login successful!');
         navigate('/');
       }
     } catch (err) {
-      enqueueSnackbar((err as any)?.data?.message || (err as any)?.data, {
-        variant: 'error',
-      });
+      toast.error((err as any)?.data?.message || (err as any)?.data);
     }
   };
 

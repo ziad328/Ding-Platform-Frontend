@@ -72,7 +72,17 @@ const tagTypes = [
   'Likes',
   'Rooms',
   'Messages',
+  'Search',
+  // Marketplace
+  'Products',
+  'SellerProfile',
+  'Applications',
+  'Deals',
+  'Sellers',
+  'AdminLogs',
+  'Privacy',
 ] as const;
+
 
 export const apiSlice = createApi({
   baseQuery: baseQueryWithReAuth,
@@ -92,7 +102,38 @@ export const apiSlice = createApi({
       }),
       invalidatesTags: ['Posts', 'Likes'],
     }),
+    search: builder.query({
+      query: (params: {
+        q?: string;
+        type?: string;
+        page?: number;
+        limit?: number;
+        sortBy?: string;
+      }) => ({
+        url: 'search',
+        params,
+      }),
+      providesTags: ['Search'],
+    }),
+    searchPublic: builder.query({
+      query: (params: {
+        q?: string;
+        type?: string;
+        page?: number;
+        limit?: number;
+        sortBy?: string;
+      }) => ({
+        url: 'search/public',
+        params,
+      }),
+      providesTags: ['Search'],
+    }),
   }),
 });
 
-export const { useLikePostMutation, useUnlikePostMutation } = apiSlice;
+export const { 
+  useLikePostMutation, 
+  useUnlikePostMutation,
+  useSearchQuery,
+  useSearchPublicQuery,
+} = apiSlice;

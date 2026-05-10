@@ -3,7 +3,7 @@ import { selectCurrentToken, selectCurrentUser, setCredentials } from "../store/
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { enqueueSnackbar } from "notistack";
+import { toast } from 'sonner';
 
 
 export const IsAuth = () => {
@@ -28,11 +28,11 @@ export const NavigationHandler = () => {
       const user = userParam ? JSON.parse(userParam) : {};
       if (token) {
         dispatch(setCredentials({ token: token, user }));
-        enqueueSnackbar('Login successful!', { variant: 'success' });
+        toast.success('Login successful!');
         navigate('/');
       }
     } catch (error) {
-      enqueueSnackbar('Login failed!', { variant: 'error' });
+      toast.error('Login failed!');
     }
   }, [dispatch, navigate]);
 

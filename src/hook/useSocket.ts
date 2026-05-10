@@ -29,10 +29,6 @@ export const useSocket = () => {
     const isInitialized = useRef(false);
     const currentRoomIdRef = useRef<string | null>(currentRoomId);
 
-    // Track mount count to avoid spurious disconnects in React StrictMode (dev)
-    const mountCount = useRef(0);
-    const disconnectTimer = useRef<number | null>(null);
-
     // Keep the ref current on every render so reconnect callback is never stale
     useEffect(() => {
         currentRoomIdRef.current = currentRoomId;
@@ -60,14 +56,7 @@ export const useSocket = () => {
 
     // Initialize / destroy the socket connection
     useEffect(() => {
-        if (!token) return;
-        mountCount.current += 1;
-
-        // Cancel any pending disconnect from a previous unmount
-        if (disconnectTimer.current !== null) {
-            clearTimeout(disconnectTimer.current);
-            disconnectTimer.current = null;
-        }
+        if (!token || isInitialized.current) return;
 
         initializeSocket(token);
         isInitialized.current = true;
@@ -81,21 +70,11 @@ export const useSocket = () => {
         });
 
         return () => {
-            mountCount.current -= 1;
-
-            // In React StrictMode (dev), effects mount/unmount quickly; delay disconnect to avoid
-            // spurious "WebSocket is closed before the connection is established" noise.
-            if (mountCount.current === 0) {
-                disconnectTimer.current = window.setTimeout(() => {
-                    if (mountCount.current !== 0) return;
-                    if (previousRoomId.current) {
-                        leaveRoom(previousRoomId.current);
-                    }
-                    disconnectSocket();
-                    isInitialized.current = false;
-                    disconnectTimer.current = null;
-                }, 150);
+            if (previousRoomId.current) {
+                leaveRoom(previousRoomId.current);
             }
+            disconnectSocket();
+            isInitialized.current = false;
         };
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [token]);

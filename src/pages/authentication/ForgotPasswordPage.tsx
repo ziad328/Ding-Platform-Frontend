@@ -5,7 +5,7 @@ import { Logo } from '../../components/atoms/Logo';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
 import { useForgotPasswordMutation } from '../../store/slices/auth/authApi';
-import { enqueueSnackbar } from 'notistack';
+import { toast } from 'sonner';
 
 // Types
 interface ForgotPasswordFormValues {
@@ -26,15 +26,11 @@ export default function ForgotPasswordPage() {
   const handleFormSubmit = async (values: ForgotPasswordFormValues) => {
     try {
       await forgotPassword({ email: values.email }).unwrap();
-      enqueueSnackbar('Password reset otp sent to your email', {
-        variant: 'success'
-      });
+      toast.success('Password reset OTP sent to your email');
       // Navigate to OTP verification page with email
       navigate('/auth/verfiy-otp', { state: { email: values.email, type: 'forgot-password' } });
     } catch (error) {
-      enqueueSnackbar((error as any)?.data?.message || 'Failed to send reset otp', {
-        variant: 'error',
-      });
+      toast.error((error as any)?.data?.message || 'Failed to send reset OTP');
     }
   };
 
