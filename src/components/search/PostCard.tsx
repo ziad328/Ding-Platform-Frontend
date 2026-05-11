@@ -32,7 +32,7 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
     <div className="p-4 bg-white border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
       {/* Author info */}
       <div className="flex items-center space-x-3 mb-3">
-        <div className="flex-shrink-0">
+        <div className="shrink-0">
           <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
             <span className="text-sm font-medium text-gray-600">
               {(post.authorName || 'Unknown').charAt(0).toUpperCase()}

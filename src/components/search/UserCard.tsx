@@ -20,7 +20,7 @@ const UserCard: React.FC<UserCardProps> = ({ user }) => {
       className="block p-4 bg-white border border-gray-200 rounded-lg hover:shadow-md transition-shadow"
     >
       <div className="flex items-center space-x-3">
-        <div className="flex-shrink-0">
+        <div className="shrink-0">
           <img
             src={user.avatar || defaultAvatar}
             alt={user.name || 'User avatar'}
