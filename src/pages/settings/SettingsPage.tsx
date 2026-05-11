@@ -7,7 +7,7 @@ function SettingsPage() {
   return (
     <main
       id="settings-main"
-      className="min-h-screen bg-neutral-w-100 dark:bg-dark-bg-primary py-10 px-4"
+      className="min-h-screen dark:bg-dark-bg-primary py-10 px-4"
     >
       <div className="max-w-2xl mx-auto space-y-6">
         {/* Page header */}
