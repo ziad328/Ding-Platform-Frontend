@@ -25,7 +25,7 @@ interface SelectFieldProps {
 
 function SelectField({ id, label, value, onChange }: SelectFieldProps) {
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 py-4 border-b last:border-0 border-neutral-w-300 dark:border-dark-border">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 py-4 border-b last:border-0 border-neutral-w-300 dark:border-dark-border">
       <label htmlFor={id} className="text-sm font-medium text-neutral-b-800 dark:text-dark-text-primary shrink-0">
         {label}
       </label>
@@ -33,9 +33,9 @@ function SelectField({ id, label, value, onChange }: SelectFieldProps) {
         id={id}
         value={value}
         onChange={(e) => onChange(e.target.value as VisibilityLevel)}
-        className="px-3 py-2 text-sm rounded-xl border border-neutral-w-400 dark:border-dark-border
+        className="w-full sm:w-auto px-3 py-2 text-sm rounded-xl border border-neutral-w-400 dark:border-dark-border
           bg-white dark:bg-dark-bg-primary text-neutral-b-900 dark:text-dark-text-primary
-          focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all duration-150 min-w-[140px]"
+          focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all duration-150 sm:min-w-[140px]"
       >
         {VISIBILITY_OPTIONS.map((opt) => (
           <option key={opt.value} value={opt.value}>
@@ -135,7 +135,7 @@ function ProfilePrivacySection() {
   return (
     <section
       aria-labelledby="profile-privacy-heading"
-      className="bg-white dark:bg-dark-bg-secondary rounded-2xl border border-neutral-w-400 dark:border-dark-border p-6 shadow-sm"
+      className="bg-white dark:bg-dark-bg-secondary rounded-2xl border border-neutral-w-400 dark:border-dark-border p-4 sm:p-6 shadow-sm"
     >
       <div className="flex items-center gap-2 mb-1">
         <UserCog size={18} className="text-primary-500" />
@@ -192,13 +192,13 @@ function ProfilePrivacySection() {
       </div>
 
       {/* Save button */}
-      <div className="flex justify-end pt-4">
+      <div className="flex justify-stretch sm:justify-end pt-4">
         <button
           type="button"
           id="save-profile-privacy"
           onClick={handleSave}
           disabled={isSaving || isLoading || !isDirty}
-          className="flex items-center gap-2 px-6 py-2.5 text-sm font-medium rounded-xl text-white
+          className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5 text-sm font-medium rounded-xl text-white
             bg-primary-500 hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed
             transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
         >

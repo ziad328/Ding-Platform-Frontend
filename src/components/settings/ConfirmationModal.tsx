@@ -94,7 +94,7 @@ function ConfirmationModal({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
-            className="relative z-10 w-full max-w-md bg-white dark:bg-dark-bg-secondary rounded-2xl shadow-2xl border border-neutral-w-400 dark:border-dark-border p-6"
+            className="relative z-10 w-full max-w-md bg-white dark:bg-dark-bg-secondary rounded-2xl shadow-2xl border border-neutral-w-400 dark:border-dark-border p-4 sm:p-6"
           >
             {/* Close button */}
             <button
@@ -148,7 +148,7 @@ function ConfirmationModal({
             </div>
 
             {/* Actions */}
-            <div className="flex gap-3">
+            <div className="flex flex-col-reverse sm:flex-row gap-3">
               <button
                 type="button"
                 onClick={onClose}

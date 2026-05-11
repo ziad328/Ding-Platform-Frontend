@@ -22,7 +22,7 @@ function AppearanceSection() {
   return (
     <section
       aria-labelledby="appearance-heading"
-      className="bg-white dark:bg-dark-bg-secondary rounded-2xl border border-neutral-w-400 dark:border-dark-border p-6 shadow-sm"
+      className="bg-white dark:bg-dark-bg-secondary rounded-2xl border border-neutral-w-400 dark:border-dark-border p-4 sm:p-6 shadow-sm"
     >
       <h2
         id="appearance-heading"
