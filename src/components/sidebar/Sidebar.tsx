@@ -159,6 +159,22 @@ function Sidebar() {
     { Out: RiVideoLine,   Fill: RiVideoFill,   label: 'Reels',    path: '/reels',    exact: false },
   ];
 
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return date.toLocaleDateString();
+  };
+
   return (
     <>
       <aside
@@ -232,25 +248,48 @@ function Sidebar() {
                   : <>
                       {users.length > 0 && <div className="p-2 border-b border-neutral-w-200 dark:border-dark-border">
                         <p className="text-xs font-semibold text-neutral-b-400 px-2 mb-1">People</p>
-                        {users.slice(0, 5).map((u: any) => (
-                          <button key={u.id} onClick={() => handleResultClick('user', u.id)}
-                            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-neutral-w-100 dark:hover:bg-dark-bg-tertiary text-left transition-colors">
-                            <div className="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center text-xs font-bold text-primary-700 shrink-0">
-                              {(u.username?.[0] || '?').toUpperCase()}
-                            </div>
-                            <div className="min-w-0">
-                              <p className="text-sm font-medium text-neutral-b-700 dark:text-dark-text-primary truncate">{u.name}</p>
-                              <p className="text-xs text-neutral-b-400 truncate">@{u.username}</p>
-                            </div>
-                          </button>
-                        ))}
+                        {users.slice(0, 5).map((u: any) => {
+                          const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name || u.username || 'User')}&background=3b82f6&color=fff`;
+                          return (
+                            <button key={u.id} onClick={() => handleResultClick('user', u.id)}
+                              className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-neutral-w-100 dark:hover:bg-dark-bg-tertiary text-left transition-colors">
+                              <div className="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center text-xs font-bold text-primary-700 shrink-0 overflow-hidden">
+                                <img
+                                  src={u.avatar || defaultAvatar}
+                                  alt={u.name || 'User avatar'}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    const target = e.target as HTMLImageElement;
+                                    target.src = defaultAvatar;
+                                  }}
+                                />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-1.5">
+                                  <p className="text-sm font-medium text-neutral-b-700 dark:text-dark-text-primary truncate">{u.name || 'Unknown User'}</p>
+                                  {u.username && <p className="text-xs text-neutral-b-400 truncate">@{u.username}</p>}
+                                </div>
+                                {u.bio && <p className="text-xs text-neutral-b-500 dark:text-dark-text-secondary truncate mt-0.5">{u.bio}</p>}
+                              </div>
+                            </button>
+                          );
+                        })}
                       </div>}
                       {posts.length > 0 && <div className="p-2">
                         <p className="text-xs font-semibold text-neutral-b-400 px-2 mb-1">Posts</p>
                         {posts.slice(0, 5).map((p: any) => (
                           <button key={p.id} onClick={() => handleResultClick('post', p.id)}
-                            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-neutral-w-100 dark:hover:bg-dark-bg-tertiary text-left transition-colors">
-                            <p className="text-sm text-neutral-b-700 dark:text-dark-text-primary line-clamp-2">{p.content}</p>
+                            className="w-full flex flex-col gap-1.5 px-3 py-2 rounded-lg hover:bg-neutral-w-100 dark:hover:bg-dark-bg-tertiary text-left transition-colors">
+                            <div className="flex items-center gap-2 w-full">
+                              <div className="w-6 h-6 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center text-[10px] font-bold text-primary-700 shrink-0">
+                                {(p.authorName?.[0] || '?').toUpperCase()}
+                              </div>
+                              <div className="min-w-0 flex-1 flex items-center justify-between">
+                                <p className="text-xs font-medium text-neutral-b-700 dark:text-dark-text-primary truncate">{p.authorName || 'Unknown Author'}</p>
+                                {p.createdAt && <span className="text-[10px] text-neutral-b-400 shrink-0 ml-2">{formatDate(p.createdAt)}</span>}
+                              </div>
+                            </div>
+                            <p className="text-sm text-neutral-b-600 dark:text-dark-text-secondary line-clamp-2 w-full">{p.content || <span className="italic text-neutral-b-400">No content available</span>}</p>
                           </button>
                         ))}
                       </div>}
