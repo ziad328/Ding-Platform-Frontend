@@ -33,14 +33,7 @@ const imageVariants: Variants = {
   },
 };
 
-const overlayVariants: Variants = {
-  rest: { opacity: 0, y: 8 },
-  hover: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.22, ease: 'easeOut' as const },
-  },
-};
+
 
 const shimmerVariants: Variants = {
   rest: { x: '-100%' },
