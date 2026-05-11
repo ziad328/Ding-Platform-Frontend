@@ -95,15 +95,15 @@ function MarketplacePage() {
 
   return (
     <div className="h-full overflow-y-auto">
-      <div className="max-w-6xl mx-auto px-4 py-6">
+      <div className="max-w-6xl mx-auto px-3 py-4 sm:px-4 sm:py-6">
 
         {/* Header */}
-        <div className="flex items-start justify-between gap-4 mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4 sm:mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-neutral-b-900 dark:text-dark-text-primary">
+            <h1 className="text-xl sm:text-2xl font-bold text-neutral-b-900 dark:text-dark-text-primary">
               Marketplace
             </h1>
-            <p className="text-sm text-neutral-b-500 dark:text-dark-text-muted mt-1">
+            <p className="text-xs sm:text-sm text-neutral-b-500 dark:text-dark-text-muted mt-1">
               Browse products from verified sellers
             </p>
           </div>
@@ -155,7 +155,7 @@ function MarketplacePage() {
 
         {/* Loading skeleton */}
         {isLoading && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-4">
             {Array.from({ length: 8 }).map((_, i) => (
               <div
                 key={i}
@@ -194,7 +194,7 @@ function MarketplacePage() {
           <AnimatePresence mode="wait">
             <div
               key={page}
-              className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 transition-opacity
+              className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-4 transition-opacity
                 ${isFetching ? 'opacity-60' : 'opacity-100'}`}
             >
               {products.map((product, i) => (

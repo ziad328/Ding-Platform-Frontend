@@ -7,12 +7,12 @@ function SettingsPage() {
   return (
     <main
       id="settings-main"
-      className="min-h-screen bg-neutral-w-100 dark:bg-dark-bg-primary py-10 px-4"
+      className="min-h-screen dark:bg-dark-bg-primary py-6 px-3 sm:py-8 sm:px-4 md:py-10"
     >
-      <div className="max-w-2xl mx-auto space-y-6">
+      <div className="w-full max-w-2xl mx-auto space-y-4 sm:space-y-6">
         {/* Page header */}
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-neutral-b-900 dark:text-dark-text-primary tracking-tight">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-xl sm:text-2xl font-bold text-neutral-b-900 dark:text-dark-text-primary tracking-tight">
             Settings
           </h1>
           <p className="text-sm text-neutral-b-500 dark:text-dark-text-muted mt-1">

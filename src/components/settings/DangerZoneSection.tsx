@@ -158,7 +158,7 @@ function DangerZoneSection() {
         <div className="rounded-2xl border border-red-200 dark:border-red-900/50 overflow-hidden shadow-sm">
 
           {/* Header band */}
-          <div className="flex items-center gap-3 px-6 py-4
+          <div className="flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4
             bg-linear-to-r from-red-600 to-rose-600 dark:from-red-700 dark:to-rose-700">
             <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/20">
               <ShieldAlert size={17} className="text-white" />
@@ -179,7 +179,7 @@ function DangerZoneSection() {
           </div>
 
           {/* Warning banner */}
-          <div className="flex items-start gap-3 px-6 py-3 bg-amber-50 dark:bg-amber-900/10 border-b border-amber-200 dark:border-amber-800/40">
+          <div className="flex items-start gap-2 sm:gap-3 px-4 sm:px-6 py-3 bg-amber-50 dark:bg-amber-900/10 border-b border-amber-200 dark:border-amber-800/40">
             <AlertTriangle size={15} className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
             <p className="text-xs text-amber-700 dark:text-amber-400 leading-relaxed">
               Please read carefully before proceeding. These actions affect your entire account
@@ -188,7 +188,7 @@ function DangerZoneSection() {
           </div>
 
           {/* Action cards */}
-          <div className="p-5 space-y-3 bg-white dark:bg-dark-bg-secondary">
+          <div className="p-3 sm:p-5 space-y-3 bg-white dark:bg-dark-bg-secondary">
             <DangerCard
               icon={<UserX size={18} />}
               title="Deactivate Account"

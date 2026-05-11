@@ -33,14 +33,7 @@ const imageVariants: Variants = {
   },
 };
 
-const overlayVariants: Variants = {
-  rest: { opacity: 0, y: 8 },
-  hover: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.22, ease: 'easeOut' as const },
-  },
-};
+
 
 const shimmerVariants: Variants = {
   rest: { x: '-100%' },
@@ -67,7 +60,6 @@ function ProductCard({ product, onClick, index = 0 }: ProductCardProps) {
       onClick={() => onClick(product)}
       className="group w-full text-left rounded-2xl overflow-hidden
         bg-white dark:bg-neutral-b-800
-        border border-neutral-b-150 dark:border-neutral-b-700
         shadow-[0_2px_8px_rgba(0,0,0,0.06)] hover:shadow-[0_8px_28px_rgba(0,0,0,0.13)]
         dark:shadow-none dark:hover:shadow-[0_8px_28px_rgba(0,0,0,0.4)]
         focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500
@@ -120,19 +112,7 @@ function ProductCard({ product, onClick, index = 0 }: ProductCardProps) {
           </div>
         )}
 
-        {/* "View" pill — slides up on hover */}
-        {!isOutOfStock && (
-          <motion.div
-            variants={overlayVariants}
-            className="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2"
-          >
-            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold
-              bg-white/90 dark:bg-neutral-b-900/90 text-primary-600 dark:text-primary-400
-              shadow-md backdrop-blur-sm border border-white/60 dark:border-neutral-b-700/60">
-              View details →
-            </span>
-          </motion.div>
-        )}
+
 
         {/* Quantity low badge */}
         {product.quantity > 0 && product.quantity <= 5 && (

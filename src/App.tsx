@@ -8,7 +8,6 @@ import { Toaster } from 'sonner';
 import { Logo } from './components/atoms/Logo';
 import AdminGuard from './components/marketplace/AdminGuard';
 
-// Lazy load all page components
 const HomePage = lazy(() => import('./pages/home/HomePage'))
 const NotFoundPage = lazy(() => import('./pages/notfound/NotFoundPage'))
 const ProfilePage = lazy(() => import('./pages/profile/ProfilePage.tsx'))
@@ -101,7 +100,7 @@ function App() {
       <Toaster
         position="top-right"
         closeButton
-        offset="70px"
+        offset="16px"
         style={{ right: 12 }}
         toastOptions={{
           duration: 4000,

@@ -79,7 +79,7 @@ function SecuritySection() {
   return (
     <section
       aria-labelledby="security-heading"
-      className="bg-white dark:bg-dark-bg-secondary rounded-2xl border border-neutral-w-400 dark:border-dark-border p-6 shadow-sm"
+      className="bg-white dark:bg-dark-bg-secondary rounded-2xl border border-neutral-w-400 dark:border-dark-border p-4 sm:p-6 shadow-sm"
     >
       <div className="flex items-center gap-2 mb-1">
         <Lock size={18} className="text-primary-500" />
@@ -141,17 +141,17 @@ function SecuritySection() {
               <li>One number and one special character</li>
             </ul>
 
-            <div className="flex justify-end pt-2">
+            <div className="flex justify-stretch sm:justify-end pt-2">
               <button
                 type="submit"
                 disabled={isSubmitting || isLoading || !dirty}
                 id="change-password-submit"
-                className="px-6 py-2.5 text-sm font-medium rounded-xl text-white bg-primary-500 hover:bg-primary-600
+                className="w-full sm:w-auto px-6 py-2.5 text-sm font-medium rounded-xl text-white bg-primary-500 hover:bg-primary-600
                   disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus:outline-none
                   focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
               >
                 {isSubmitting || isLoading ? (
-                  <span className="flex items-center gap-2">
+                  <span className="flex items-center justify-center gap-2">
                     <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     Updating…
                   </span>
