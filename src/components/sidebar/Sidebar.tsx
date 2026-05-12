@@ -120,15 +120,25 @@ function Sidebar() {
   };
 
   useEffect(() => {
-    const onDown = (e: MouseEvent) => {
+    const onDown = (e: MouseEvent | TouchEvent) => {
       const target = e.target as Node;
       const outsideSidebar = sidebarRef.current && !sidebarRef.current.contains(target);
       const outsideMore    = !document.getElementById('more-dd')?.contains(target);
-      if (outsideSidebar && outsideMore) setMoreOpen(false);
+      if (outsideSidebar && outsideMore) {
+        if (hoverTimer.current) { clearTimeout(hoverTimer.current); hoverTimer.current = null; }
+        if (collapseTimer.current) { clearTimeout(collapseTimer.current); collapseTimer.current = null; }
+        setMoreOpen(false);
+        setExpanded(false);
+        clearSearch();
+      }
     };
     document.addEventListener('mousedown', onDown);
-    return () => document.removeEventListener('mousedown', onDown);
-  }, []);
+    document.addEventListener('touchstart', onDown, { passive: true });
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('touchstart', onDown);
+    };
+  }, [clearSearch]);
 
   useEffect(() => {
     if (!mobileMenuOpen) return;
