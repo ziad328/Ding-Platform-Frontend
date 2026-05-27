@@ -42,10 +42,10 @@ const NoroChatInput: React.FC<NoroChatInputProps> = ({ onSendMessage, isLoading 
     <div className="w-full px-3 sm:px-4 md:px-6 pb-1">
       <div className="max-w-[800px] mx-auto">
         {/* Input container */}
-        <div className="flex items-end gap-2 bg-white dark:bg-dark-bg-secondary border border-neutral-w-400 dark:border-dark-border rounded-2xl px-3 py-2.5 shadow-sm focus-within:border-primary-400 dark:focus-within:border-primary-600 focus-within:shadow-md transition-all duration-200">
+        <div className="flex items-center gap-2 bg-white dark:bg-dark-bg-secondary border border-neutral-w-400 dark:border-dark-border rounded-2xl px-3 py-2.5 shadow-sm focus-within:border-primary-400 dark:focus-within:border-primary-600 focus-within:shadow-md transition-all duration-200">
           {/* Left: attachment icon */}
           <button
-            className="p-1.5 text-neutral-b-300 dark:text-dark-text-muted hover:text-neutral-b-600 dark:hover:text-dark-text-secondary transition-colors shrink-0 self-end mb-0.5"
+            className="p-1.5 text-neutral-b-300 dark:text-dark-text-muted hover:text-neutral-b-600 dark:hover:text-dark-text-secondary transition-colors shrink-0"
             title="Attach file"
             aria-label="Attach file"
             disabled={isLoading}
@@ -67,7 +67,7 @@ const NoroChatInput: React.FC<NoroChatInputProps> = ({ onSendMessage, isLoading 
           />
 
           {/* Right: mic / send */}
-          <div className="flex items-center gap-1 shrink-0 self-end mb-0.5">
+          <div className="flex items-center gap-1 shrink-0">
             <AnimatePresence mode="wait" initial={false}>
               {!hasText && (
                 <motion.button

@@ -25,8 +25,8 @@ const NoroChatSidebar: React.FC<NoroChatSidebarProps> = ({
 }) => {
   const groups = groupConversationsByTime(conversations);
 
-  const SidebarContent = () => (
-    <div className="flex flex-col h-full bg-neutral-w-100 dark:bg-dark-bg-secondary">
+  const SidebarContent = ({ className = "bg-neutral-w-100 dark:bg-dark-bg-secondary" }: { className?: string }) => (
+    <div className={`flex flex-col h-full ${className}`}>
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-5 pb-3 shrink-0">
         <h2 className="text-base font-semibold text-neutral-b-800 dark:text-dark-text-primary">
@@ -92,8 +92,8 @@ const NoroChatSidebar: React.FC<NoroChatSidebarProps> = ({
   return (
     <>
       {/* ── Desktop sidebar (always visible) ── */}
-      <aside className="hidden md:flex flex-col w-[280px] shrink-0 h-full border-r border-neutral-w-400 dark:border-dark-border/40">
-        <SidebarContent />
+      <aside className="hidden md:flex flex-col w-[280px] shrink-0 h-full border-r-2 border-neutral-w-400 dark:border-dark-border/30 bg-transparent">
+        <SidebarContent className="bg-transparent" />
       </aside>
 
       {/* ── Mobile: backdrop + slide-in drawer ── */}
@@ -117,9 +117,9 @@ const NoroChatSidebar: React.FC<NoroChatSidebarProps> = ({
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'tween', duration: 0.25, ease: 'easeInOut' }}
-              className="fixed top-0 left-0 bottom-0 z-50 w-[280px] md:hidden shadow-2xl"
+              className="fixed top-0 left-0 bottom-0 z-50 w-[280px] md:hidden shadow-2xl bg-neutral-w-100 dark:bg-dark-bg-secondary"
             >
-              <SidebarContent />
+              <SidebarContent className="bg-neutral-w-100 dark:bg-dark-bg-secondary" />
             </motion.div>
           </>
         )}
@@ -143,23 +143,22 @@ const SidebarItem: React.FC<SidebarItemProps> = ({ conv, isActive, onSelect, onD
     animate={{ opacity: 1, x: 0 }}
     exit={{ opacity: 0, x: -8, height: 0, marginBottom: 0 }}
     transition={{ duration: 0.15 }}
-    className="group relative flex items-center gap-1"
+    onClick={onSelect}
+    className={`group relative flex items-center justify-between w-full px-3 py-2.5 rounded-xl text-sm transition-all duration-150 cursor-pointer mb-1.5 ${
+      isActive
+        ? 'bg-primary-500/10 dark:bg-primary-500/15 text-neutral-b-800 dark:text-dark-text-primary font-medium border-l-2 border-primary-500'
+        : 'text-neutral-b-600 dark:text-dark-text-secondary hover:bg-neutral-w-300 dark:hover:bg-dark-bg-tertiary'
+    }`}
   >
-    <button
-      onClick={onSelect}
-      className={`flex-1 min-w-0 text-left px-3 py-2.5 rounded-xl text-sm transition-all duration-150 ${
-        isActive
-          ? 'bg-primary-500/10 dark:bg-primary-500/15 text-neutral-b-800 dark:text-dark-text-primary font-medium border-l-2 border-primary-500'
-          : 'text-neutral-b-600 dark:text-dark-text-secondary hover:bg-neutral-w-300 dark:hover:bg-dark-bg-tertiary'
-      }`}
-    >
-      <span className="block truncate leading-tight">{conv.title}</span>
-    </button>
+    <span className="flex-1 truncate pr-2 leading-tight select-none">{conv.title}</span>
 
-    {/* Delete button — sibling (NOT nested), appears on group hover */}
+    {/* Delete button — inside the box, appears on group hover */}
     <button
-      onClick={onDelete}
-      className="opacity-0 group-hover:opacity-100 shrink-0 w-6 h-6 rounded flex items-center justify-center text-neutral-b-400 dark:text-dark-text-muted hover:text-semantic-r-800 dark:hover:text-semantic-r-700 hover:bg-semantic-r-700/10 transition-all duration-150 mr-1"
+      onClick={(e) => {
+        e.stopPropagation();
+        onDelete(e);
+      }}
+      className="opacity-0 group-hover:opacity-100 shrink-0 w-6 h-6 rounded-lg flex items-center justify-center text-neutral-b-400 dark:text-dark-text-muted hover:text-neutral-b-700 dark:hover:text-dark-text-primary hover:bg-neutral-w-300 dark:hover:bg-dark-bg-tertiary transition-all duration-150"
       title="Delete conversation"
     >
       <X size={12} />
