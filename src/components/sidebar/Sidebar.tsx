@@ -6,13 +6,28 @@ import {
   RiVideoLine, RiVideoFill, RiSearchLine, RiStoreLine, RiStoreFill,
   RiMenuLine, RiSettings2Line, RiLogoutBoxLine, RiUser3Line,
 } from '@remixicon/react';
-import { X, Loader2 } from 'lucide-react';
+import { X, Loader2, Sparkles } from 'lucide-react';
 import logoSvg from '../../assets/Logo.svg';
 import { selectCurrentUser } from '../../store/slices/auth/auth';
 import { useSendLogOutMutation } from '../../store/slices/auth/authApi';
 import { setQuery } from '../../store/slices/search/searchSlice';
 import { useSearchQuery } from '../../store/ApiSlice';
 import { debounce } from 'lodash';
+
+interface SearchUser {
+  id: string;
+  name?: string;
+  username?: string;
+  avatar?: string;
+  bio?: string;
+}
+
+interface SearchPost {
+  id: string;
+  content?: string;
+  authorName?: string;
+  createdAt?: string;
+}
 
 const COLLAPSED_W  = 72;
 const EXPANDED_W   = 240;
@@ -75,6 +90,7 @@ function Sidebar() {
     { q: searchValue, type: 'all', sortBy: 'relevance', limit: 10 },
     { skip: !searchValue || searchValue.length < 1 }
   );
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const debouncedSearch = useCallback(debounce((q: string) => dispatch(setQuery(q)), 300), [dispatch]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -95,7 +111,11 @@ function Sidebar() {
 
   const handleResultClick = (type: 'user' | 'post', id: string) => {
     clearSearch();
-    type === 'user' ? navigate(`/profile/${id}`) : navigate(`/post/${id}`);
+    if (type === 'user') {
+      navigate(`/profile/${id}`);
+    } else {
+      navigate(`/post/${id}`);
+    }
   };
 
   const openMore = (e: React.MouseEvent) => {
@@ -166,6 +186,7 @@ function Sidebar() {
   const coreItems = [
     { Out: RiHome9Line,   Fill: RiHome9Fill,   label: 'Home',     path: '/',         exact: true  },
     { Out: RiSendInsLine, Fill: RiSendInsFill, label: 'Messages', path: '/messages', exact: false },
+    { Out: Sparkles,      Fill: Sparkles,      label: 'Noro AI',  path: '/noro',     exact: false },
     { Out: RiVideoLine,   Fill: RiVideoFill,   label: 'Reels',    path: '/reels',    exact: false },
   ];
 
@@ -243,7 +264,7 @@ function Sidebar() {
           </button>
 
           {showDropdown && searchResults && (() => {
-            const { users = [], posts = [] } = (searchResults as any).data || {};
+            const { users = [], posts = [] } = (searchResults as { data?: { users: SearchUser[]; posts: SearchPost[] } }).data || {};
             const hasResults = users.length > 0 || posts.length > 0;
             return (
               <div style={{ position: 'fixed', left: (expanded ? EXPANDED_W : COLLAPSED_W) + 8, top: 120, zIndex: 60 }}
@@ -258,7 +279,7 @@ function Sidebar() {
                   : <>
                       {users.length > 0 && <div className="p-2 border-b border-neutral-w-200 dark:border-dark-border">
                         <p className="text-xs font-semibold text-neutral-b-400 px-2 mb-1">People</p>
-                        {users.slice(0, 5).map((u: any) => {
+                        {users.slice(0, 5).map((u: SearchUser) => {
                           const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name || u.username || 'User')}&background=3b82f6&color=fff`;
                           return (
                             <button key={u.id} onClick={() => handleResultClick('user', u.id)}
@@ -287,7 +308,7 @@ function Sidebar() {
                       </div>}
                       {posts.length > 0 && <div className="p-2">
                         <p className="text-xs font-semibold text-neutral-b-400 px-2 mb-1">Posts</p>
-                        {posts.slice(0, 5).map((p: any) => (
+                        {posts.slice(0, 5).map((p: SearchPost) => (
                           <button key={p.id} onClick={() => handleResultClick('post', p.id)}
                             className="w-full flex flex-col gap-1.5 px-3 py-2 rounded-lg hover:bg-neutral-w-100 dark:hover:bg-dark-bg-tertiary text-left transition-colors">
                             <div className="flex items-center gap-2 w-full">
@@ -368,6 +389,7 @@ function Sidebar() {
           {([
             { Out: RiHome9Line,   Fill: RiHome9Fill,   path: '/',            exact: true  },
             { Out: RiSendInsLine, Fill: RiSendInsFill, path: '/messages',    exact: false },
+            { Out: Sparkles,      Fill: Sparkles,      path: '/noro',        exact: false },
             { Out: RiVideoLine,   Fill: RiVideoFill,   path: '/reels',       exact: false },
             { Out: RiStoreLine,   Fill: RiStoreFill,   path: '/marketplace', exact: false },
           ] as const).map(item => (
