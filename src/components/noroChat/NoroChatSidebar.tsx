@@ -91,7 +91,7 @@ const NoroChatSidebar: React.FC<NoroChatSidebarProps> = ({
                     session={session}
                     isActive={session.id === activeId}
                     onSelect={() => { onSelectSession(session.id); onClose(); }}
-                    onDelete={(e) => { e.stopPropagation(); onDeleteSession(session.id); }}
+                    onDelete={() => onDeleteSession(session.id)}
                   />
                 ))}
               </AnimatePresence>
@@ -146,7 +146,7 @@ interface SidebarItemProps {
   session: ChatSession;
   isActive: boolean;
   onSelect: () => void;
-  onDelete: (e: React.MouseEvent) => void;
+  onDelete: () => void;
 }
 
 const SidebarItem: React.FC<SidebarItemProps> = ({ session, isActive, onSelect, onDelete }) => (
@@ -169,7 +169,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({ session, isActive, onSelect, 
     <button
       onClick={(e) => {
         e.stopPropagation();
-        onDelete(e);
+        onDelete();
       }}
       className="opacity-0 group-hover:opacity-100 shrink-0 w-6 h-6 rounded-lg flex items-center justify-center text-neutral-b-400 dark:text-dark-text-muted hover:text-neutral-b-700 dark:hover:text-dark-text-primary hover:bg-neutral-w-300 dark:hover:bg-dark-bg-tertiary transition-all duration-150"
       title="Delete conversation"
