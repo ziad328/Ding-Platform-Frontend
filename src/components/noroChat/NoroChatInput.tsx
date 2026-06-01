@@ -41,7 +41,7 @@ const NoroChatInput: React.FC<NoroChatInputProps> = ({ onSendMessage, isLoading 
   return (
     <div className="w-full px-2 sm:px-4 md:px-6 pb-1">
       <div className="max-w-[800px] mx-auto">
-        <div className="flex items-center gap-1.5 sm:gap-2 bg-neutral-w-200 dark:bg-dark-bg-secondary border border-neutral-w-400 dark:border-dark-border rounded-2xl px-2.5 py-1.5 sm:px-3 sm:py-2.5 shadow-sm focus-within:border-primary-400 dark:focus-within:border-primary-600 focus-within:shadow-md transition-all duration-200">
+        <div className="flex items-center gap-1.5 sm:gap-2 bg-white dark:bg-dark-bg-secondary border border-neutral-w-400 dark:border-dark-border rounded-2xl px-2.5 py-1.5 sm:px-3 sm:py-2.5 shadow-sm focus-within:border-primary-400 dark:focus-within:border-primary-600 focus-within:shadow-md transition-all duration-200">
           <button
             className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-neutral-b-300 dark:text-dark-text-muted hover:text-neutral-b-600 dark:hover:text-dark-text-secondary hover:bg-neutral-w-300/30 dark:hover:bg-dark-bg-secondary/40 transition-all shrink-0"
             title="Attach file"
