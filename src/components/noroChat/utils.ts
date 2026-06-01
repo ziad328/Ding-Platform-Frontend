@@ -1,8 +1,9 @@
 import type { NoroChatConversation } from './types';
+import type { ChatSession } from '../../types/noroChat';
 
-// ─────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
 // Time-group helper
-// ─────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
 export type TimeGroup = 'Today' | 'Previous 7 Days' | 'Previous 30 Days' | 'Older';
 
 export function getTimeGroup(date: Date): TimeGroup {
@@ -16,6 +17,7 @@ export function getTimeGroup(date: Date): TimeGroup {
   return 'Older';
 }
 
+// ── Group local mock conversations (createdAt: Date) ─────────────────────────
 export function groupConversationsByTime(
   conversations: NoroChatConversation[]
 ): { group: TimeGroup; items: NoroChatConversation[] }[] {
@@ -36,17 +38,38 @@ export function groupConversationsByTime(
     .map((g) => ({ group: g, items: map[g] }));
 }
 
-// ─────────────────────────────────────────────────────────────
+// ── Group API sessions (created_at: ISO string) ───────────────────────────────
+export function groupSessionsByTime(
+  sessions: ChatSession[]
+): { group: TimeGroup; items: ChatSession[] }[] {
+  const order: TimeGroup[] = ['Today', 'Previous 7 Days', 'Previous 30 Days', 'Older'];
+  const map: Record<TimeGroup, ChatSession[]> = {
+    Today: [],
+    'Previous 7 Days': [],
+    'Previous 30 Days': [],
+    Older: [],
+  };
+
+  for (const session of sessions) {
+    map[getTimeGroup(new Date(session.created_at))].push(session);
+  }
+
+  return order
+    .filter((g) => map[g].length > 0)
+    .map((g) => ({ group: g, items: map[g] }));
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Title generation from first user message
-// ─────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
 export function generateTitle(text: string): string {
   const cleaned = text.replace(/\n/g, ' ').trim();
   return cleaned.length > 40 ? cleaned.slice(0, 37) + '…' : cleaned;
 }
 
-// ─────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
 // Unique ID
-// ─────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
 export function genId(): string {
   return Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
 }
