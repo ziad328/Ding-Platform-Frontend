@@ -70,7 +70,7 @@ const NoroChatMain: React.FC<NoroChatMainProps> = ({
 
   return (
     <div className="flex flex-col flex-1 h-full min-w-0 bg-neutral-w-200 dark:bg-dark-bg-primary">
-      <div className="md:hidden flex items-center gap-3 px-4 py-3 bg-neutral-w-200 dark:bg-dark-bg-primary border-b border-neutral-w-300/60 dark:border-dark-border/20 shrink-0">
+      <div className="md:hidden flex items-center gap-3 px-4 py-3 bg-neutral-w-200 dark:bg-dark-bg-primary border-b border-neutral-w-400 dark:border-dark-border/20 shrink-0">
         <button
           id="noro-sidebar-toggle"
           onClick={onOpenSidebar}

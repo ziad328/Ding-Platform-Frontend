@@ -36,7 +36,7 @@ const NoroChatSidebar: React.FC<NoroChatSidebarProps> = ({
   const SidebarContent = ({ className = '' }: { className?: string }) => (
     <div className={`flex flex-col h-full pb-safe ${className}`}>
       {/* Header */}
-      <div className="flex items-center justify-between px-4 pt-5 pb-3 shrink-0 border-b border-neutral-w-300/60 dark:border-dark-border/20">
+      <div className="flex items-center justify-between px-4 pt-5 pb-3 shrink-0">
         <div className="flex items-center gap-2.5">
           <div className="w-6 h-6 rounded-lg bg-linear-to-br from-primary-400 to-primary-700 flex items-center justify-center shadow-sm">
             <svg width="12" height="12" viewBox="0 0 32 32" fill="none">
@@ -127,7 +127,7 @@ const NoroChatSidebar: React.FC<NoroChatSidebarProps> = ({
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex flex-col w-[260px] shrink-0 h-full border-r border-neutral-w-300/80 dark:border-dark-border/20 bg-neutral-w-200 dark:bg-dark-bg-primary">
+      <aside className="hidden md:flex flex-col w-[260px] shrink-0 h-full border-r border-neutral-w-400 dark:border-dark-border/20 bg-neutral-w-200 dark:bg-dark-bg-primary">
         <SidebarContent />
       </aside>
 
@@ -150,7 +150,7 @@ const NoroChatSidebar: React.FC<NoroChatSidebarProps> = ({
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', damping: 28, stiffness: 280 }}
-              className="fixed top-0 left-0 bottom-0 z-50 w-[270px] md:hidden shadow-2xl bg-neutral-w-200 dark:bg-dark-bg-primary border-r border-neutral-w-300 dark:border-dark-border/30"
+              className="fixed top-0 left-0 bottom-0 z-50 w-[270px] md:hidden shadow-2xl bg-neutral-w-200 dark:bg-dark-bg-primary border-r border-neutral-w-400 dark:border-dark-border/30"
             >
               <SidebarContent />
             </motion.div>
