@@ -1,3 +1,8 @@
+/**
+ * NoroChatPage — top-level page that wires RTK Query data (sessions, messages)
+ * to the Sidebar and Main components. Manages optimistic messages, client-side
+ * title derivation (persisted to localStorage), and active session UI state via Redux.
+ */
 import { useState, useCallback, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { selectCurrentUser } from '../../store/slices/auth/auth';
@@ -18,265 +23,171 @@ import { generateTitle } from '../../components/noroChat/utils';
 import NoroChatSidebar from '../../components/noroChat/NoroChatSidebar';
 import NoroChatMain from '../../components/noroChat/NoroChatMain';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Streaming animation config (client-side simulation)
-// ─────────────────────────────────────────────────────────────────────────────
 const THINK_DELAY_MS = 900;
+const LOCAL_TITLES_KEY = 'noro-session-titles';
+
+function readPersistedTitles(): Record<string, string> {
+  try {
+    const raw = localStorage.getItem(LOCAL_TITLES_KEY);
+    return raw ? (JSON.parse(raw) as Record<string, string>) : {};
+  } catch {
+    return {};
+  }
+}
+
+function writePersistedTitles(titles: Record<string, string>) {
+  try {
+    localStorage.setItem(LOCAL_TITLES_KEY, JSON.stringify(titles));
+  } catch {}
+}
 
 function NoroChatPage() {
   const dispatch = useDispatch();
   const user = useSelector(selectCurrentUser);
   const activeSessionId = useSelector(selectActiveSessionId);
 
-  // Use a ref so async handlers always read the latest value without
-  // becoming stale closures.
   const activeSessionIdRef = useRef<string | null>(activeSessionId);
   activeSessionIdRef.current = activeSessionId;
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null);
-
-  // ── Optimistic local messages keyed by sessionId ──────────────────────────
-  // Map<sessionId, ChatMessage[]> so switching sessions never leaks messages.
-  const [localMessagesBySession, setLocalMessagesBySession] = useState<
-    Record<string, ChatMessage[]>
-  >({});
+  const [localMessagesBySession, setLocalMessagesBySession] = useState<Record<string, ChatMessage[]>>({});
   const [isSending, setIsSending] = useState(false);
 
-  // ── Client-side title overrides ───────────────────────────────────────────
-  // The backend creates sessions with title "New Chat" and never renames them.
-  // We derive a title from the first message text and store it here.
-  const [localTitles, setLocalTitles] = useState<Record<string, string>>({});
+  // Titles are seeded from localStorage on mount so they survive page refreshes.
+  const [localTitles, setLocalTitles] = useState<Record<string, string>>(readPersistedTitles);
 
-  // ── RTK Query hooks ───────────────────────────────────────────────────────
-  const {
-    data: sessionsData,
-    isLoading: sessionsLoading,
-    isError: sessionsError,
-  } = useGetChatSessionsQuery();
+  const updateTitles = useCallback((updater: (prev: Record<string, string>) => Record<string, string>) => {
+    setLocalTitles((prev) => {
+      const next = updater(prev);
+      writePersistedTitles(next);
+      return next;
+    });
+  }, []);
 
-  const {
-    data: messagesData,
-    isLoading: messagesLoading,
-    isError: messagesError,
-  } = useGetMessagesQuery(activeSessionId!, { skip: !activeSessionId });
+  const { data: sessionsData, isLoading: sessionsLoading, isError: sessionsError } = useGetChatSessionsQuery();
+  const { data: messagesData, isLoading: messagesLoading, isError: messagesError } = useGetMessagesQuery(activeSessionId!, { skip: !activeSessionId });
 
   const [createSession] = useCreateChatSessionMutation();
   const [deleteSession] = useDeleteSessionMutation();
   const [sendMessage] = useSendMessageMutation();
 
-  // ── Derive active session and messages ────────────────────────────────────
   const sessions = sessionsData?.items ?? [];
-  const activeSession = activeSessionId
-    ? sessions.find((s) => s.id === activeSessionId) ?? null
-    : null;
-
+  const activeSession = activeSessionId ? sessions.find((s) => s.id === activeSessionId) ?? null : null;
   const fetchedMessages: ChatMessage[] = messagesData?.items ?? [];
-  const localMessages = activeSessionId
-    ? (localMessagesBySession[activeSessionId] ?? [])
-    : [];
-  const displayedMessages: ChatMessage[] =
-    localMessages.length > 0 ? localMessages : fetchedMessages;
+  const localMessages = activeSessionId ? (localMessagesBySession[activeSessionId] ?? []) : [];
+  const displayedMessages: ChatMessage[] = localMessages.length > 0 ? localMessages : fetchedMessages;
 
-  // ── New Chat ──────────────────────────────────────────────────────────────
   const handleNewChat = useCallback(() => {
     dispatch(clearActiveSession());
     setIsSidebarOpen(false);
   }, [dispatch]);
 
-  // ── Select session ────────────────────────────────────────────────────────
-  const handleSelectSession = useCallback(
-    (id: string) => {
-      dispatch(setActiveSession(id));
-    },
-    [dispatch]
-  );
+  const handleSelectSession = useCallback((id: string) => {
+    dispatch(setActiveSession(id));
+  }, [dispatch]);
 
-  // ── Delete session ────────────────────────────────────────────────────────
-  const handleDeleteSession = useCallback(
-    async (id: string) => {
-      // Read the *current* active session from the ref (not stale closure)
-      const currentActiveId = activeSessionIdRef.current;
+  const handleDeleteSession = useCallback(async (id: string) => {
+    const currentActiveId = activeSessionIdRef.current;
+    if (currentActiveId === id) dispatch(clearActiveSession());
 
-      // Optimistically clear from sidebar immediately — the RTK cache
-      // invalidation will remove it from the server list after the call.
-      // If it was the active session, clear the view right away so the
-      // user doesn't see a ghost session.
-      if (currentActiveId === id) {
-        dispatch(clearActiveSession());
-      }
+    setLocalMessagesBySession((prev) => {
+      if (!prev[id]) return prev;
+      const next = { ...prev }; delete next[id]; return next;
+    });
+    updateTitles((prev) => {
+      if (!prev[id]) return prev;
+      const next = { ...prev }; delete next[id]; return next;
+    });
 
-      // Clean up any local optimistic messages and title for that session
-      setLocalMessagesBySession((prev) => {
-        if (!prev[id]) return prev;
-        const next = { ...prev };
-        delete next[id];
-        return next;
-      });
-      setLocalTitles((prev) => {
-        if (!prev[id]) return prev;
-        const next = { ...prev };
-        delete next[id];
-        return next;
-      });
+    try {
+      await deleteSession(id).unwrap();
+    } catch {
+      if (currentActiveId === id) dispatch(setActiveSession(id));
+    }
+  }, [deleteSession, dispatch, updateTitles]);
 
+  const handleSendMessage = useCallback(async (text: string) => {
+    if (!text.trim() || isSending) return;
+
+    let targetSessionId = activeSessionIdRef.current;
+
+    if (!targetSessionId) {
       try {
-        await deleteSession(id).unwrap();
-        // RTK Query will invalidate 'NoroChatSessions' and re-fetch the list.
+        const newSession = await createSession({ title: 'New Chat' }).unwrap();
+        targetSessionId = newSession.id;
+        dispatch(setActiveSession(newSession.id));
+        updateTitles((prev) => ({ ...prev, [newSession.id]: generateTitle(text.trim()) }));
       } catch {
-        // API call failed — the session list will revert to the cached state
-        // automatically (no optimistic update was applied to the server list).
-        // If we cleared the active session, re-select it so the UI is consistent.
-        if (currentActiveId === id) {
-          dispatch(setActiveSession(id));
-        }
+        return;
       }
-    },
-    [deleteSession, dispatch]
-    // NOTE: no activeSessionId in deps — we use the ref to avoid stale closure
-  );
+    }
 
-  // ── Send message ──────────────────────────────────────────────────────────
-  const handleSendMessage = useCallback(
-    async (text: string) => {
-      if (!text.trim() || isSending) return;
+    const sessionId = targetSessionId;
 
-      let targetSessionId = activeSessionIdRef.current;
+    const optimisticUserMsg: ChatMessage = {
+      id: `local-${Date.now()}`,
+      session_id: sessionId,
+      role: 'user',
+      content: text.trim(),
+      created_at: new Date().toISOString(),
+    };
 
-      // 1️⃣ If no active session, create one first
-      if (!targetSessionId) {
-        try {
-          const newSession = await createSession({ title: 'New Chat' }).unwrap();
-          targetSessionId = newSession.id;
-          dispatch(setActiveSession(newSession.id));
-          // Derive a meaningful title from the first message and store it locally.
-          // The backend keeps the session named "New Chat" — we override client-side.
-          setLocalTitles((prev) => ({
-            ...prev,
-            [newSession.id]: generateTitle(text.trim()),
-          }));
-        } catch {
-          return;
-        }
-      }
+    setLocalMessagesBySession((prev) => {
+      const existing = prev[sessionId] ?? fetchedMessages;
+      return { ...prev, [sessionId]: [...existing, optimisticUserMsg] };
+    });
 
-      const sessionId = targetSessionId; // narrow to string
+    setIsSending(true);
+    await new Promise<void>((r) => setTimeout(r, THINK_DELAY_MS));
 
-      // 2️⃣ Optimistically append the user message to the correct session bucket
-      const optimisticUserMsg: ChatMessage = {
-        id: `local-${Date.now()}`,
-        session_id: sessionId,
-        role: 'user',
-        content: text.trim(),
-        created_at: new Date().toISOString(),
-      };
+    try {
+      const response = await sendMessage({ sessionId, message: text.trim() }).unwrap();
+      const aiMsg = response.assistant_message;
 
       setLocalMessagesBySession((prev) => {
-        const existing = prev[sessionId] ?? fetchedMessages;
-        return { ...prev, [sessionId]: [...existing, optimisticUserMsg] };
+        const current = prev[sessionId] ?? [];
+        const withoutOptimistic = current.filter((m) => m.id !== optimisticUserMsg.id);
+        return { ...prev, [sessionId]: [...withoutOptimistic, response.user_message, aiMsg] };
       });
 
-      setIsSending(true);
+      setStreamingMessageId(aiMsg.id);
+      const streamDurationMs = Math.ceil((aiMsg.content.length / 6) * 16) + 400;
+      setTimeout(() => setStreamingMessageId(null), streamDurationMs);
+    } catch {
+      setLocalMessagesBySession((prev) => {
+        const current = prev[sessionId] ?? [];
+        return { ...prev, [sessionId]: current.filter((m) => m.id !== optimisticUserMsg.id) };
+      });
+    } finally {
+      setIsSending(false);
+    }
+  }, [isSending, fetchedMessages, createSession, sendMessage, dispatch, updateTitles]);
 
-      // 3️⃣ Simulate thinking delay
-      await new Promise<void>((r) => setTimeout(r, THINK_DELAY_MS));
+  const handleSuggestionClick = useCallback((text: string) => {
+    handleSendMessage(text);
+  }, [handleSendMessage]);
 
-      // 4️⃣ Send to API
-      try {
-        const response = await sendMessage({
-          sessionId,
-          message: text.trim(),
-        }).unwrap();
-
-        const aiMsg = response.assistant_message;
-
-        // 5️⃣ Replace optimistic message with confirmed server messages
-        setLocalMessagesBySession((prev) => {
-          const current = prev[sessionId] ?? [];
-          const withoutOptimistic = current.filter(
-            (m) => m.id !== optimisticUserMsg.id
-          );
-          return {
-            ...prev,
-            [sessionId]: [...withoutOptimistic, response.user_message, aiMsg],
-          };
-        });
-
-        // 6️⃣ Trigger streaming animation
-        setStreamingMessageId(aiMsg.id);
-        const streamDurationMs = Math.ceil((aiMsg.content.length / 6) * 16) + 400;
-        setTimeout(() => setStreamingMessageId(null), streamDurationMs);
-      } catch {
-        // Remove optimistic message on failure
-        setLocalMessagesBySession((prev) => {
-          const current = prev[sessionId] ?? [];
-          return {
-            ...prev,
-            [sessionId]: current.filter((m) => m.id !== optimisticUserMsg.id),
-          };
-        });
-      } finally {
-        setIsSending(false);
-      }
-    },
-    [isSending, fetchedMessages, createSession, sendMessage, dispatch]
-  );
-
-  // ── Suggestion pill clicked ───────────────────────────────────────────────
-  const handleSuggestionClick = useCallback(
-    (text: string) => {
-      handleSendMessage(text);
-    },
-    [handleSendMessage]
-  );
-
-  // ── Merge client-side title overrides into the sessions list ─────────────
-  // Produces a new array where any session with a local title override uses
-  // that instead of the backend's "New Chat" placeholder.
   const sessionsWithTitles = sessions.map((s) =>
     localTitles[s.id] ? { ...s, title: localTitles[s.id] } : s
   );
 
-  // ── Build the session shape NoroChatMain expects ──────────────────────────
-  // Guard: if activeSessionId is set but the session no longer exists in the
-  // list (e.g. just deleted), treat it as null so the welcome screen shows.
-  const sessionExistsInList = activeSessionId
-    ? sessions.some((s) => s.id === activeSessionId)
-    : false;
-
-  const resolvedTitle =
-    (activeSessionId && localTitles[activeSessionId]) ??
-    activeSession?.title ??
-    'Chat';
+  const sessionExistsInList = activeSessionId ? sessions.some((s) => s.id === activeSessionId) : false;
+  const resolvedTitle = (activeSessionId && localTitles[activeSessionId]) ?? activeSession?.title ?? 'Chat';
 
   const activeSessionForMain =
     activeSessionId && (sessionExistsInList || sessionsLoading)
-      ? {
-          id: activeSessionId,
-          title: resolvedTitle,
-          messages: displayedMessages,
-        }
+      ? { id: activeSessionId, title: resolvedTitle, messages: displayedMessages }
       : null;
 
-  // Clear the Redux active session if it no longer exists in the fetched list
-  // (handles the case where the delete succeeded but clearActiveSession wasn't
-  // dispatched yet, e.g. if the user deleted from another tab).
-  if (
-    activeSessionId &&
-    !sessionsLoading &&
-    !sessionExistsInList &&
-    !isSending
-  ) {
+  if (activeSessionId && !sessionsLoading && !sessionExistsInList && !isSending) {
     dispatch(clearActiveSession());
   }
 
-  const inlineError = messagesError
-    ? 'Could not load messages. Please try again.'
-    : null;
+  const inlineError = messagesError ? 'Could not load messages. Please try again.' : null;
 
   return (
-    <div className="flex h-full overflow-hidden bg-neutral-w-200 dark:bg-dark-bg-primary">
-      {/* ── Sidebar ─────────────────────────────────────────── */}
+    <div className="flex h-full overflow-hidden bg-neutral-w-100 dark:bg-dark-bg-primary">
       <NoroChatSidebar
         sessions={sessionsWithTitles}
         activeId={activeSessionId}
@@ -288,8 +199,6 @@ function NoroChatPage() {
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
       />
-
-      {/* ── Main chat area ───────────────────────────────────── */}
       <NoroChatMain
         session={activeSessionForMain}
         isLoading={isSending || messagesLoading}
