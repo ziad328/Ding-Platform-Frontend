@@ -14,6 +14,7 @@ import {
   useGetMessagesQuery,
 } from '../../store/noroChatApi';
 import type { ChatMessage } from '../../types/noroChat';
+import { generateTitle } from '../../components/noroChat/utils';
 import NoroChatSidebar from '../../components/noroChat/NoroChatSidebar';
 import NoroChatMain from '../../components/noroChat/NoroChatMain';
 
@@ -41,6 +42,11 @@ function NoroChatPage() {
     Record<string, ChatMessage[]>
   >({});
   const [isSending, setIsSending] = useState(false);
+
+  // ── Client-side title overrides ───────────────────────────────────────────
+  // The backend creates sessions with title "New Chat" and never renames them.
+  // We derive a title from the first message text and store it here.
+  const [localTitles, setLocalTitles] = useState<Record<string, string>>({});
 
   // ── RTK Query hooks ───────────────────────────────────────────────────────
   const {
@@ -100,8 +106,14 @@ function NoroChatPage() {
         dispatch(clearActiveSession());
       }
 
-      // Clean up any local optimistic messages for that session
+      // Clean up any local optimistic messages and title for that session
       setLocalMessagesBySession((prev) => {
+        if (!prev[id]) return prev;
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+      setLocalTitles((prev) => {
         if (!prev[id]) return prev;
         const next = { ...prev };
         delete next[id];
@@ -137,6 +149,12 @@ function NoroChatPage() {
           const newSession = await createSession({ title: 'New Chat' }).unwrap();
           targetSessionId = newSession.id;
           dispatch(setActiveSession(newSession.id));
+          // Derive a meaningful title from the first message and store it locally.
+          // The backend keeps the session named "New Chat" — we override client-side.
+          setLocalTitles((prev) => ({
+            ...prev,
+            [newSession.id]: generateTitle(text.trim()),
+          }));
         } catch {
           return;
         }
@@ -212,6 +230,13 @@ function NoroChatPage() {
     [handleSendMessage]
   );
 
+  // ── Merge client-side title overrides into the sessions list ─────────────
+  // Produces a new array where any session with a local title override uses
+  // that instead of the backend's "New Chat" placeholder.
+  const sessionsWithTitles = sessions.map((s) =>
+    localTitles[s.id] ? { ...s, title: localTitles[s.id] } : s
+  );
+
   // ── Build the session shape NoroChatMain expects ──────────────────────────
   // Guard: if activeSessionId is set but the session no longer exists in the
   // list (e.g. just deleted), treat it as null so the welcome screen shows.
@@ -219,11 +244,16 @@ function NoroChatPage() {
     ? sessions.some((s) => s.id === activeSessionId)
     : false;
 
+  const resolvedTitle =
+    (activeSessionId && localTitles[activeSessionId]) ??
+    activeSession?.title ??
+    'Chat';
+
   const activeSessionForMain =
     activeSessionId && (sessionExistsInList || sessionsLoading)
       ? {
           id: activeSessionId,
-          title: activeSession?.title ?? 'Chat',
+          title: resolvedTitle,
           messages: displayedMessages,
         }
       : null;
@@ -248,7 +278,7 @@ function NoroChatPage() {
     <div className="flex h-full overflow-hidden bg-neutral-w-200 dark:bg-dark-bg-primary">
       {/* ── Sidebar ─────────────────────────────────────────── */}
       <NoroChatSidebar
-        sessions={sessions}
+        sessions={sessionsWithTitles}
         activeId={activeSessionId}
         isLoading={sessionsLoading}
         isError={sessionsError}
