@@ -1,36 +1,46 @@
 import React, { useRef, useEffect, useCallback, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { Menu } from 'lucide-react';
-import type { NoroChatConversation } from './types';
+import type { ChatMessage } from '../../types/noroChat';
 import NoroChatWelcome from './NoroChatWelcome';
 import NoroChatUserMessage from './NoroChatUserMessage';
 import NoroChatAIMessage from './NoroChatAIMessage';
 import NoroChatThinkingIndicator from './NoroChatThinkingIndicator';
 import NoroChatInput from './NoroChatInput';
 
+// ── Props now use API types ───────────────────────────────────────────────────
+interface ActiveSession {
+  id: string;
+  title: string;
+  messages: ChatMessage[];
+}
+
 interface NoroChatMainProps {
-  conversation: NoroChatConversation | null;
+  session: ActiveSession | null;
   isLoading: boolean;
   streamingMessageId: string | null;
   onSendMessage: (text: string) => void;
   onSuggestionClick: (text: string) => void;
   onOpenSidebar: () => void;
   username?: string;
+  /** Inline error to display instead of the message list */
+  errorMessage?: string | null;
 }
 
 const NoroChatMain: React.FC<NoroChatMainProps> = ({
-  conversation,
+  session,
   isLoading,
   streamingMessageId,
   onSendMessage,
   onSuggestionClick,
   onOpenSidebar,
   username,
+  errorMessage,
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [userScrolledUp, setUserScrolledUp] = useState(false);
-  const prevConversationId = useRef<string | null>(null);
+  const prevSessionId = useRef<string | null>(null);
 
   // Detect if user manually scrolled up
   const handleScroll = useCallback(() => {
@@ -38,27 +48,26 @@ const NoroChatMain: React.FC<NoroChatMainProps> = ({
     if (!container) return;
     const { scrollTop, scrollHeight, clientHeight } = container;
     const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
-    // If more than 100px from bottom, consider user scrolled up
     setUserScrolledUp(distanceFromBottom > 100);
   }, []);
 
-  // On conversation switch → always scroll to bottom
+  // On session switch → always scroll to bottom
   useEffect(() => {
-    if (conversation?.id !== prevConversationId.current) {
-      prevConversationId.current = conversation?.id ?? null;
+    if (session?.id !== prevSessionId.current) {
+      prevSessionId.current = session?.id ?? null;
       setUserScrolledUp(false);
       messagesEndRef.current?.scrollIntoView({ behavior: 'instant' });
     }
-  }, [conversation?.id]);
+  }, [session?.id]);
 
   // On new message — scroll only if user is near the bottom
   useEffect(() => {
     if (!userScrolledUp) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [conversation?.messages.length, isLoading, userScrolledUp]);
+  }, [session?.messages.length, isLoading, userScrolledUp]);
 
-  const messages = conversation?.messages ?? [];
+  const messages = session?.messages ?? [];
   const lastMsg = messages[messages.length - 1];
 
   return (
@@ -88,11 +97,19 @@ const NoroChatMain: React.FC<NoroChatMainProps> = ({
         onScroll={handleScroll}
         className="flex-1 overflow-y-auto thin-scrollbar"
       >
-        {!conversation ? (
+        {!session ? (
           <NoroChatWelcome
             username={username}
             onSuggestionClick={onSuggestionClick}
           />
+        ) : errorMessage ? (
+          /* ── Inline error state ── */
+          <div className="flex flex-col items-center justify-center h-full px-6 text-center">
+            <p className="text-sm text-red-400 mb-2">{errorMessage}</p>
+            <p className="text-xs text-neutral-b-300 dark:text-dark-text-muted">
+              Please try again or start a new chat.
+            </p>
+          </div>
         ) : (
           <div className="max-w-[800px] mx-auto px-4 sm:px-6 py-6 sm:py-8">
             <AnimatePresence initial={false}>
@@ -104,14 +121,13 @@ const NoroChatMain: React.FC<NoroChatMainProps> = ({
                   <NoroChatUserMessage
                     key={msg.id}
                     content={msg.content}
-                    timestamp={msg.timestamp}
+                    timestamp={new Date(msg.created_at)}
                   />
                 ) : (
                   <NoroChatAIMessage
                     key={msg.id}
                     content={msg.content}
-                    timestamp={msg.timestamp}
-                    suggestions={msg.suggestions}
+                    timestamp={new Date(msg.created_at)}
                     isLatest={isLatest}
                     isStreaming={isStreaming}
                     onSuggestionClick={onSuggestionClick}
