@@ -101,7 +101,7 @@ const NoroChatMain: React.FC<NoroChatMainProps> = ({
             <p className="text-xs text-neutral-b-300 dark:text-dark-text-muted">Please try again or start a new chat.</p>
           </div>
         ) : (
-          <div className="max-w-[760px] mx-auto px-4 sm:px-6 py-6 sm:py-8">
+          <div className="max-w-[760px] mx-auto px-4 sm:px-6 py-4 sm:py-8">
             <AnimatePresence initial={false}>
               {messages.map((msg, idx) => {
                 const isLatest = idx === messages.length - 1;
@@ -136,7 +136,7 @@ const NoroChatMain: React.FC<NoroChatMainProps> = ({
         )}
       </div>
 
-      <div className="shrink-0 pb-safe bg-transparent pt-2">
+      <div className="shrink-0 pb-safe pb-3 pt-1 bg-transparent">
         <NoroChatInput onSendMessage={onSendMessage} isLoading={isLoading} />
       </div>
     </div>

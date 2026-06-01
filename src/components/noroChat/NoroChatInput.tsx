@@ -39,16 +39,16 @@ const NoroChatInput: React.FC<NoroChatInputProps> = ({ onSendMessage, isLoading 
   };
 
   return (
-    <div className="w-full px-3 sm:px-4 md:px-6 pb-1">
+    <div className="w-full px-2 sm:px-4 md:px-6 pb-1">
       <div className="max-w-[800px] mx-auto">
-        <div className="flex items-center gap-2 bg-neutral-w-200 dark:bg-dark-bg-secondary border border-neutral-w-400 dark:border-dark-border rounded-2xl px-3 py-2.5 shadow-sm focus-within:border-primary-400 dark:focus-within:border-primary-600 focus-within:shadow-md transition-all duration-200">
+        <div className="flex items-center gap-1.5 sm:gap-2 bg-neutral-w-200 dark:bg-dark-bg-secondary border border-neutral-w-400 dark:border-dark-border rounded-2xl px-2.5 py-1.5 sm:px-3 sm:py-2.5 shadow-sm focus-within:border-primary-400 dark:focus-within:border-primary-600 focus-within:shadow-md transition-all duration-200">
           <button
-            className="p-1.5 text-neutral-b-300 dark:text-dark-text-muted hover:text-neutral-b-600 dark:hover:text-dark-text-secondary transition-colors shrink-0"
+            className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-neutral-b-300 dark:text-dark-text-muted hover:text-neutral-b-600 dark:hover:text-dark-text-secondary hover:bg-neutral-w-300/30 dark:hover:bg-dark-bg-secondary/40 transition-all shrink-0"
             title="Attach file"
             aria-label="Attach file"
             disabled={isLoading}
           >
-            <Paperclip size={18} />
+            <Paperclip className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
           </button>
 
           <textarea
@@ -60,7 +60,7 @@ const NoroChatInput: React.FC<NoroChatInputProps> = ({ onSendMessage, isLoading 
             placeholder="Message Noro…"
             rows={1}
             disabled={isLoading}
-            className="flex-1 bg-transparent resize-none text-sm text-neutral-b-800 dark:text-dark-text-primary placeholder:text-neutral-b-400 dark:placeholder:text-dark-text-muted focus:outline-none disabled:opacity-50 leading-relaxed max-h-40 min-h-[22px] py-0.5"
+            className="flex-1 bg-transparent resize-none text-[13px] sm:text-sm text-neutral-b-800 dark:text-dark-text-primary placeholder:text-neutral-b-400 dark:placeholder:text-dark-text-muted focus:outline-none disabled:opacity-50 leading-relaxed max-h-32 md:max-h-40 min-h-5 py-0.5"
           />
 
           <div className="flex items-center gap-1 shrink-0">
@@ -72,11 +72,11 @@ const NoroChatInput: React.FC<NoroChatInputProps> = ({ onSendMessage, isLoading 
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0, opacity: 0 }}
                   transition={{ duration: 0.1 }}
-                  className="p-1.5 text-neutral-b-300 dark:text-dark-text-muted hover:text-neutral-b-600 dark:hover:text-dark-text-secondary transition-colors"
+                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-neutral-b-300 dark:text-dark-text-muted hover:text-neutral-b-600 dark:hover:text-dark-text-secondary hover:bg-neutral-w-300/30 dark:hover:bg-dark-bg-secondary/40 transition-all shrink-0"
                   title="Voice input"
                   disabled={isLoading}
                 >
-                  <Mic size={17} />
+                  <Mic className="w-4 h-4 sm:w-[17px] sm:h-[17px]" />
                 </motion.button>
               )}
             </AnimatePresence>
@@ -86,7 +86,7 @@ const NoroChatInput: React.FC<NoroChatInputProps> = ({ onSendMessage, isLoading 
               onClick={handleSend}
               disabled={!hasText || isLoading}
               whileTap={hasText && !isLoading ? { scale: 0.88 } : {}}
-              className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 ${
+              className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-all duration-200 ${
                 hasText && !isLoading
                   ? 'bg-primary-600 hover:bg-primary-700 text-white shadow-sm'
                   : 'bg-neutral-w-300 dark:bg-dark-bg-tertiary text-neutral-b-300 dark:text-dark-text-muted cursor-default'
@@ -102,7 +102,7 @@ const NoroChatInput: React.FC<NoroChatInputProps> = ({ onSendMessage, isLoading 
                     exit={{ scale: 0, rotate: 45 }}
                     transition={{ duration: 0.1 }}
                   >
-                    <ArrowUp size={16} />
+                    <ArrowUp className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   </motion.span>
                 ) : (
                   <motion.span
@@ -112,7 +112,7 @@ const NoroChatInput: React.FC<NoroChatInputProps> = ({ onSendMessage, isLoading 
                     exit={{ scale: 0 }}
                     transition={{ duration: 0.1 }}
                   >
-                    <Send size={13} />
+                    <Send className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                   </motion.span>
                 )}
               </AnimatePresence>

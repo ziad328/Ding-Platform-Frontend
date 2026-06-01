@@ -124,12 +124,12 @@ const NoroChatAIMessage: React.FC<NoroChatAIMessageProps> = ({
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.28, ease: 'easeOut' }}
-      className="flex items-start gap-3 mb-5 sm:mb-7"
+      className="flex items-start gap-2 sm:gap-3 mb-4 sm:mb-6"
     >
       <NoroAvatar />
 
       <div className="flex-1 min-w-0">
-        <div className="bg-white dark:bg-dark-bg-secondary/80 rounded-2xl rounded-tl-sm px-4 py-3.5 shadow-sm border border-neutral-w-300/60 dark:border-dark-border/30">
+        <div className="bg-white dark:bg-dark-bg-secondary/80 rounded-2xl rounded-tl-sm px-3 py-2.5 sm:px-4 sm:py-3.5 shadow-sm border border-neutral-w-300/60 dark:border-dark-border/30">
           <div className="prose prose-sm max-w-none">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
@@ -153,7 +153,7 @@ const NoroChatAIMessage: React.FC<NoroChatAIMessageProps> = ({
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.25, delay: 0.12 }}
-            className="flex flex-wrap gap-2 mt-3"
+            className="flex flex-wrap gap-1.5 sm:gap-2 mt-2 sm:mt-3"
           >
             {suggestions.map((s, i) => (
               <motion.button
@@ -162,7 +162,7 @@ const NoroChatAIMessage: React.FC<NoroChatAIMessageProps> = ({
                 onClick={() => onSuggestionClick(s)}
                 whileHover={{ scale: 1.03, y: -1 }}
                 whileTap={{ scale: 0.97 }}
-                className="text-xs px-3 py-1.5 rounded-full border border-neutral-w-400 dark:border-dark-border text-neutral-b-600 dark:text-dark-text-secondary hover:border-primary-400 dark:hover:border-primary-600 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 hover:shadow-sm transition-all duration-150 whitespace-nowrap"
+                className="text-[11px] sm:text-xs px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full border border-neutral-w-400 dark:border-dark-border text-neutral-b-600 dark:text-dark-text-secondary hover:border-primary-400 dark:hover:border-primary-600 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 hover:shadow-sm transition-all duration-150 whitespace-nowrap"
               >
                 {s}
               </motion.button>

@@ -34,17 +34,26 @@ const NoroChatSidebar: React.FC<NoroChatSidebarProps> = ({
   const groups = groupSessionsByTime(sessions);
 
   const SidebarContent = ({ className = '' }: { className?: string }) => (
-    <div className={`flex flex-col h-full ${className}`}>
+    <div className={`flex flex-col h-full pb-safe ${className}`}>
       {/* Header */}
-      <div className="flex items-center gap-2.5 px-4 pt-5 pb-3 shrink-0 border-b border-neutral-w-300/60 dark:border-dark-border/20">
-        <div className="w-6 h-6 rounded-lg bg-linear-to-br from-primary-400 to-primary-700 flex items-center justify-center shadow-sm">
-          <svg width="12" height="12" viewBox="0 0 32 32" fill="none">
-            <path d="M16 4L18.8 11.2H26.4L20.8 15.6L22.8 23.2L16 18.8L9.2 23.2L11.2 15.6L5.6 11.2H13.2L16 4Z" fill="white" opacity="0.9" />
-          </svg>
+      <div className="flex items-center justify-between px-4 pt-5 pb-3 shrink-0 border-b border-neutral-w-300/60 dark:border-dark-border/20">
+        <div className="flex items-center gap-2.5">
+          <div className="w-6 h-6 rounded-lg bg-linear-to-br from-primary-400 to-primary-700 flex items-center justify-center shadow-sm">
+            <svg width="12" height="12" viewBox="0 0 32 32" fill="none">
+              <path d="M16 4L18.8 11.2H26.4L20.8 15.6L22.8 23.2L16 18.8L9.2 23.2L11.2 15.6L5.6 11.2H13.2L16 4Z" fill="white" opacity="0.9" />
+            </svg>
+          </div>
+          <h2 className="text-sm font-semibold text-neutral-b-800 dark:text-dark-text-primary tracking-tight">
+            Noro Chats
+          </h2>
         </div>
-        <h2 className="text-sm font-semibold text-neutral-b-800 dark:text-dark-text-primary tracking-tight">
-          Noro Chats
-        </h2>
+        <button
+          onClick={onClose}
+          className="md:hidden w-8 h-8 rounded-lg flex items-center justify-center text-neutral-b-400 dark:text-dark-text-muted hover:bg-neutral-w-200 dark:hover:bg-dark-bg-tertiary transition-colors"
+          aria-label="Close sidebar"
+        >
+          <X size={16} />
+        </button>
       </div>
 
       {/* New Chat shortcut */}
