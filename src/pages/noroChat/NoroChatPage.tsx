@@ -3,7 +3,7 @@
  * to the Sidebar and Main components. Manages optimistic messages, client-side
  * title derivation (persisted to localStorage), and active session UI state via Redux.
  */
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { selectCurrentUser } from '../../store/slices/auth/auth';
 import {
@@ -65,7 +65,12 @@ function NoroChatPage() {
     });
   }, []);
 
-  const { data: sessionsData, isLoading: sessionsLoading, isError: sessionsError } = useGetChatSessionsQuery();
+  const {
+    data: sessionsData,
+    isLoading: sessionsLoading,
+    isFetching: sessionsFetching,
+    isError: sessionsError,
+  } = useGetChatSessionsQuery();
   const { data: messagesData, isLoading: messagesLoading, isError: messagesError } = useGetMessagesQuery(activeSessionId!, { skip: !activeSessionId });
 
   const [createSession] = useCreateChatSessionMutation();
@@ -180,9 +185,24 @@ function NoroChatPage() {
       ? { id: activeSessionId, title: resolvedTitle, messages: displayedMessages }
       : null;
 
-  if (activeSessionId && !sessionsLoading && !sessionExistsInList && !isSending) {
-    dispatch(clearActiveSession());
-  }
+  useEffect(() => {
+    if (
+      activeSessionId &&
+      !sessionsLoading &&
+      !sessionsFetching &&
+      !sessionExistsInList &&
+      !isSending
+    ) {
+      dispatch(clearActiveSession());
+    }
+  }, [
+    activeSessionId,
+    sessionsLoading,
+    sessionsFetching,
+    sessionExistsInList,
+    isSending,
+    dispatch,
+  ]);
 
   const inlineError = messagesError ? 'Could not load messages. Please try again.' : null;
 

@@ -57,6 +57,20 @@ export const noroChatApi = createApi({
     deleteSession: builder.mutation<void, string>({
       query: (sessionId) => ({ url: `/chat/sessions/${sessionId}`, method: 'DELETE' }),
       invalidatesTags: ['NoroChatSessions'],
+      async onQueryStarted(sessionId, { dispatch, queryFulfilled }) {
+        const patchResult = dispatch(
+          noroChatApi.util.updateQueryData('getChatSessions', undefined, (draft) => {
+            if (draft && draft.items) {
+              draft.items = draft.items.filter((s) => s.id !== sessionId);
+            }
+          })
+        );
+        try {
+          await queryFulfilled;
+        } catch {
+          patchResult.undo();
+        }
+      },
     }),
     sendMessage: builder.mutation<SendMessageResponse, { sessionId: string; message: string }>({
       query: ({ sessionId, message }) => ({
