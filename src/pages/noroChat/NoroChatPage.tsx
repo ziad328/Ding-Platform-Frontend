@@ -1,125 +1,176 @@
 import { useState, useCallback } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { selectCurrentUser } from '../../store/slices/auth/auth';
+import {
+  selectActiveSessionId,
+  setActiveSession,
+  clearActiveSession,
+} from '../../store/slices/noroChat/chatSlice';
+import {
+  useGetChatSessionsQuery,
+  useCreateChatSessionMutation,
+  useDeleteSessionMutation,
+  useSendMessageMutation,
+  useGetMessagesQuery,
+} from '../../store/noroChatApi';
+import type { ChatMessage } from '../../types/noroChat';
 import NoroChatSidebar from '../../components/noroChat/NoroChatSidebar';
 import NoroChatMain from '../../components/noroChat/NoroChatMain';
-import type { NoroChatConversation, NoroChatMessage } from '../../components/noroChat/types';
-import { generateTitle, genId } from '../../components/noroChat/utils';
-import { getRandomResponse } from '../../components/noroChat/mockResponses';
 
-// ─────────────────────────────────────────────────────────────
-// Simulate a streaming AI response
-// ─────────────────────────────────────────────────────────────
-const THINK_DELAY_MS = 900; // dot-dot-dot "thinking" duration
+// ─────────────────────────────────────────────────────────────────────────────
+// Streaming animation config (client-side simulation, same as before)
+// ─────────────────────────────────────────────────────────────────────────────
+const THINK_DELAY_MS = 900;
 
 function NoroChatPage() {
+  const dispatch = useDispatch();
   const user = useSelector(selectCurrentUser);
+  const activeSessionId = useSelector(selectActiveSessionId);
 
-  const [conversations, setConversations] = useState<NoroChatConversation[]>([]);
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null);
 
-  const activeConversation = conversations.find((c) => c.id === activeId) ?? null;
+  // ── Optimistic local messages (shown immediately after send, before refetch) ──
+  const [localMessages, setLocalMessages] = useState<ChatMessage[]>([]);
+  // Track whether we are in the "sending + waiting for AI" phase
+  const [isSending, setIsSending] = useState(false);
 
-  // ── Create a new conversation ──────────────────────────────
+  // ── RTK Query hooks ───────────────────────────────────────────────────────────
+  const {
+    data: sessionsData,
+    isLoading: sessionsLoading,
+    isError: sessionsError,
+  } = useGetChatSessionsQuery();
+
+  const {
+    data: messagesData,
+    isLoading: messagesLoading,
+    isError: messagesError,
+  } = useGetMessagesQuery(activeSessionId!, { skip: !activeSessionId });
+
+  const [createSession] = useCreateChatSessionMutation();
+  const [deleteSession] = useDeleteSessionMutation();
+  const [sendMessage] = useSendMessageMutation();
+
+  // ── Derive the active session object ────────────────────────────────────────
+  const sessions = sessionsData?.items ?? [];
+  const activeSession = activeSessionId
+    ? sessions.find((s) => s.id === activeSessionId) ?? null
+    : null;
+
+  // Combine fetched messages with any optimistic local ones
+  const fetchedMessages: ChatMessage[] = messagesData?.items ?? [];
+  const displayedMessages: ChatMessage[] =
+    localMessages.length > 0 ? localMessages : fetchedMessages;
+
+  // ── New Chat ─────────────────────────────────────────────────────────────────
   const handleNewChat = useCallback(() => {
-    setActiveId(null);
+    dispatch(clearActiveSession());
+    setLocalMessages([]);
     setIsSidebarOpen(false);
-  }, []);
+  }, [dispatch]);
 
-  // ── Select an existing conversation ───────────────────────
-  const handleSelectConversation = useCallback((id: string) => {
-    setActiveId(id);
-  }, []);
-
-  // ── Delete a conversation ──────────────────────────────────
-  const handleDeleteConversation = useCallback(
+  // ── Select session ───────────────────────────────────────────────────────────
+  const handleSelectSession = useCallback(
     (id: string) => {
-      setConversations((prev) => prev.filter((c) => c.id !== id));
-      if (activeId === id) setActiveId(null);
+      dispatch(setActiveSession(id));
+      setLocalMessages([]); // clear local buffer when switching sessions
     },
-    [activeId]
+    [dispatch]
   );
 
-  // ── Core: send a message and simulate an AI response ───────
+  // ── Delete session ───────────────────────────────────────────────────────────
+  const handleDeleteSession = useCallback(
+    async (id: string) => {
+      try {
+        await deleteSession(id).unwrap();
+        if (activeSessionId === id) {
+          dispatch(clearActiveSession());
+          setLocalMessages([]);
+        }
+      } catch {
+        // Deletion failed silently — sidebar will re-render from cache
+      }
+    },
+    [activeSessionId, deleteSession, dispatch]
+  );
+
+  // ── Send message ─────────────────────────────────────────────────────────────
   const handleSendMessage = useCallback(
     async (text: string) => {
-      if (!text.trim() || isLoading) return;
+      if (!text.trim() || isSending) return;
 
-      const userMsg: NoroChatMessage = {
-        id: genId(),
+      let targetSessionId = activeSessionId;
+
+      // 1️⃣ If no active session, create one first
+      if (!targetSessionId) {
+        try {
+          const newSession = await createSession({ title: 'New Chat' }).unwrap();
+          targetSessionId = newSession.id;
+          dispatch(setActiveSession(newSession.id));
+        } catch {
+          // Could not create session — show nothing, user can retry
+          return;
+        }
+      }
+
+      // 2️⃣ Optimistically append the user message locally
+      const optimisticUserMsg: ChatMessage = {
+        id: `local-${Date.now()}`,
+        session_id: targetSessionId,
         role: 'user',
         content: text.trim(),
-        timestamp: new Date(),
+        created_at: new Date().toISOString(),
       };
 
-      let targetId = activeId;
-
-      setConversations((prev) => {
-        // Create a new conversation if none is active
-        if (!targetId) {
-          const newConv: NoroChatConversation = {
-            id: genId(),
-            title: generateTitle(text),
-            createdAt: new Date(),
-            messages: [userMsg],
-          };
-          targetId = newConv.id;
-          return [newConv, ...prev];
-        }
-
-        // Append to existing conversation
-        return prev.map((c) =>
-          c.id === targetId ? { ...c, messages: [...c.messages, userMsg] } : c
-        );
+      setLocalMessages((prev) => {
+        // Seed from fetched if local is empty
+        const base = prev.length === 0 ? fetchedMessages : prev;
+        return [...base, optimisticUserMsg];
       });
 
-      // Set the active conversation (needed for new conv)
-      // We need targetId in scope after the setState — use a ref trick via closure
-      // The state update above sets targetId in the outer closure; use another state setter
-      setActiveId(() => {
-        // targetId is set in the closure above
-        return targetId!;
-      });
+      setIsSending(true);
 
-      // ── "Thinking" phase ────────────────────────────────
-      setIsLoading(true);
-
+      // 3️⃣ Simulate the "thinking" delay before API call resolves
       await new Promise<void>((r) => setTimeout(r, THINK_DELAY_MS));
 
-      // ── Build AI response ────────────────────────────────
-      const mock = getRandomResponse();
-      const aiMsgId = genId();
-      const aiMsg: NoroChatMessage = {
-        id: aiMsgId,
-        role: 'assistant',
-        content: mock.content,
-        timestamp: new Date(),
-        suggestions: mock.suggestions,
-      };
+      // 4️⃣ Actually send the message
+      try {
+        const response = await sendMessage({
+          sessionId: targetSessionId,
+          message: text.trim(),
+        }).unwrap();
 
-      setIsLoading(false);
+        const aiMsg = response.assistant_message;
 
-      setConversations((prev) =>
-        prev.map((c) =>
-          c.id === targetId ? { ...c, messages: [...c.messages, aiMsg] } : c
-        )
-      );
+        // 5️⃣ Replace optimistic user message with real ones + AI response
+        setLocalMessages((prev) => {
+          const withoutOptimistic = prev.filter((m) => m.id !== optimisticUserMsg.id);
+          return [...withoutOptimistic, response.user_message, aiMsg];
+        });
 
-      // ── Trigger streaming on the new AI message ──────────
-      setStreamingMessageId(aiMsgId);
-
-      // Clear streaming flag after estimated stream duration
-      // ~content.length / CHARS_PER_TICK * TICK_MS + buffer
-      const streamDurationMs = Math.ceil((mock.content.length / 6) * 16) + 400;
-      setTimeout(() => setStreamingMessageId(null), streamDurationMs);
+        // 6️⃣ Trigger streaming animation on the AI message
+        setStreamingMessageId(aiMsg.id);
+        const streamDurationMs = Math.ceil((aiMsg.content.length / 6) * 16) + 400;
+        setTimeout(() => setStreamingMessageId(null), streamDurationMs);
+      } catch {
+        // Remove optimistic message on failure, show inline error via messagesError
+        setLocalMessages((prev) => prev.filter((m) => m.id !== optimisticUserMsg.id));
+      } finally {
+        setIsSending(false);
+      }
     },
-    [activeId, isLoading]
+    [
+      activeSessionId,
+      isSending,
+      fetchedMessages,
+      createSession,
+      sendMessage,
+      dispatch,
+    ]
   );
 
-  // ── Suggestion pill clicked ────────────────────────────────
+  // ── Suggestion pill clicked ──────────────────────────────────────────────────
   const handleSuggestionClick = useCallback(
     (text: string) => {
       handleSendMessage(text);
@@ -127,28 +178,52 @@ function NoroChatPage() {
     [handleSendMessage]
   );
 
+  // ── Build the session shape NoroChatMain expects ─────────────────────────────
+  const activeSessionForMain =
+    activeSession && !messagesLoading
+      ? {
+          id: activeSession.id,
+          title: activeSession.title,
+          messages: displayedMessages,
+        }
+      : activeSessionId
+      ? // Session is known but messages are still loading — pass empty
+        {
+          id: activeSessionId,
+          title: activeSession?.title ?? 'Chat',
+          messages: displayedMessages,
+        }
+      : null;
+
+  const inlineError = messagesError
+    ? 'Could not load messages. Please try again.'
+    : null;
+
   return (
     <div className="flex h-full overflow-hidden bg-neutral-w-200 dark:bg-dark-bg-primary">
       {/* ── Sidebar ─────────────────────────────────────────── */}
       <NoroChatSidebar
-        conversations={conversations}
-        activeId={activeId}
-        onSelectConversation={handleSelectConversation}
+        sessions={sessions}
+        activeId={activeSessionId}
+        isLoading={sessionsLoading}
+        isError={sessionsError}
+        onSelectSession={handleSelectSession}
         onNewChat={handleNewChat}
-        onDeleteConversation={handleDeleteConversation}
+        onDeleteSession={handleDeleteSession}
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
       />
 
       {/* ── Main chat area ───────────────────────────────────── */}
       <NoroChatMain
-        conversation={activeConversation}
-        isLoading={isLoading}
+        session={activeSessionForMain}
+        isLoading={isSending || messagesLoading}
         streamingMessageId={streamingMessageId}
         onSendMessage={handleSendMessage}
         onSuggestionClick={handleSuggestionClick}
         onOpenSidebar={() => setIsSidebarOpen(true)}
         username={user?.name || user?.username}
+        errorMessage={inlineError}
       />
     </div>
   );
