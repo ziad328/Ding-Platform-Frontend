@@ -131,12 +131,12 @@ const NoroChatMain: React.FC<NoroChatMainProps> = ({
               )}
             </AnimatePresence>
 
-            <div ref={messagesEndRef} className="h-4" />
+            <div ref={messagesEndRef} className="h-20" />
           </div>
         )}
       </div>
 
-      <div className="shrink-0 pb-safe bg-neutral-w-100 dark:bg-dark-bg-primary pt-2 border-t border-neutral-w-300/40 dark:border-dark-border/10">
+      <div className="shrink-0 pb-safe bg-transparent pt-2">
         <NoroChatInput onSendMessage={onSendMessage} isLoading={isLoading} />
       </div>
     </div>
