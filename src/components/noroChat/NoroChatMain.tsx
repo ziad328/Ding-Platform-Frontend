@@ -1,3 +1,7 @@
+/**
+ * NoroChatMain — scrollable message list with a welcome screen fallback,
+ * thinking indicator, inline error state, and the chat input bar.
+ */
 import React, { useRef, useEffect, useCallback, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { Menu } from 'lucide-react';
@@ -8,7 +12,6 @@ import NoroChatAIMessage from './NoroChatAIMessage';
 import NoroChatThinkingIndicator from './NoroChatThinkingIndicator';
 import NoroChatInput from './NoroChatInput';
 
-// ── Props now use API types ───────────────────────────────────────────────────
 interface ActiveSession {
   id: string;
   title: string;
@@ -23,7 +26,6 @@ interface NoroChatMainProps {
   onSuggestionClick: (text: string) => void;
   onOpenSidebar: () => void;
   username?: string;
-  /** Inline error to display instead of the message list */
   errorMessage?: string | null;
 }
 
@@ -42,16 +44,13 @@ const NoroChatMain: React.FC<NoroChatMainProps> = ({
   const [userScrolledUp, setUserScrolledUp] = useState(false);
   const prevSessionId = useRef<string | null>(null);
 
-  // Detect if user manually scrolled up
   const handleScroll = useCallback(() => {
     const container = scrollContainerRef.current;
     if (!container) return;
     const { scrollTop, scrollHeight, clientHeight } = container;
-    const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
-    setUserScrolledUp(distanceFromBottom > 100);
+    setUserScrolledUp(scrollHeight - scrollTop - clientHeight > 100);
   }, []);
 
-  // On session switch → always scroll to bottom
   useEffect(() => {
     if (session?.id !== prevSessionId.current) {
       prevSessionId.current = session?.id ?? null;
@@ -60,7 +59,6 @@ const NoroChatMain: React.FC<NoroChatMainProps> = ({
     }
   }, [session?.id]);
 
-  // On new message — scroll only if user is near the bottom
   useEffect(() => {
     if (!userScrolledUp) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -71,18 +69,17 @@ const NoroChatMain: React.FC<NoroChatMainProps> = ({
   const lastMsg = messages[messages.length - 1];
 
   return (
-    <div className="flex flex-col flex-1 h-full min-w-0 bg-neutral-w-200 dark:bg-dark-bg-primary">
-      {/* ── Mobile header (hamburger) ───────────────── */}
-      <div className="md:hidden flex items-center gap-3 px-4 py-3 bg-neutral-w-200 dark:bg-dark-bg-primary border-b border-neutral-w-400 dark:border-dark-border/40 shrink-0">
+    <div className="flex flex-col flex-1 h-full min-w-0 bg-neutral-w-100 dark:bg-dark-bg-primary">
+      <div className="md:hidden flex items-center gap-3 px-4 py-3 bg-neutral-w-100 dark:bg-dark-bg-primary border-b border-neutral-w-300/60 dark:border-dark-border/20 shrink-0">
         <button
           id="noro-sidebar-toggle"
           onClick={onOpenSidebar}
-          className="w-9 h-9 rounded-full flex items-center justify-center text-neutral-b-500 dark:text-dark-text-muted hover:bg-neutral-w-300 dark:hover:bg-dark-bg-tertiary transition-all"
+          className="w-8 h-8 rounded-lg flex items-center justify-center text-neutral-b-500 dark:text-dark-text-muted hover:bg-neutral-w-200 dark:hover:bg-dark-bg-tertiary transition-all"
         >
-          <Menu size={20} />
+          <Menu size={18} />
         </button>
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-full bg-linear-to-br from-primary-400 to-primary-700 flex items-center justify-center">
+          <div className="w-6 h-6 rounded-lg bg-linear-to-br from-primary-400 to-primary-700 flex items-center justify-center shadow-sm">
             <svg width="12" height="12" viewBox="0 0 32 32" fill="none">
               <path d="M16 4L18.8 11.2H26.4L20.8 15.6L22.8 23.2L16 18.8L9.2 23.2L11.2 15.6L5.6 11.2H13.2L16 4Z" fill="white" opacity="0.9" />
             </svg>
@@ -91,32 +88,24 @@ const NoroChatMain: React.FC<NoroChatMainProps> = ({
         </div>
       </div>
 
-      {/* ── Messages or Welcome ─────────────────────── */}
       <div
         ref={scrollContainerRef}
         onScroll={handleScroll}
         className="flex-1 overflow-y-auto thin-scrollbar"
       >
         {!session ? (
-          <NoroChatWelcome
-            username={username}
-            onSuggestionClick={onSuggestionClick}
-          />
+          <NoroChatWelcome username={username} onSuggestionClick={onSuggestionClick} />
         ) : errorMessage ? (
-          /* ── Inline error state ── */
-          <div className="flex flex-col items-center justify-center h-full px-6 text-center">
-            <p className="text-sm text-red-400 mb-2">{errorMessage}</p>
-            <p className="text-xs text-neutral-b-300 dark:text-dark-text-muted">
-              Please try again or start a new chat.
-            </p>
+          <div className="flex flex-col items-center justify-center h-full px-6 text-center gap-2">
+            <p className="text-sm text-red-400">{errorMessage}</p>
+            <p className="text-xs text-neutral-b-300 dark:text-dark-text-muted">Please try again or start a new chat.</p>
           </div>
         ) : (
-          <div className="max-w-[800px] mx-auto px-4 sm:px-6 py-6 sm:py-8">
+          <div className="max-w-[760px] mx-auto px-4 sm:px-6 py-6 sm:py-8">
             <AnimatePresence initial={false}>
               {messages.map((msg, idx) => {
                 const isLatest = idx === messages.length - 1;
                 const isStreaming = msg.id === streamingMessageId;
-
                 return msg.role === 'user' ? (
                   <NoroChatUserMessage
                     key={msg.id}
@@ -136,25 +125,19 @@ const NoroChatMain: React.FC<NoroChatMainProps> = ({
               })}
             </AnimatePresence>
 
-            {/* Thinking indicator */}
             <AnimatePresence>
               {isLoading && lastMsg?.role === 'user' && (
                 <NoroChatThinkingIndicator key="thinking" />
               )}
             </AnimatePresence>
 
-            {/* Scroll anchor */}
             <div ref={messagesEndRef} className="h-4" />
           </div>
         )}
       </div>
 
-      {/* ── Input bar ──────────────────────────────── */}
-      <div className="shrink-0 pb-safe bg-neutral-w-200 dark:bg-dark-bg-primary pt-2">
-        <NoroChatInput
-          onSendMessage={onSendMessage}
-          isLoading={isLoading}
-        />
+      <div className="shrink-0 pb-safe bg-neutral-w-100 dark:bg-dark-bg-primary pt-2 border-t border-neutral-w-300/40 dark:border-dark-border/10">
+        <NoroChatInput onSendMessage={onSendMessage} isLoading={isLoading} />
       </div>
     </div>
   );
