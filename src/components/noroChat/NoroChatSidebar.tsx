@@ -1,31 +1,35 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, X, MessageSquare } from 'lucide-react';
-import type { NoroChatConversation } from './types';
-import { groupConversationsByTime } from './utils';
+import { Plus, X, MessageSquare, Loader2 } from 'lucide-react';
+import type { ChatSession } from '../../types/noroChat';
+import { groupSessionsByTime } from './utils';
 
 interface NoroChatSidebarProps {
-  conversations: NoroChatConversation[];
+  sessions: ChatSession[];
   activeId: string | null;
-  onSelectConversation: (id: string) => void;
+  isLoading: boolean;
+  isError: boolean;
+  onSelectSession: (id: string) => void;
   onNewChat: () => void;
-  onDeleteConversation: (id: string) => void;
+  onDeleteSession: (id: string) => void;
   isOpen: boolean;       // mobile drawer state
   onClose: () => void;
 }
 
 const NoroChatSidebar: React.FC<NoroChatSidebarProps> = ({
-  conversations,
+  sessions,
   activeId,
-  onSelectConversation,
+  isLoading,
+  isError,
+  onSelectSession,
   onNewChat,
-  onDeleteConversation,
+  onDeleteSession,
   isOpen,
   onClose,
 }) => {
-  const groups = groupConversationsByTime(conversations);
+  const groups = groupSessionsByTime(sessions);
 
-  const SidebarContent = ({ className = "bg-neutral-w-100 dark:bg-dark-bg-secondary" }: { className?: string }) => (
+  const SidebarContent = ({ className = 'bg-neutral-w-100 dark:bg-dark-bg-secondary' }: { className?: string }) => (
     <div className={`flex flex-col h-full ${className}`}>
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-5 pb-3 shrink-0">
@@ -51,9 +55,18 @@ const NoroChatSidebar: React.FC<NoroChatSidebarProps> = ({
         </div>
       </div>
 
-      {/* Conversation list */}
+      {/* Session list */}
       <div className="flex-1 overflow-y-auto thin-scrollbar px-2 pb-4">
-        {conversations.length === 0 ? (
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+            <Loader2 size={20} className="text-primary-500 animate-spin mb-2" />
+            <p className="text-sm text-neutral-b-400 dark:text-dark-text-muted">Loading chats…</p>
+          </div>
+        ) : isError ? (
+          <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+            <p className="text-sm text-red-400 dark:text-red-400">Failed to load chats</p>
+          </div>
+        ) : sessions.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
             <div className="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center mb-3">
               <MessageSquare size={18} className="text-primary-500" />
@@ -72,13 +85,13 @@ const NoroChatSidebar: React.FC<NoroChatSidebarProps> = ({
                 {group}
               </p>
               <AnimatePresence initial={false}>
-                {items.map((conv) => (
+                {items.map((session) => (
                   <SidebarItem
-                    key={conv.id}
-                    conv={conv}
-                    isActive={conv.id === activeId}
-                    onSelect={() => { onSelectConversation(conv.id); onClose(); }}
-                    onDelete={(e) => { e.stopPropagation(); onDeleteConversation(conv.id); }}
+                    key={session.id}
+                    session={session}
+                    isActive={session.id === activeId}
+                    onSelect={() => { onSelectSession(session.id); onClose(); }}
+                    onDelete={(e) => { e.stopPropagation(); onDeleteSession(session.id); }}
                   />
                 ))}
               </AnimatePresence>
@@ -128,15 +141,15 @@ const NoroChatSidebar: React.FC<NoroChatSidebarProps> = ({
   );
 };
 
-// ─── Individual sidebar item ─────────────────────────────────
+// ─── Individual sidebar item ─────────────────────────────────────────────────
 interface SidebarItemProps {
-  conv: NoroChatConversation;
+  session: ChatSession;
   isActive: boolean;
   onSelect: () => void;
   onDelete: (e: React.MouseEvent) => void;
 }
 
-const SidebarItem: React.FC<SidebarItemProps> = ({ conv, isActive, onSelect, onDelete }) => (
+const SidebarItem: React.FC<SidebarItemProps> = ({ session, isActive, onSelect, onDelete }) => (
   <motion.div
     layout
     initial={{ opacity: 0, x: -8 }}
@@ -150,7 +163,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({ conv, isActive, onSelect, onD
         : 'text-neutral-b-600 dark:text-dark-text-secondary hover:bg-neutral-w-300 dark:hover:bg-dark-bg-tertiary'
     }`}
   >
-    <span className="flex-1 truncate pr-2 leading-tight select-none">{conv.title}</span>
+    <span className="flex-1 truncate pr-2 leading-tight select-none">{session.title}</span>
 
     {/* Delete button — inside the box, appears on group hover */}
     <button
