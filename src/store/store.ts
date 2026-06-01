@@ -14,6 +14,8 @@ import likeReducer from './slices/like/likeSlice';
 import { chatReducer } from './slices/chat';
 import themeReducer from './slices/theme/themeSlice';
 import { apiSlice } from './ApiSlice';
+import { noroChatApi } from './noroChatApi';
+import noroChatReducer from './slices/noroChat/chatSlice';
 import storage from 'redux-persist/lib/storage';
 import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from 'redux-persist';
 import searchReducer from './slices/search/searchSlice';
@@ -43,7 +45,9 @@ export const store = configureStore({
     chat: chatReducer,
     search: searchReducer,
     theme: themeReducer,
+    noroChat: noroChatReducer,
     [apiSlice.reducerPath]: apiSlice.reducer,
+    [noroChatApi.reducerPath]: noroChatApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
@@ -51,7 +55,7 @@ export const store = configureStore({
         // Ignore actions related to redux-persist
         ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
       },
-    }).concat(apiSlice.middleware),
+    }).concat(apiSlice.middleware).concat(noroChatApi.middleware),
 });
 
 export const persistor = persistStore(store);
