@@ -127,7 +127,7 @@ const NoroChatSidebar: React.FC<NoroChatSidebarProps> = ({
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex flex-col w-[260px] shrink-0 h-full border-r border-neutral-w-300/80 dark:border-dark-border/20 bg-neutral-w-100 dark:bg-dark-bg-primary">
+      <aside className="hidden md:flex flex-col w-[260px] shrink-0 h-full border-r border-neutral-w-300/80 dark:border-dark-border/20 bg-neutral-w-200 dark:bg-dark-bg-primary">
         <SidebarContent />
       </aside>
 
@@ -150,7 +150,7 @@ const NoroChatSidebar: React.FC<NoroChatSidebarProps> = ({
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', damping: 28, stiffness: 280 }}
-              className="fixed top-0 left-0 bottom-0 z-50 w-[270px] md:hidden shadow-2xl bg-neutral-w-100 dark:bg-dark-bg-primary border-r border-neutral-w-300 dark:border-dark-border/30"
+              className="fixed top-0 left-0 bottom-0 z-50 w-[270px] md:hidden shadow-2xl bg-neutral-w-200 dark:bg-dark-bg-primary border-r border-neutral-w-300 dark:border-dark-border/30"
             >
               <SidebarContent />
             </motion.div>

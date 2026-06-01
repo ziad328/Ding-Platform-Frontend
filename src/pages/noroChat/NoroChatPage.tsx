@@ -207,7 +207,7 @@ function NoroChatPage() {
   const inlineError = messagesError ? 'Could not load messages. Please try again.' : null;
 
   return (
-    <div className="flex h-dvh overflow-hidden bg-neutral-w-100 dark:bg-dark-bg-primary">
+    <div className="flex h-dvh overflow-hidden bg-neutral-w-200 dark:bg-dark-bg-primary">
       <NoroChatSidebar
         sessions={sessionsWithTitles}
         activeId={activeSessionId}
