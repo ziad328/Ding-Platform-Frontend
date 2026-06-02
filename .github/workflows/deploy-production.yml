@@ -44,5 +44,6 @@ jobs:
             cd "$FRONTEND_PATH"
             git fetch origin
             git checkout "$BRANCH"
+            git checkout -- .env.example 2>/dev/null || true
             git pull origin "$BRANCH"
             FRONTEND_DIR="$FRONTEND_PATH" "$BACKEND_PATH/scripts/deploy-frontend.sh"
