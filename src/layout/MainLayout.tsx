@@ -12,7 +12,7 @@ function MainLayout() {
   const location = useLocation();
   useDarkMode();
 
-  const isMessagesPage = location.pathname === '/messages';
+  const isFullWidthPage = location.pathname === '/messages' || location.pathname === '/noro';
 
   if (!token || !user) {
     return <Navigate to="/welcome" replace />;
@@ -27,7 +27,7 @@ function MainLayout() {
       {/* Main content — offset by collapsed sidebar width on desktop */}
       <main
         className={`h-full overflow-y-auto pb-16 md:pb-0 md:ml-[72px]
-          ${isMessagesPage ? '' : 'px-3 py-4 sm:px-4 sm:py-5 md:px-6 md:py-6'}`}
+          ${isFullWidthPage ? '' : 'px-3 py-4 sm:px-4 sm:py-5 md:px-6 md:py-6'}`}
       >
         <Outlet />
       </main>

@@ -24,6 +24,7 @@ const EmailLoginPage = lazy(() => import('./pages/authentication/EmailLoginPage'
 const OTPVerificationPage = lazy(() => import('./pages/authentication/OTPVerificationPage'))
 const LandingPage = lazy(() => import('./pages/landing/LandingPage'))
 const MessagesPage = lazy(() => import('./pages/messages/MessagesPage'))
+const NoroChatPage = lazy(() => import('./pages/noroChat/NoroChatPage'))
 const ReelsPage = lazy(() => import('./pages/reels/ReelsPage'))
 const MarketplacePage = lazy(() => import('./pages/marketplace/MarketplacePage'))
 const SettingsPage = lazy(() => import('./pages/settings/SettingsPage'))
@@ -67,6 +68,7 @@ const router = createBrowserRouter(
         <Route path='profile/followers' element={<FollowersPage />} />
         <Route path='profile/following' element={<FollowingPage />} />
         <Route path='messages' element={<MessagesPage />} />
+        <Route path='noro' element={<NoroChatPage />} />
         <Route path='reels' element={<ReelsPage />} />
         <Route path='marketplace' element={<MarketplacePage />} />
         {/* Marketplace — Seller Portal */}
