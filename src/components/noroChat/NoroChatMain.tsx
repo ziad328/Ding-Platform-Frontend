@@ -25,6 +25,7 @@ interface NoroChatMainProps {
   onSendMessage: (text: string) => void;
   onSuggestionClick: (text: string) => void;
   onOpenSidebar: () => void;
+  onStop: () => void;
   username?: string;
   errorMessage?: string | null;
 }
@@ -36,6 +37,7 @@ const NoroChatMain: React.FC<NoroChatMainProps> = ({
   onSendMessage,
   onSuggestionClick,
   onOpenSidebar,
+  onStop,
   username,
   errorMessage,
 }) => {
@@ -137,7 +139,7 @@ const NoroChatMain: React.FC<NoroChatMainProps> = ({
       </div>
 
       <div className="shrink-0 pb-safe pb-3 pt-1 bg-transparent">
-        <NoroChatInput onSendMessage={onSendMessage} isLoading={isLoading} />
+        <NoroChatInput onSendMessage={onSendMessage} isLoading={isLoading} onStop={onStop} />
       </div>
     </div>
   );

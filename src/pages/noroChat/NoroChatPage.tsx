@@ -54,6 +54,15 @@ function NoroChatPage() {
   const [localMessagesBySession, setLocalMessagesBySession] = useState<Record<string, ChatMessage[]>>({});
   const [isSending, setIsSending] = useState(false);
 
+  // Refs for aborting in-flight operations.
+  // abortControllerRef cancels the think-delay promise.
+  // sendMutationRef holds the RTK mutation result so we can call .abort() on it.
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const sendMutationRef = useRef<{ abort: () => void } | null>(null);
+  // Tracks the optimistic message id for the current in-flight send so we can
+  // remove it on abort.
+  const optimisticMsgRef = useRef<{ sessionId: string; msgId: string } | null>(null);
+
   // Titles are seeded from localStorage on mount so they survive page refreshes.
   const [localTitles, setLocalTitles] = useState<Record<string, string>>(readPersistedTitles);
 
@@ -83,18 +92,54 @@ function NoroChatPage() {
   const localMessages = activeSessionId ? (localMessagesBySession[activeSessionId] ?? []) : [];
   const displayedMessages: ChatMessage[] = localMessages.length > 0 ? localMessages : fetchedMessages;
 
+  /**
+   * Aborts any in-flight generation: cancels the think-delay, aborts the RTK
+   * mutation, and removes the optimistic message from the local store.
+   */
+  const abortCurrentRequest = useCallback(() => {
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = null;
+
+    sendMutationRef.current?.abort();
+    sendMutationRef.current = null;
+
+    // Remove the dangling optimistic message so the chat looks clean.
+    if (optimisticMsgRef.current) {
+      const { sessionId, msgId } = optimisticMsgRef.current;
+      setLocalMessagesBySession((prev) => {
+        const current = prev[sessionId] ?? [];
+        const filtered = current.filter((m) => m.id !== msgId);
+        return { ...prev, [sessionId]: filtered };
+      });
+      optimisticMsgRef.current = null;
+    }
+
+    setIsSending(false);
+    setStreamingMessageId(null);
+  }, []);
+
+  /** User clicked "Stop" button while generating. */
+  const handleStop = useCallback(() => {
+    abortCurrentRequest();
+  }, [abortCurrentRequest]);
+
   const handleNewChat = useCallback(() => {
+    abortCurrentRequest();
     dispatch(clearActiveSession());
     setIsSidebarOpen(false);
-  }, [dispatch]);
+  }, [dispatch, abortCurrentRequest]);
 
   const handleSelectSession = useCallback((id: string) => {
+    abortCurrentRequest();
     dispatch(setActiveSession(id));
-  }, [dispatch]);
+  }, [dispatch, abortCurrentRequest]);
 
   const handleDeleteSession = useCallback(async (id: string) => {
     const currentActiveId = activeSessionIdRef.current;
-    if (currentActiveId === id) dispatch(clearActiveSession());
+    if (currentActiveId === id) {
+      abortCurrentRequest();
+      dispatch(clearActiveSession());
+    }
 
     setLocalMessagesBySession((prev) => {
       if (!prev[id]) return prev;
@@ -110,7 +155,7 @@ function NoroChatPage() {
     } catch {
       if (currentActiveId === id) dispatch(setActiveSession(id));
     }
-  }, [deleteSession, dispatch, updateTitles]);
+  }, [deleteSession, dispatch, updateTitles, abortCurrentRequest]);
 
   const handleSendMessage = useCallback(async (text: string) => {
     if (!text.trim() || isSending) return;
@@ -138,17 +183,45 @@ function NoroChatPage() {
       created_at: new Date().toISOString(),
     };
 
+    optimisticMsgRef.current = { sessionId, msgId: optimisticUserMsg.id };
+
     setLocalMessagesBySession((prev) => {
-      const existing = prev[sessionId] ?? fetchedMessages;
+      const existing = prev[sessionId] ?? [];
       return { ...prev, [sessionId]: [...existing, optimisticUserMsg] };
     });
 
+    // Set up an AbortController to cancel the think-delay if the user
+    // navigates away or clicks Stop before the request fires.
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     setIsSending(true);
-    await new Promise<void>((r) => setTimeout(r, THINK_DELAY_MS));
+
+    // Wait for the think delay, but bail out early if aborted.
+    await new Promise<void>((resolve) => {
+      const timer = setTimeout(resolve, THINK_DELAY_MS);
+      controller.signal.addEventListener('abort', () => {
+        clearTimeout(timer);
+        resolve();
+      });
+    });
+
+    // If the controller was aborted during the delay, stop here — the
+    // abortCurrentRequest() call already cleaned up the optimistic message.
+    if (controller.signal.aborted) return;
 
     try {
-      const response = await sendMessage({ sessionId, message: text.trim() }).unwrap();
+      const mutationResult = sendMessage({ sessionId, message: text.trim() });
+      sendMutationRef.current = mutationResult;
+
+      const response = await mutationResult.unwrap();
+      sendMutationRef.current = null;
+
+      // Guard: if the session changed while we were waiting, discard the result.
+      if (controller.signal.aborted) return;
+
       const aiMsg = response.assistant_message;
+      optimisticMsgRef.current = null;
 
       setLocalMessagesBySession((prev) => {
         const current = prev[sessionId] ?? [];
@@ -160,14 +233,22 @@ function NoroChatPage() {
       const streamDurationMs = Math.ceil((aiMsg.content.length / 6) * 16) + 400;
       setTimeout(() => setStreamingMessageId(null), streamDurationMs);
     } catch {
-      setLocalMessagesBySession((prev) => {
-        const current = prev[sessionId] ?? [];
-        return { ...prev, [sessionId]: current.filter((m) => m.id !== optimisticUserMsg.id) };
-      });
+      // Abort errors are expected — only clean up the optimistic message for
+      // genuine network failures (abortCurrentRequest handles the abort case).
+      if (!controller.signal.aborted) {
+        setLocalMessagesBySession((prev) => {
+          const current = prev[sessionId] ?? [];
+          return { ...prev, [sessionId]: current.filter((m) => m.id !== optimisticUserMsg.id) };
+        });
+        optimisticMsgRef.current = null;
+      }
     } finally {
-      setIsSending(false);
+      if (!controller.signal.aborted) {
+        setIsSending(false);
+        abortControllerRef.current = null;
+      }
     }
-  }, [isSending, fetchedMessages, createSession, sendMessage, dispatch, updateTitles]);
+  }, [isSending, createSession, sendMessage, dispatch, updateTitles]);
 
   const handleSuggestionClick = useCallback((text: string) => {
     handleSendMessage(text);
@@ -226,6 +307,7 @@ function NoroChatPage() {
         onSendMessage={handleSendMessage}
         onSuggestionClick={handleSuggestionClick}
         onOpenSidebar={() => setIsSidebarOpen(true)}
+        onStop={handleStop}
         username={user?.name || user?.username}
         errorMessage={inlineError}
       />
