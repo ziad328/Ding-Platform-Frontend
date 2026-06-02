@@ -1,18 +1,23 @@
+/**
+ * NoroChatInput — auto-resizing textarea with send/mic/stop controls.
+ * Supports Enter-to-send and Shift+Enter for new lines.
+ * When isLoading is true the send button morphs into an animated Stop button.
+ */
 import React, { useRef, useEffect, useState } from 'react';
-import { Paperclip, Mic, Send, ArrowUp } from 'lucide-react';
+import { Paperclip, Mic, ArrowUp, Send, Square } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface NoroChatInputProps {
   onSendMessage: (text: string) => void;
+  onStop: () => void;
   isLoading: boolean;
 }
 
-const NoroChatInput: React.FC<NoroChatInputProps> = ({ onSendMessage, isLoading }) => {
+const NoroChatInput: React.FC<NoroChatInputProps> = ({ onSendMessage, onStop, isLoading }) => {
   const [value, setValue] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const hasText = value.trim().length > 0;
 
-  // Auto-resize textarea
   useEffect(() => {
     const ta = textareaRef.current;
     if (!ta) return;
@@ -25,10 +30,7 @@ const NoroChatInput: React.FC<NoroChatInputProps> = ({ onSendMessage, isLoading 
     if (!text || isLoading) return;
     onSendMessage(text);
     setValue('');
-    // Reset height
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-    }
+    if (textareaRef.current) textareaRef.current.style.height = 'auto';
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -39,93 +41,117 @@ const NoroChatInput: React.FC<NoroChatInputProps> = ({ onSendMessage, isLoading 
   };
 
   return (
-    <div className="w-full px-3 sm:px-4 md:px-6 pb-1">
+    <div className="w-full px-2 sm:px-4 md:px-6 pb-1">
       <div className="max-w-[800px] mx-auto">
-        {/* Input container */}
-        <div className="flex items-center gap-2 bg-white dark:bg-dark-bg-secondary border border-neutral-w-400 dark:border-dark-border rounded-2xl px-3 py-2.5 shadow-sm focus-within:border-primary-400 dark:focus-within:border-primary-600 focus-within:shadow-md transition-all duration-200">
-          {/* Left: attachment icon */}
+        <div className="flex items-center gap-1.5 sm:gap-2 bg-white dark:bg-dark-bg-secondary border border-neutral-w-400 dark:border-dark-border rounded-2xl px-2.5 py-1.5 sm:px-3 sm:py-2.5 shadow-sm focus-within:border-primary-400 dark:focus-within:border-primary-600 focus-within:shadow-md transition-all duration-200">
           <button
-            className="p-1.5 text-neutral-b-300 dark:text-dark-text-muted hover:text-neutral-b-600 dark:hover:text-dark-text-secondary transition-colors shrink-0"
+            className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-neutral-b-300 dark:text-dark-text-muted hover:text-neutral-b-600 dark:hover:text-dark-text-secondary hover:bg-neutral-w-300/30 dark:hover:bg-dark-bg-secondary/40 transition-all shrink-0"
             title="Attach file"
             aria-label="Attach file"
             disabled={isLoading}
           >
-            <Paperclip size={18} />
+            <Paperclip className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
           </button>
 
-          {/* Textarea */}
           <textarea
             ref={textareaRef}
             id="noro-message-input"
             value={value}
             onChange={(e) => setValue(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Message Noro..."
+            placeholder={isLoading ? 'Generating…' : 'Message Noro…'}
             rows={1}
             disabled={isLoading}
-            className="flex-1 bg-transparent resize-none text-sm text-neutral-b-800 dark:text-dark-text-primary placeholder:text-neutral-b-300 dark:placeholder:text-dark-text-muted focus:outline-none disabled:opacity-50 leading-relaxed max-h-40 min-h-6 py-0.5"
+            className="flex-1 bg-transparent resize-none text-[13px] sm:text-sm text-neutral-b-800 dark:text-dark-text-primary placeholder:text-neutral-b-400 dark:placeholder:text-dark-text-muted focus:outline-none disabled:opacity-50 leading-relaxed max-h-32 md:max-h-40 min-h-5 py-0.5"
           />
 
-          {/* Right: mic / send */}
           <div className="flex items-center gap-1 shrink-0">
             <AnimatePresence mode="wait" initial={false}>
-              {!hasText && (
+              {!hasText && !isLoading && (
                 <motion.button
                   key="mic"
                   initial={{ scale: 0, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0, opacity: 0 }}
-                  transition={{ duration: 0.12 }}
-                  className="p-1.5 text-neutral-b-300 dark:text-dark-text-muted hover:text-neutral-b-600 dark:hover:text-dark-text-secondary transition-colors"
+                  transition={{ duration: 0.1 }}
+                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-neutral-b-300 dark:text-dark-text-muted hover:text-neutral-b-600 dark:hover:text-dark-text-secondary hover:bg-neutral-w-300/30 dark:hover:bg-dark-bg-secondary/40 transition-all shrink-0"
                   title="Voice input"
-                  aria-label="Voice input"
-                  disabled={isLoading}
                 >
-                  <Mic size={18} />
+                  <Mic className="w-4 h-4 sm:w-[17px] sm:h-[17px]" />
                 </motion.button>
               )}
             </AnimatePresence>
 
-            <motion.button
-              id="noro-send-btn"
-              onClick={handleSend}
-              disabled={!hasText || isLoading}
-              whileTap={hasText && !isLoading ? { scale: 0.92 } : {}}
-              className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 ${
-                hasText && !isLoading
-                  ? 'bg-primary-600 hover:bg-primary-700 text-white shadow-sm'
-                  : 'bg-neutral-w-300 dark:bg-dark-bg-tertiary text-neutral-b-300 dark:text-dark-text-muted cursor-default'
-              }`}
-              aria-label="Send message"
-            >
-              <AnimatePresence mode="wait" initial={false}>
-                {hasText ? (
-                  <motion.span
-                    key="send"
-                    initial={{ scale: 0, rotate: -45 }}
-                    animate={{ scale: 1, rotate: 0 }}
-                    exit={{ scale: 0, rotate: 45 }}
-                    transition={{ duration: 0.12 }}
-                  >
-                    <ArrowUp size={16} />
-                  </motion.span>
-                ) : (
-                  <motion.span
-                    key="send-idle"
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    exit={{ scale: 0 }}
-                    transition={{ duration: 0.12 }}
-                  >
-                    <Send size={14} />
-                  </motion.span>
-                )}
-              </AnimatePresence>
-            </motion.button>
+            <AnimatePresence mode="wait" initial={false}>
+              {isLoading ? (
+                /* ── Stop button ── */
+                <motion.button
+                  key="stop"
+                  id="noro-stop-btn"
+                  onClick={onStop}
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0, opacity: 0 }}
+                  transition={{ duration: 0.15 }}
+                  whileTap={{ scale: 0.88 }}
+                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center bg-neutral-b-800 dark:bg-dark-text-primary text-white shadow-sm hover:bg-neutral-b-700 dark:hover:bg-dark-text-secondary transition-colors"
+                  aria-label="Stop generating"
+                  title="Stop generating"
+                >
+                  {/* Pulsing ring behind the square icon */}
+                  <span className="relative flex items-center justify-center">
+                    <span className="absolute inset-0 rounded-full bg-neutral-b-600/30 dark:bg-white/20 animate-ping" />
+                    <Square className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-current relative z-10" />
+                  </span>
+                </motion.button>
+              ) : (
+                /* ── Send button ── */
+                <motion.button
+                  key="send"
+                  id="noro-send-btn"
+                  onClick={handleSend}
+                  disabled={!hasText}
+                  whileTap={hasText ? { scale: 0.88 } : {}}
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0, opacity: 0 }}
+                  transition={{ duration: 0.15 }}
+                  className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-all duration-200 ${
+                    hasText
+                      ? 'bg-primary-600 hover:bg-primary-700 text-white shadow-sm'
+                      : 'bg-neutral-w-300 dark:bg-dark-bg-tertiary text-neutral-b-300 dark:text-dark-text-muted cursor-default'
+                  }`}
+                  aria-label="Send message"
+                >
+                  <AnimatePresence mode="wait" initial={false}>
+                    {hasText ? (
+                      <motion.span
+                        key="arrow"
+                        initial={{ scale: 0, rotate: -45 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        exit={{ scale: 0, rotate: 45 }}
+                        transition={{ duration: 0.1 }}
+                      >
+                        <ArrowUp className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                      </motion.span>
+                    ) : (
+                      <motion.span
+                        key="idle"
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        exit={{ scale: 0 }}
+                        transition={{ duration: 0.1 }}
+                      >
+                        <Send className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </motion.button>
+              )}
+            </AnimatePresence>
           </div>
         </div>
 
-        {/* Disclaimer */}
         <p className="text-[11px] text-neutral-b-300 dark:text-dark-text-muted/60 text-center mt-2 pb-1 select-none">
           Noro can make mistakes. Verify important information.
         </p>
